@@ -11,17 +11,24 @@ guard let display = DisplayProvider.primary() else {
     print("디스플레이 정보를 조회할 수 없습니다")
     exit(1)
 }
-print("visibleFrame=\(display.visibleFrame) primaryMaxY=\(display.primaryMaxY)")
-print("")
+
+let target = SlotGeometry.frame(
+    for: .leftHalf, in: display.visibleFrame, primaryMaxY: display.primaryMaxY)
+print("target=\(target)")
 
 do {
-    for app in AppRegistry.probeSample {
-        let bundleID = try AppRegistry.bundleID(for: app)
-        let instances = AppLauncher.runningApplications(bundleID: bundleID)
-        let pids = instances.map { String($0.processIdentifier) }.joined(separator: ",")
-        print("\(app.rawValue): instances=\(instances.count) pids=[\(pids)]")
+    let bundleID = try AppRegistry.bundleID(for: AppID("cursor"))
+    guard let app = AppLauncher.runningApplication(bundleID: bundleID) else {
+        print("cursor가 실행 중이 아닙니다")
+        exit(1)
     }
+    let window = try await WindowWaiter.wait(pid: app.processIdentifier, timeout: .seconds(5))
+    print("before=\(window.currentFrame.map(String.init(describing:)) ?? "n/a")")
+    await WindowWaiter.prepareForDesktopPlacement(window)
+    let result = await WindowPlacer.place(window, target: target)
+    print("result=\(result)")
+    print("after=\(window.currentFrame.map(String.init(describing:)) ?? "n/a")")
 } catch {
-    print("조회 실패: \(error)")
+    print("실패: \(error)")
     exit(1)
 }

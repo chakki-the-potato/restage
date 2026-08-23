@@ -3,13 +3,13 @@ import Foundation
 import RestageKit
 
 @MainActor
-enum WindowPlacer {
+public enum WindowPlacer {
     static let tolerance: CGFloat = 2
     static let maxAttempts = 3
     static let totalTimeout: Duration = .seconds(3)
     static let settleTimeout: Duration = .milliseconds(800)
 
-    static func place(_ window: AXWindow, target: CGRect) async -> PlacementResult {
+    public static func place(_ window: AXWindow, target: CGRect) async -> PlacementResult {
         let clock = ContinuousClock()
         let start = clock.now
         let deadline = start.advanced(by: totalTimeout)

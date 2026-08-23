@@ -1,11 +1,11 @@
 import RestageKit
 
 @MainActor
-enum WindowWaiter {
+public enum WindowWaiter {
     /// 배치 가능한 창이 나타날 때까지 폴링한다.
     /// 조건: AXRole == AXWindow, 크기가 0보다 큼, 최소화 아님.
     /// 반환값은 AX 창 목록의 첫 번째, 즉 가장 최근 활성 창이다.
-    static func wait(pid: Int32, timeout: Duration) async throws -> AXWindow {
+    public static func wait(pid: Int32, timeout: Duration) async throws -> AXWindow {
         var lastError: Error?
 
         let found = await Polling.poll(timeout: timeout) { () -> AXWindow? in
@@ -25,7 +25,7 @@ enum WindowWaiter {
 
     /// 배치 전 창 상태를 정리한다. 최소화 해제, 필요 시 전체화면 해제.
     /// 크기가 안정될 때까지 기다린 뒤 반환한다.
-    static func prepareForDesktopPlacement(_ window: AXWindow) async {
+    public static func prepareForDesktopPlacement(_ window: AXWindow) async {
         if window.isMinimized {
             window.setMinimized(false)
             _ = await Polling.settle(timeout: .seconds(2)) { window.currentFrame }
