@@ -11,7 +11,8 @@ public enum SlotGeometry {
         toAX(cocoaFrame(for: slot, in: visibleFrame), primaryMaxY: primaryMaxY)
     }
 
-    private static func cocoaFrame(for slot: Slot, in vf: CGRect) -> CGRect {
+    private static func cocoaFrame(for slot: Slot, in visibleFrame: CGRect) -> CGRect {
+        let vf = inscribedIntegral(visibleFrame)
         let leftWidth = (vf.width / 2).rounded(.up)
         let rightWidth = vf.width - leftWidth
         let topHeight = (vf.height / 2).rounded(.up)
@@ -52,5 +53,15 @@ public enum SlotGeometry {
     /// 이 변환식은 프로젝트 전체에서 이 함수에만 존재해야 한다.
     private static func toAX(_ rect: CGRect, primaryMaxY: CGFloat) -> CGRect {
         CGRect(x: rect.minX, y: primaryMaxY - rect.maxY, width: rect.width, height: rect.height)
+    }
+
+    /// 가용 영역을 정수 좌표로 정규화한다. 경계를 항상 안쪽으로 당겨
+    /// 정규화 결과가 원본을 벗어나지 않게 한다. 정수 입력에는 항등이다.
+    private static func inscribedIntegral(_ rect: CGRect) -> CGRect {
+        let minX = rect.minX.rounded(.up)
+        let minY = rect.minY.rounded(.up)
+        let maxX = rect.maxX.rounded(.down)
+        let maxY = rect.maxY.rounded(.down)
+        return CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
     }
 }
