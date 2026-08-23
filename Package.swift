@@ -10,7 +10,10 @@ let package = Package(
     targets: [
         .target(name: "RestageKit", dependencies: [.product(name: "Yams", package: "Yams")]),
         .target(name: "RestageKitDarwin", dependencies: ["RestageKit"]),
-        .executableTarget(name: "restage", dependencies: ["RestageKit", "RestageKitDarwin"]),
+        .target(name: "RestageBrand"),
+        .executableTarget(
+            name: "restage", dependencies: ["RestageKit", "RestageKitDarwin", "RestageBrand"]),
+        .executableTarget(name: "restage-icon", dependencies: ["RestageBrand"]),
         .testTarget(name: "RestageKitTests", dependencies: ["RestageKit"]),
         .testTarget(name: "RestageKitDarwinTests", dependencies: ["RestageKitDarwin"]),
     ]
