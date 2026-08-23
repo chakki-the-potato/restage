@@ -7,19 +7,19 @@ guard AccessibilityPermission.isTrusted() else {
     exit(1)
 }
 
-guard let finder = NSWorkspace.shared.runningApplications
-        .first(where: { $0.bundleIdentifier == "com.apple.finder" }) else {
-    print("Finder를 찾을 수 없습니다")
+guard let display = DisplayProvider.primary() else {
+    print("디스플레이 정보를 조회할 수 없습니다")
     exit(1)
 }
+print("visibleFrame=\(display.visibleFrame) primaryMaxY=\(display.primaryMaxY)")
+print("")
 
 do {
-    let windows = try AXWindow.windows(ofPID: finder.processIdentifier)
-    print("Finder 창 개수: \(windows.count)")
-    for window in windows {
-        let frame = window.currentFrame.map(String.init(describing:)) ?? "n/a"
-        let min = window.minSize.map(String.init(describing:)) ?? "n/a"
-        print("  role=\(window.role ?? "?") frame=\(frame) minSize=\(min)")
+    for app in AppRegistry.probeSample {
+        let bundleID = try AppRegistry.bundleID(for: app)
+        let instances = AppLauncher.runningApplications(bundleID: bundleID)
+        let pids = instances.map { String($0.processIdentifier) }.joined(separator: ",")
+        print("\(app.rawValue): instances=\(instances.count) pids=[\(pids)]")
     }
 } catch {
     print("조회 실패: \(error)")
