@@ -19,13 +19,23 @@ import RestageKit
     #expect(try AppRegistry.bundleID(for: AppID("KakaoTalk")) == "com.kakao.KakaoTalkMac")
 }
 
-@Test func sampleExcludesCursor() {
-    #expect(AppRegistry.probeSample.count == 9)
-    #expect(!AppRegistry.probeSample.contains(AppID("cursor")))
+@Test func sampleExcludesProtectedApps() {
+    #expect(AppRegistry.probeSample.count == 8)
+    for app in AppRegistry.protected {
+        #expect(!AppRegistry.probeSample.contains(app))
+    }
 }
 
-@Test func cursorStillResolvesEvenThoughExcludedFromSample() throws {
+@Test func protectedAppsAreRecognized() {
+    #expect(AppRegistry.isProtected(AppID("cursor")))
+    #expect(AppRegistry.isProtected(AppID("Cursor")))
+    #expect(AppRegistry.isProtected(AppID("chrome")))
+    #expect(!AppRegistry.isProtected(AppID("safari")))
+}
+
+@Test func protectedAppsStillResolveForNormalUse() throws {
     #expect(try AppRegistry.bundleID(for: AppID("cursor")) == "com.todesktop.230313mzl4w4u92")
+    #expect(try AppRegistry.bundleID(for: AppID("chrome")) == "com.google.Chrome")
 }
 
 @Test func everySampleAppResolves() throws {
