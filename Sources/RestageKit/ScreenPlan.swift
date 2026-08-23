@@ -9,6 +9,26 @@ public struct DisplayList: Sendable {
         self.primary = primary
         self.externals = externals
     }
+
+    /// 창 중심이 놓인 디스플레이를 가리키는 선택자. AX 좌표계 사각형을 받는다.
+    /// 어느 화면에도 속하지 않으면 주 디스플레이로 본다.
+    public func selector(containing frame: CGRect) -> DisplaySelector {
+        let center = CGPoint(x: frame.midX, y: frame.midY)
+        if primary.axBounds.contains(center) { return .builtin }
+        for (offset, display) in externals.enumerated() where display.axBounds.contains(center) {
+            return .external(index: offset + 1)
+        }
+        return .builtin
+    }
+
+    public func info(for selector: DisplaySelector) -> DisplayInfo? {
+        switch selector {
+        case .builtin, .any: return primary
+        case .external(let index):
+            let position = index - 1
+            return externals.indices.contains(position) ? externals[position] : nil
+        }
+    }
 }
 
 /// 한 항목의 배치 목표. target은 AX 좌표계다.

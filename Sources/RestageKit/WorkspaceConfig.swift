@@ -131,3 +131,15 @@ extension ItemConfig: Decodable {
 
 extension AppID: Decodable {}
 extension Slot: Decodable {}
+
+extension DisplaySelector {
+    /// config 파일에 쓰는 문자열. `init(from:)`의 역이다.
+    /// 파싱과 직렬화가 갈라지지 않도록 접두사를 같은 상수에서 가져온다.
+    public var yamlValue: String {
+        switch self {
+        case .builtin: return "builtin"
+        case .any: return "any"
+        case .external(let index): return "\(Self.externalPrefix)\(index)"
+        }
+    }
+}

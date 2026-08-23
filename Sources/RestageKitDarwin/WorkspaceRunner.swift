@@ -106,10 +106,13 @@ public struct WorkspaceRunner {
     private func applyTabs(
         _ plan: TabPlan, handle: ProcessHandle, screen: ScreenPlan
     ) async -> ItemOutcome {
-        guard let dialect = BrowserDialect.forApp(plan.app) else {
+        let dialect: BrowserDialect
+        do {
+            dialect = try BrowserDialect.forApp(plan.app)
+        } catch {
             return ItemOutcome(
-                screenID: screen.id, app: plan.app, status: .skipped,
-                detail: "지원하지 않는 브라우저입니다. 지원: safari, chrome")
+                screenID: screen.id, app: plan.app, status: .failed,
+                detail: String(describing: error))
         }
 
         do {
@@ -235,7 +238,7 @@ public struct WorkspaceRunner {
     private func focusFirstAnchor(_ resolved: ResolvedWorkspace) {
         guard let screen = resolved.screens.first,
               let anchor = screen.anchor,
-              let bundleID = try? AppRegistry.bundleID(for: anchor),
+              let bundleID = try? InstalledApps.bundleID(for: anchor),
               let app = AppLauncher.runningApplication(bundleID: bundleID) else { return }
         AXWindow.setApplicationFrontmost(pid: app.processIdentifier)
     }
