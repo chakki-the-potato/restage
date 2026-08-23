@@ -94,3 +94,43 @@ probe의 콜드 스타트는 대상 앱을 종료한다. 이 저장소의 개발
 `AppRegistry.probeSample`에서 빼되 매핑에는 남겨서 `--app cursor`로 개별 조회는 계속 가능하다. Electron 자가 리사이즈는 discord, notion, claude 3종이 덮으므로 커버리지 손실은 없다.
 
 참고로 Task 8·9 진행 중 단일 창 배치로는 Cursor에서 성공을 확인했다. 외장 모니터에 있던 창을 내장 화면 좌측 절반으로 첫 시도, 105ms에 옮겼다. 콜드/웜 2케이스 정식 검증은 아니다.
+
+## 데스크탑(Space) 지정 — 검증 결과와 다음 사이클 방향
+
+사용자가 실제로 여러 데스크탑에 앱을 나눠 쓰고 있어, 전체 스펙이 제외했던 Space 배치를 다시 검토했다.
+
+### 우회로 검증
+
+"목표 데스크탑으로 먼저 전환한 뒤 그 자리에서 앱을 띄우면 새 창이 거기 생긴다"는 우회로를 시험했다. 데스크탑 전환 단축키를 두 경로로 주입했고 **둘 다 전환되지 않았다.**
+
+| 방법 | 결과 |
+|---|---|
+| `CGEvent`로 `ctrl+→` 주입 (`.cghidEventTap`) | 전환 안 됨 |
+| System Events `key code 124 using control down` | 전환 안 됨 |
+
+판정은 `CGWindowListCopyWindowInfo(.optionOnScreenOnly)`의 창 소유 앱 집합으로 했다. 이 목록은 현재 Space의 창만 담으므로 전환되면 반드시 바뀐다. `com.apple.spaces` plist의 `Current Space`는 지연 기록이라 판정에 쓸 수 없었다.
+
+Mission Control 단축키 설정은 활성 상태였다(`AppleSymbolicHotKeys` id 79~82 전부 `enabled=1`). 즉 설정 문제가 아니라 macOS가 합성 키 입력으로는 Space를 바꾸지 않는다.
+
+`ApplicationServices`에 Space 관련 공개 심볼은 0개다. 이 머신의 SIP은 enabled다.
+
+결론: 현재 권한 모델 안에서 데스크탑 지정은 불가능하다.
+
+### 다음 사이클 방향: yabai 선택 의존
+
+직접 SkyLight 비공개 API를 주입하는 대신, yabai가 설치된 경우에만 그것을 호출한다.
+
+```
+yabai -m window --space 2
+```
+
+근거는 이렇다.
+
+- SIP 부분 해제는 어느 경로로 가든 피할 수 없다. 그 위험과 macOS 업데이트 대응 부담을 직접 떠안는 대신 이미 그 문제를 푼 도구에 위임한다.
+- restage 본체는 공개 API만 쓰므로 공증과 Homebrew cask 배포 경로를 유지한다.
+- yabai가 없으면 해당 항목만 전체화면으로 대체되고 나머지 배치는 그대로 동작한다. 선택 의존이므로 기본 사용자는 영향이 없다.
+
+대안으로 검토했다가 채택하지 않은 것.
+
+- **restage가 직접 주입**: 결과는 같은데 유지보수를 전부 떠안고 배포 경로를 잃는다.
+- **Dock의 앱별 "데스크탑에 지정"**: SIP을 건드리지 않는 유일한 방법이지만 설정이 수동이고 restage가 읽거나 쓸 수 없다. 보조 안내로만 문서화한다.
