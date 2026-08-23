@@ -51,9 +51,11 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         reloadHotkeys()
 
         let result = Result { try WorkspaceRegistry().list() }
-        for entry in MenuContent.entries(for: result) {
-            let item = NSMenuItem(
-                title: entry.title, action: #selector(openWorkspace(_:)), keyEquivalent: "")
+        let granted = AccessibilityPermission.isTrusted()
+        for entry in MenuContent.entries(for: result, accessibilityGranted: granted) {
+            let action = entry == .permissionNeeded
+                ? #selector(openAccessibilitySettings) : #selector(openWorkspace(_:))
+            let item = NSMenuItem(title: entry.title, action: action, keyEquivalent: "")
             item.isEnabled = entry.isEnabled && !isRunning
             item.toolTip = entry.tooltip
             item.target = entry.isEnabled ? self : nil
@@ -65,6 +67,13 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         }
 
         menu.addItem(.separator())
+        if LoginItem.isSupported {
+            let login = NSMenuItem(
+                title: "로그인 시 자동 실행", action: #selector(toggleLoginItem), keyEquivalent: "")
+            login.target = self
+            login.state = LoginItem.isEnabled ? .on : .off
+            menu.addItem(login)
+        }
         addAction(to: menu, title: "config 폴더 열기", selector: #selector(revealConfigFolder))
         addAction(to: menu, title: "종료", selector: #selector(quit), keyEquivalent: "q")
     }
@@ -138,6 +147,18 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         } catch {
             alert("'\(name)' 실행 실패", "\(error)")
         }
+    }
+
+    @objc private func toggleLoginItem() {
+        if let reason = LoginItem.toggle() {
+            alert("로그인 항목 등록에 실패했습니다", reason)
+        }
+    }
+
+    @objc private func openAccessibilitySettings() {
+        _ = AccessibilityPermission.requestIfNeeded()
+        guard let url = URL(string: AccessibilityPermission.settingsDeepLink) else { return }
+        NSWorkspace.shared.open(url)
     }
 
     @objc private func revealConfigFolder() {
