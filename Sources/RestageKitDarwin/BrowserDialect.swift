@@ -18,21 +18,27 @@ struct BrowserDialect {
 
     /// 창 id와 각 창의 탭 URL을 줄 단위로 돌려준다.
     /// 출력 형식은 창 하나당 한 줄이며 필드는 탭 문자로 구분한다.
+    ///
+    /// 구분자를 `tell` 블록 밖에서 만드는 이유는 블록 안에서 `tab`이 AppleScript의
+    /// 탭 상수가 아니라 브라우저의 `tab` 클래스로 해석되기 때문이다. 그대로 쓰면
+    /// 구분자 자리에 문자열 "tab"이 들어가 파싱이 전부 실패한다. 실제로 겪었다.
     func readWindowsScript() -> String {
         """
+        set fieldSeparator to character id 9
+        set lineSeparator to character id 10
+        set out to ""
         tell application "\(applicationName)"
-          set out to ""
           repeat with w in windows
             try
               set out to out & (id of w)
               repeat with t in tabs of w
-                set out to out & tab & (URL of t)
+                set out to out & fieldSeparator & (URL of t)
               end repeat
-              set out to out & linefeed
+              set out to out & lineSeparator
             end try
           end repeat
-          return out
         end tell
+        return out
         """
     }
 

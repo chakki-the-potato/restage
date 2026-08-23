@@ -138,6 +138,12 @@ public struct WorkspaceRunner {
         _ target: CGRect, slot: Slot, plan: TabPlan, handle: ProcessHandle,
         screen: ScreenPlan, tabs: TabController.Result
     ) async -> ItemOutcome {
+        if tabs.openedCount == 0, CurrentState.isPlaced(pid: handle.pid, target: target) {
+            return ItemOutcome(
+                screenID: screen.id, app: plan.app, status: .alreadySatisfied,
+                expected: target, detail: "탭 \(plan.tabs.count)개와 창 위치 모두 이미 목표 상태")
+        }
+
         AXWindow.setApplicationFrontmost(pid: handle.pid)
         guard let window = try? await engine.waitForWindow(handle, timeout: Self.windowTimeout)
         else {
