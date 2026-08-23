@@ -76,6 +76,22 @@ enum WorkspaceFiles {
         NSWorkspace.shared.open(URL(fileURLWithPath: directory))
     }
 
+    /// config의 hotkey 줄만 갈아 끼운다. nil이면 지운다.
+    static func setHotkey(_ hotkey: String?, for name: String) -> Failure {
+        guard let path = path(for: name) else {
+            return "'\(name)' 파일을 찾을 수 없습니다"
+        }
+        do {
+            let original = try String(contentsOfFile: path, encoding: .utf8)
+            let updated = HotkeyLine.apply(hotkey, to: original)
+            guard updated != original else { return nil }
+            try updated.write(toFile: path, atomically: true, encoding: .utf8)
+            return nil
+        } catch {
+            return "단축키를 저장하지 못했습니다: \(error.localizedDescription)"
+        }
+    }
+
     static func exists(_ name: String) -> Bool {
         path(for: name) != nil
     }
