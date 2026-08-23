@@ -12,6 +12,7 @@ public enum ConfigError: Error, CustomStringConvertible {
     case anchorNotInItems(screenID: String, anchor: AppID)
     case directoryNotFound(path: String)
     case workspaceNotFound(name: String, path: String, available: [String])
+    case invalidHotkey(String, reason: String)
 
     public var description: String {
         switch self {
@@ -38,6 +39,8 @@ public enum ConfigError: Error, CustomStringConvertible {
                 워크스페이스 디렉토리가 없습니다: \(path)
                 mkdir -p \(path) 로 만들고 <이름>.yaml 파일을 두세요
                 """
+        case .invalidHotkey(let raw, let reason):
+            return "hotkey 형식이 올바르지 않습니다: '\(raw)'. \(reason)"
         case .workspaceNotFound(let name, let path, let available):
             let known = available.isEmpty
                 ? "등록된 워크스페이스가 없습니다"
