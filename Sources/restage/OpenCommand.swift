@@ -4,7 +4,7 @@ import RestageKitDarwin
 
 @MainActor
 enum OpenCommand {
-    static func run(path: String) async -> Int32 {
+    static func run(target: String) async -> Int32 {
         guard AccessibilityPermission.isTrusted() else {
             print(AccessibilityPermission.onboardingMessage)
             return 1
@@ -20,6 +20,7 @@ enum OpenCommand {
 
         let config: WorkspaceConfig
         do {
+            let path = try WorkspaceRegistry().resolve(target)
             config = try ConfigLoader.load(path: path)
         } catch {
             print(error)
