@@ -75,22 +75,58 @@ public enum WindowPlacer {
                 actual: observed, expected: target, reason: "크기를 바꿀 수 없는 창입니다")
         }
 
-        if let minSize = window.minSize {
-            let widthBlocked = target.width < minSize.width - tolerance
-            let heightBlocked = target.height < minSize.height - tolerance
-            let widthSettledAtMin = abs(observed.width - minSize.width) <= tolerance
-            let heightSettledAtMin = abs(observed.height - minSize.height) <= tolerance
+        if let minSize = window.minSize,
+           let reason = declaredMinimumReason(target: target, observed: observed, minSize: minSize) {
+            return .constrained(actual: observed, expected: target, reason: reason)
+        }
 
-            if (widthBlocked && widthSettledAtMin) || (heightBlocked && heightSettledAtMin) {
-                return .constrained(
-                    actual: observed, expected: target,
-                    reason: "최소 크기 \(Int(minSize.width))x\(Int(minSize.height))")
-            }
+        if let reason = inferredMinimumReason(target: target, observed: observed) {
+            return .constrained(actual: observed, expected: target, reason: reason)
         }
 
         return .failed(
             expected: target,
             actual: observed,
             reason: "\(maxAttempts)회 시도 후에도 목표 좌표에 도달하지 못했습니다")
+    }
+
+    /// 앱이 `AXMinSize`로 최소 크기를 알려주는 경우.
+    private static func declaredMinimumReason(
+        target: CGRect, observed: CGRect, minSize: CGSize
+    ) -> String? {
+        let widthBlocked = target.width < minSize.width - tolerance
+        let heightBlocked = target.height < minSize.height - tolerance
+        let widthSettledAtMin = abs(observed.width - minSize.width) <= tolerance
+        let heightSettledAtMin = abs(observed.height - minSize.height) <= tolerance
+
+        guard (widthBlocked && widthSettledAtMin) || (heightBlocked && heightSettledAtMin)
+        else { return nil }
+        return "최소 크기 \(Int(minSize.width))x\(Int(minSize.height))"
+    }
+
+    /// `AXMinSize`를 노출하지 않으면서 최소 크기를 강제하는 앱을 동작으로 판별한다.
+    ///
+    /// Xcode가 그렇다. `AXMinSize` 조회가 -25205(속성 미지원)를 반환하는데 너비는 940
+    /// 아래로 내려가지 않는다. 높이는 요청대로 바뀌므로 리사이즈 자체를 거부하는 것은 아니다.
+    ///
+    /// 판별 근거는 "한 축은 요청대로 맞았는데 다른 축만 요청보다 크게 고정된" 상태다.
+    /// 한 축이 맞았다는 것은 앱이 크기 변경을 받아들였다는 뜻이므로, 남은 축의 차이는
+    /// 우리가 못 맞춘 것이 아니라 앱이 막은 것이다.
+    private static func inferredMinimumReason(target: CGRect, observed: CGRect) -> String? {
+        let widthStuckLarger = observed.width > target.width + tolerance
+        let heightStuckLarger = observed.height > target.height + tolerance
+        let widthMatches = abs(observed.width - target.width) <= tolerance
+        let heightMatches = abs(observed.height - target.height) <= tolerance
+
+        if widthStuckLarger && heightMatches {
+            return "최소 너비 \(Int(observed.width)) (앱이 AXMinSize를 노출하지 않음)"
+        }
+        if heightStuckLarger && widthMatches {
+            return "최소 높이 \(Int(observed.height)) (앱이 AXMinSize를 노출하지 않음)"
+        }
+        if widthStuckLarger && heightStuckLarger {
+            return "최소 크기 \(Int(observed.width))x\(Int(observed.height)) (앱이 AXMinSize를 노출하지 않음)"
+        }
+        return nil
     }
 }

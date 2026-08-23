@@ -6,6 +6,7 @@ struct ProbeOptions {
     var slot: Slot = .leftHalf
     var apps: [AppID] = AppRegistry.probeSample
     var includeFullScreen = false
+    var warmOnly = false
 
     static func parse(_ arguments: [String]) throws -> ProbeOptions {
         var options = ProbeOptions()
@@ -28,6 +29,8 @@ struct ProbeOptions {
                 options.apps = [AppID(arguments[index])]
             case "--fullscreen":
                 options.includeFullScreen = true
+            case "--warm-only":
+                options.warmOnly = true
             default:
                 throw ProbeError.usage("알 수 없는 인자: \(arguments[index])")
             }
@@ -67,7 +70,9 @@ enum ProbeCommand {
         var rows: [ProbeRow] = []
 
         for app in options.apps {
-            rows.append(await coldStart(app, engine: engine, display: display, options: options))
+            if !options.warmOnly {
+                rows.append(await coldStart(app, engine: engine, display: display, options: options))
+            }
             rows.append(await warmStart(app, engine: engine, display: display, options: options))
         }
 
