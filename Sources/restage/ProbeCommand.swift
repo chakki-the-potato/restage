@@ -54,6 +54,10 @@ enum ProbeCommand {
             print(AccessibilityPermission.onboardingMessage)
             return 1
         }
+        guard !ScreenLock.isLocked() else {
+            print(ScreenLock.message)
+            return 1
+        }
         guard let display = DisplayProvider.primary() else {
             print("디스플레이 정보를 조회할 수 없습니다")
             return 1
