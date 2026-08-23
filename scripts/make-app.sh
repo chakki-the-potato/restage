@@ -18,6 +18,14 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BINARY" "$APP/Contents/MacOS/restage"
 
+# 아이콘은 restage-icon이 그린 .iconset을 iconutil이 .icns로 굽는다.
+# 그림 자체가 코드라 별도 바이너리 에셋을 저장소에 두지 않는다.
+ICONSET="$ROOT/build/restage.iconset"
+rm -rf "$ICONSET"
+swift run -c release restage-icon "$ICONSET" >/dev/null
+iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/restage.icns"
+rm -rf "$ICONSET"
+
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -28,6 +36,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleName</key>
   <string>restage</string>
   <key>CFBundleExecutable</key>
+  <string>restage</string>
+  <key>CFBundleIconFile</key>
   <string>restage</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
