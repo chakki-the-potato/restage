@@ -2,20 +2,38 @@ import RestageKit
 
 @MainActor
 public enum WindowWaiter {
+    /// 활성화 폴백을 발동하기까지 기다리는 시간.
+    static let activationGrace: Duration = .milliseconds(750)
+
     /// 배치 가능한 창이 나타날 때까지 폴링한다.
     /// 조건: AXRole == AXWindow, 크기가 0보다 큼, 최소화 아님.
     /// 반환값은 AX 창 목록의 첫 번째, 즉 가장 최근 활성 창이다.
+    ///
+    /// 일부 앱은 최전면이 되기 전까지 AX 창 트리를 만들지 않는다. Safari가 그렇다.
+    /// 창이 실제로 열려 있고 화면에 보이는데도 `AXWindows`가 빈 배열을 돌려준다.
+    /// 그래서 `activationGrace` 안에 창을 못 찾으면 한 번만 앱을 활성화하고 계속 폴링한다.
+    /// 활성화를 처음부터 하지 않는 이유는 배치 도중 앱들이 서로 포커스를 뺏으면
+    /// 마지막에 지정 앱으로 포커스를 주는 동작과 충돌하기 때문이다.
     public static func wait(pid: Int32, timeout: Duration) async throws -> AXWindow {
         var lastError: Error?
+        var activated = false
+        let clock = ContinuousClock()
+        let activationDeadline = clock.now.advanced(by: activationGrace)
 
         let found = await Polling.poll(timeout: timeout) { () -> AXWindow? in
             do {
                 let windows = try AXWindow.windows(ofPID: pid)
-                return windows.first(where: isPlaceable)
+                if let window = windows.first(where: isPlaceable) { return window }
             } catch {
                 lastError = error
                 return nil
             }
+
+            if !activated, clock.now >= activationDeadline {
+                activated = true
+                AXWindow.setApplicationFrontmost(pid: pid)
+            }
+            return nil
         }
 
         if let found { return found }

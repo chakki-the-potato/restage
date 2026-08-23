@@ -21,6 +21,18 @@ public struct AXWindow: WindowHandle {
         return list.map(AXWindow.init(element:))
     }
 
+    /// 앱을 최전면으로 올린다.
+    ///
+    /// `NSRunningApplication.activate()`를 쓰지 않는 이유: 호출하는 쪽이 GUI 앱이 아니면
+    /// macOS가 활성화 요청을 무시한다. 이 도구는 CLI라 그 경로가 아무 효과도 내지 못한다.
+    /// AX는 접근성 권한이 이미 있으므로 동작하며, Apple Events 권한을 새로 요구하지 않는다.
+    @discardableResult
+    static func setApplicationFrontmost(pid: Int32) -> Bool {
+        let app = AXUIElementCreateApplication(pid)
+        return AXUIElementSetAttributeValue(
+            app, AXAttributes.frontmost as CFString, true as CFTypeRef) == .success
+    }
+
     public var currentFrame: CGRect? {
         guard let origin = point(AXAttributes.position),
               let extent = size(AXAttributes.size) else { return nil }

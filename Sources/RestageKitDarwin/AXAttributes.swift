@@ -2,6 +2,7 @@
 /// 'not concurrency-safe' 에러를 내므로 리터럴로 정의한다.
 enum AXAttributes {
     static let windows = "AXWindows"
+    static let frontmost = "AXFrontmost"
     static let role = "AXRole"
     static let position = "AXPosition"
     static let size = "AXSize"
