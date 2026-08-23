@@ -55,9 +55,7 @@ public struct WorkspaceRunner {
             case .place(let placement):
                 outcomes.append(await apply(placement, handle: handle, screen: screen))
             case .tabs(let plan):
-                outcomes.append(ItemOutcome(
-                    screenID: screen.id, app: plan.app, status: .skipped,
-                    detail: "브라우저 탭 제어는 아직 구현되지 않았습니다"))
+                outcomes.append(await applyTabs(plan, handle: handle, screen: screen))
             }
         }
 
@@ -95,6 +93,79 @@ public struct WorkspaceRunner {
 
         let fullScreenResult = await engine.fullscreen(window)
         return outcome(from: fullScreenResult, placement: placement, screen: screen)
+    }
+
+    private func applyTabs(
+        _ plan: TabPlan, handle: ProcessHandle, screen: ScreenPlan
+    ) async -> ItemOutcome {
+        guard let dialect = BrowserDialect.forApp(plan.app) else {
+            return ItemOutcome(
+                screenID: screen.id, app: plan.app, status: .skipped,
+                detail: "지원하지 않는 브라우저입니다. 지원: safari, chrome")
+        }
+
+        do {
+            _ = try await engine.waitForWindow(handle, timeout: Self.windowTimeout)
+        } catch {
+            let status: OutcomeStatus = CurrentState.windowCount(pid: handle.pid) > 0
+                ? .unreachable : .failed
+            return ItemOutcome(
+                screenID: screen.id, app: plan.app, status: status,
+                detail: String(describing: error))
+        }
+
+        let tabs: TabController.Result
+        do {
+            tabs = try await TabController.apply(plan, dialect: dialect)
+        } catch {
+            return ItemOutcome(
+                screenID: screen.id, app: plan.app, status: .failed,
+                detail: String(describing: error))
+        }
+
+        guard let target = plan.target, let slot = plan.slot else {
+            return tabOutcome(tabs, plan: plan, screen: screen)
+        }
+        return await placeBrowserWindow(
+            target, slot: slot, plan: plan, handle: handle, screen: screen, tabs: tabs)
+    }
+
+    /// 탭 작업을 한 창을 배치한다.
+    ///
+    /// AppleScript로 식별한 창과 AX 창을 직접 대응시킬 방법이 없으므로, 그 앱을 맨 앞으로
+    /// 올린 뒤 AX 창 목록의 첫 번째를 쓴다. AX 목록은 최근 활성 순이다.
+    private func placeBrowserWindow(
+        _ target: CGRect, slot: Slot, plan: TabPlan, handle: ProcessHandle,
+        screen: ScreenPlan, tabs: TabController.Result
+    ) async -> ItemOutcome {
+        AXWindow.setApplicationFrontmost(pid: handle.pid)
+        guard let window = try? await engine.waitForWindow(handle, timeout: Self.windowTimeout)
+        else {
+            return tabOutcome(tabs, plan: plan, screen: screen)
+        }
+        let result = await engine.place(window, slot: slot, display: screen.display)
+        let placed = outcome(
+            from: result,
+            placement: Placement(app: plan.app, slot: slot, target: target),
+            screen: screen)
+        guard tabs.openedCount > 0 else { return placed }
+        return ItemOutcome(
+            screenID: placed.screenID, app: placed.app, status: placed.status,
+            expected: placed.expected, actual: placed.actual,
+            detail: "탭 \(tabs.openedCount)개 추가. \(placed.detail)")
+    }
+
+    private func tabOutcome(
+        _ result: TabController.Result, plan: TabPlan, screen: ScreenPlan
+    ) -> ItemOutcome {
+        guard result.openedCount > 0 else {
+            return ItemOutcome(
+                screenID: screen.id, app: plan.app, status: .alreadySatisfied,
+                detail: "탭 \(plan.tabs.count)개 모두 이미 열려 있음")
+        }
+        return ItemOutcome(
+            screenID: screen.id, app: plan.app, status: .placed,
+            detail: "탭 \(result.openedCount)개 추가")
     }
 
     /// 이미 목표 상태인지 판정한다. 이것이 멱등성의 핵심이다.
