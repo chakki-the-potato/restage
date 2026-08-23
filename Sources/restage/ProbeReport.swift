@@ -42,16 +42,17 @@ enum ProbeReport {
     }
 
     static func render(_ rows: [ProbeRow]) -> String {
+        let appWidth = width(of: ["APP"] + rows.map(\.app))
         var lines: [String] = []
         lines.append(
-            pad("APP", 12) + pad("START", 8) + pad("RESULT", 13)
+            pad("APP", appWidth) + pad("START", 8) + pad("RESULT", 13)
             + pad("EXPECTED", 23) + pad("ACTUAL", 23)
             + padLeft("TRY", 4) + padLeft("MS", 8) + "  NOTE")
         lines.append(String(repeating: "-", count: 110))
 
         for row in rows {
             lines.append(
-                pad(row.app, 12) + pad(row.start, 8) + pad(row.label, 13)
+                pad(row.app, appWidth) + pad(row.start, 8) + pad(row.label, 13)
                 + pad(row.expected.map(fmt) ?? "-", 23)
                 + pad(row.actual.map(fmt) ?? "-", 23)
                 + padLeft(row.attempts.map(String.init) ?? "-", 4)
@@ -93,6 +94,11 @@ enum ProbeReport {
 
     static func hasFailure(_ rows: [ProbeRow]) -> Bool {
         rows.contains { $0.label == "FAIL" }
+    }
+
+    /// 열 너비를 내용에 맞춘다. 앱 이름은 사용자 컴퓨터에서 오는 값이라 길 수 있다.
+    private static func width(of values: [String]) -> Int {
+        (values.map(\.count).max() ?? 0) + 2
     }
 
     private static func pad(_ text: String, _ width: Int) -> String {

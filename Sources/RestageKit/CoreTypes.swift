@@ -28,6 +28,13 @@ public struct DisplayInfo: Sendable {
         self.visibleFrame = visibleFrame
         self.primaryMaxY = primaryMaxY
     }
+
+    /// 가용 영역을 AX 좌표계(top-left 원점)로 옮긴 사각형.
+    public var axBounds: CGRect {
+        CGRect(
+            x: visibleFrame.minX, y: primaryMaxY - visibleFrame.maxY,
+            width: visibleFrame.width, height: visibleFrame.height)
+    }
 }
 
 /// 창에 대한 불투명 참조. 구현체가 OS 고유 핸들을 숨긴다.
