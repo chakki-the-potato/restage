@@ -5,6 +5,10 @@ public enum WindowWaiter {
     /// 활성화 폴백을 발동하기까지 기다리는 시간.
     static let activationGrace: Duration = .milliseconds(750)
 
+    /// 배치를 시작하기 전에 앱이 자체 레이아웃을 끝내기를 기다리는 시간.
+    /// 기동 직후 크기를 조정하는 중에 배치하면 앱과 서로 덮어쓰기를 반복한다.
+    static let layoutSettleTimeout: Duration = .seconds(2)
+
     /// 크기 고정 창만 보일 때 그것을 최종 후보로 받아들이기까지 기다리는 시간.
     /// 스플래시가 본창으로 교체되는 시간을 벌어준다. 실측상 Discord는 3초 안에 교체된다.
     static let splashGrace: Duration = .seconds(4)
@@ -70,6 +74,7 @@ public enum WindowWaiter {
             window.setFullScreen(false)
             _ = await Polling.settle(timeout: .seconds(3)) { window.currentFrame }
         }
+        _ = await Polling.settle(timeout: layoutSettleTimeout) { window.currentFrame }
     }
 
     /// 크기까지 바꿀 수 있는 창. 배치 대상으로 우선 선택한다.

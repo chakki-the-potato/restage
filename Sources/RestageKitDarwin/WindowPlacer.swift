@@ -5,8 +5,11 @@ import RestageKit
 @MainActor
 public enum WindowPlacer {
     static let tolerance: CGFloat = 2
-    static let maxAttempts = 10
-    static let totalTimeout: Duration = .seconds(6)
+    /// 시도 횟수가 아니라 `totalTimeout`이 주 제약이다. Electron 앱은 기동 중
+    /// 자기 크기를 반복해서 되돌리는데, 한 번 시도가 수십 ms라 횟수를 낮게 잡으면
+    /// 앱이 진정되기 전에 루프가 먼저 끝난다.
+    static let maxAttempts = 40
+    static let totalTimeout: Duration = .seconds(8)
     static let settleTimeout: Duration = .milliseconds(800)
 
     public static func place(_ window: AXWindow, target: CGRect) async -> PlacementResult {
