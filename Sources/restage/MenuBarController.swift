@@ -7,6 +7,8 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(
         withLength: NSStatusItem.variableLength)
     private var isRunning = false
+    private let hotkeys = HotkeyRegistry()
+    private var registrations: [String: HotkeyRegistry.Registration] = [:]
 
     func start() {
         statusItem.button?.image = NSImage(
@@ -19,6 +21,25 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             _ = AccessibilityPermission.requestIfNeeded()
         }
 
+        hotkeys.install { [weak self] workspace in
+            self?.launch(workspace)
+        }
+        reloadHotkeys()
+    }
+
+    /// config의 hotkey를 다시 등록한다.
+    ///
+    /// 메뉴는 열 때마다 다시 만들 수 있지만 단축키 등록은 프로세스 수명에 묶인 자원이라
+    /// 그럴 수 없다. 메뉴를 여는 시점에 config를 다시 읽으므로 그때 함께 갱신한다.
+    private func reloadHotkeys() {
+        let entries = (try? WorkspaceRegistry().list()) ?? []
+        let declared: [(workspace: String, raw: String)] = entries.compactMap { entry in
+            guard entry.error == nil,
+                  let config = try? ConfigLoader.load(path: entry.path),
+                  let raw = config.hotkey else { return nil }
+            return (entry.name, raw)
+        }
+        registrations = hotkeys.reload(declared)
     }
 
     /// 메뉴를 열 때마다 다시 만든다.
@@ -27,6 +48,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     /// 것이 이 도구의 편집 방식이므로 재시작이 필요하면 쓰기 어렵다.
     func menuWillOpen(_ menu: NSMenu) {
         menu.removeAllItems()
+        reloadHotkeys()
 
         let result = Result { try WorkspaceRegistry().list() }
         for entry in MenuContent.entries(for: result) {
@@ -35,13 +57,43 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             item.isEnabled = entry.isEnabled && !isRunning
             item.toolTip = entry.tooltip
             item.target = entry.isEnabled ? self : nil
-            if case .workspace(let name) = entry { item.representedObject = name }
+            if case .workspace(let name) = entry {
+                item.representedObject = name
+                applyHotkey(to: item, workspace: name)
+            }
             menu.addItem(item)
         }
 
         menu.addItem(.separator())
         addAction(to: menu, title: "config 폴더 열기", selector: #selector(revealConfigFolder))
         addAction(to: menu, title: "종료", selector: #selector(quit), keyEquivalent: "q")
+    }
+
+    /// 등록된 단축키는 항목 오른쪽에 기호로 보여주고, 실패한 것은 사유를 툴팁에 붙인다.
+    ///
+    /// `keyEquivalent`로 넣지 않는 이유는 그것이 메뉴 단축키라 실제 전역 등록과 별개이기
+    /// 때문이다. 등록은 Carbon 쪽에서 이미 끝났고 여기서는 표시만 한다.
+    /// `NSMenuItemBadge`는 macOS 14부터라 배포 타겟(13)에서 쓸 수 없어 제목에 덧붙인다.
+    private func applyHotkey(to item: NSMenuItem, workspace: String) {
+        switch registrations[workspace] {
+        case .registered(let spec):
+            item.title = "\(item.title)   \(spec.displayString)"
+        case .invalid(let reason):
+            item.toolTip = reason
+        case .conflicted(let spec):
+            item.toolTip = "단축키 \(spec.displayString)를 등록하지 못했습니다. 다른 앱이 쓰고 있거나 중복입니다"
+        case nil:
+            break
+        }
+    }
+
+    private func launch(_ workspace: String) {
+        guard !isRunning else { return }
+        isRunning = true
+        Task { @MainActor in
+            defer { isRunning = false }
+            await run(workspace)
+        }
     }
 
     private func addAction(
