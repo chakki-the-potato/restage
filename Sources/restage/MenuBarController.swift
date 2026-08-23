@@ -1,4 +1,5 @@
 import AppKit
+import RestageBrand
 import RestageKit
 import RestageKitDarwin
 
@@ -11,8 +12,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     private var registrations: [String: HotkeyRegistry.Registration] = [:]
 
     func start() {
-        statusItem.button?.image = NSImage(
-            systemSymbolName: "rectangle.3.group", accessibilityDescription: "restage")
+        statusItem.button?.image = MenuBarIcon.image()
         let menu = NSMenu()
         menu.delegate = self
         statusItem.menu = menu
