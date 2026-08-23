@@ -1,34 +1,40 @@
-import AppKit
-import RestageKit
+import Foundation
 import RestageKitDarwin
 
-guard AccessibilityPermission.isTrusted() else {
-    print(AccessibilityPermission.onboardingMessage)
-    exit(1)
+let usage = """
+restage — 워크스페이스 복원 도구
+
+사용법:
+  restage probe [--slot <slot>] [--app <name>] [--fullscreen]
+
+옵션:
+  --slot <slot>   배치할 위치. 기본값 left-half
+  --app <name>    단일 앱만 검증. 기본값은 표본 10종 전부
+  --fullscreen    배치 후 전체화면 전환까지 검증
+"""
+
+let arguments = Array(CommandLine.arguments.dropFirst())
+
+guard let command = arguments.first else {
+    print(usage)
+    exit(2)
 }
 
-guard let display = DisplayProvider.primary() else {
-    print("디스플레이 정보를 조회할 수 없습니다")
-    exit(1)
-}
-
-let target = SlotGeometry.frame(
-    for: .leftHalf, in: display.visibleFrame, primaryMaxY: display.primaryMaxY)
-print("target=\(target)")
-
-do {
-    let bundleID = try AppRegistry.bundleID(for: AppID("cursor"))
-    guard let app = AppLauncher.runningApplication(bundleID: bundleID) else {
-        print("cursor가 실행 중이 아닙니다")
-        exit(1)
+switch command {
+case "probe":
+    do {
+        let options = try ProbeOptions.parse(Array(arguments.dropFirst()))
+        let code = await ProbeCommand.run(options)
+        exit(code)
+    } catch {
+        print(error)
+        print("")
+        print(usage)
+        exit(2)
     }
-    let window = try await WindowWaiter.wait(pid: app.processIdentifier, timeout: .seconds(5))
-    print("before=\(window.currentFrame.map(String.init(describing:)) ?? "n/a")")
-    await WindowWaiter.prepareForDesktopPlacement(window)
-    let result = await WindowPlacer.place(window, target: target)
-    print("result=\(result)")
-    print("after=\(window.currentFrame.map(String.init(describing:)) ?? "n/a")")
-} catch {
-    print("실패: \(error)")
-    exit(1)
+default:
+    print("알 수 없는 명령: \(command)")
+    print("")
+    print(usage)
+    exit(2)
 }
