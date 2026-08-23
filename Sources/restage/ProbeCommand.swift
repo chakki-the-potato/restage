@@ -46,7 +46,7 @@ enum ProbeError: Error, CustomStringConvertible {
 
 @MainActor
 enum ProbeCommand {
-    static let windowTimeout: Duration = .seconds(5)
+    static let windowTimeout: Duration = .seconds(15)
     static let terminateTimeout: Duration = .seconds(5)
 
     static func run(_ options: ProbeOptions) async -> Int32 {

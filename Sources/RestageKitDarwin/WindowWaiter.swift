@@ -5,6 +5,10 @@ public enum WindowWaiter {
     /// 활성화 폴백을 발동하기까지 기다리는 시간.
     static let activationGrace: Duration = .milliseconds(750)
 
+    /// 크기 고정 창만 보일 때 그것을 최종 후보로 받아들이기까지 기다리는 시간.
+    /// 스플래시가 본창으로 교체되는 시간을 벌어준다. 실측상 Discord는 3초 안에 교체된다.
+    static let splashGrace: Duration = .seconds(4)
+
     /// 배치 가능한 창이 나타날 때까지 폴링한다.
     /// 조건: AXRole == AXWindow, 크기가 0보다 큼, 최소화 아님.
     /// 반환값은 AX 창 목록의 첫 번째, 즉 가장 최근 활성 창이다.
@@ -17,6 +21,7 @@ public enum WindowWaiter {
     public static func wait(pid: Int32, timeout: Duration) async throws -> AXWindow {
         var lastError: Error?
         var fixedSizeCandidate: AXWindow?
+        var fixedSizeSeenAt: ContinuousClock.Instant?
         var activated = false
         let clock = ContinuousClock()
         let activationDeadline = clock.now.advanced(by: activationGrace)
@@ -25,8 +30,16 @@ public enum WindowWaiter {
             do {
                 let windows = try AXWindow.windows(ofPID: pid)
                 if let window = windows.first(where: isPlaceable) { return window }
-                if fixedSizeCandidate == nil {
-                    fixedSizeCandidate = windows.first(where: isRealWindow)
+
+                if let candidate = windows.first(where: isRealWindow) {
+                    if fixedSizeCandidate == nil {
+                        fixedSizeCandidate = candidate
+                        fixedSizeSeenAt = clock.now
+                    }
+                    if let seenAt = fixedSizeSeenAt,
+                       clock.now >= seenAt.advanced(by: splashGrace) {
+                        return candidate
+                    }
                 }
             } catch {
                 lastError = error
