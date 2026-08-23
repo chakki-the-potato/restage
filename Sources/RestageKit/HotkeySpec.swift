@@ -6,6 +6,16 @@ public enum HotkeyModifier: String, Sendable, CaseIterable {
     case shift
     case command
 
+    /// config 파일에 적는 이름. `HotkeyModifier.named`가 받아들이는 값이어야 한다.
+    public var configName: String {
+        switch self {
+        case .control: return "ctrl"
+        case .option: return "alt"
+        case .shift: return "shift"
+        case .command: return "cmd"
+        }
+    }
+
     /// macOS 관례 표기. 메뉴에 보여줄 때 이 순서로 나열한다.
     public var symbol: String {
         switch self {
@@ -72,6 +82,24 @@ public struct HotkeySpec: Equatable, Sendable {
             .map(\.symbol)
             .joined()
         return symbols + key.uppercased()
+    }
+
+    /// config 파일에 적는 문자열. `parse`의 역이다.
+    public var configString: String {
+        let names = HotkeyModifier.allCases
+            .filter { modifiers.contains($0) }
+            .map(\.configName)
+        return (names + [key]).joined(separator: "+")
+    }
+
+    public init(modifiers: Set<HotkeyModifier>, key: String) {
+        self.modifiers = modifiers
+        self.key = key
+    }
+
+    /// 수식키 없는 조합은 받지 않는다. 전역 단축키로 등록하면 평범한 타자를 가로챈다.
+    public var isUsableAsGlobalHotkey: Bool {
+        !modifiers.isEmpty && Self.isValidKey(key)
     }
 
     private static func isValidKey(_ key: String) -> Bool {
