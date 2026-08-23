@@ -1,24 +1,56 @@
 import Foundation
-import RestageKit
 import RestageKitDarwin
 
-guard let displays = DisplayCatalog.current() else { exit(1) }
-let target = SlotGeometry.frame(
-    for: .leftHalf, in: displays.primary.visibleFrame, primaryMaxY: displays.primary.primaryMaxY)
-print("target=\(target)")
+let usage = """
+restage — 워크스페이스 복원 도구
 
-for name in ["safari", "notion"] {
-    do {
-        let bundleID = try AppRegistry.bundleID(for: AppID(name))
-        guard let app = AppLauncher.runningApplication(bundleID: bundleID) else {
-            print("\(name): 미실행")
-            continue
-        }
-        let pid = app.processIdentifier
-        print("\(name): 창 \(CurrentState.windowCount(pid: pid))개 "
-            + "isPlaced=\(CurrentState.isPlaced(pid: pid, target: target)) "
-            + "isFullScreen=\(CurrentState.isFullScreen(pid: pid, on: displays.primary))")
-    } catch {
-        print("\(name): \(error)")
+사용법:
+  restage open <config.yaml>
+  restage probe [--slot <slot>] [--app <name>] [--fullscreen] [--warm-only]
+
+open 옵션:
+  <config.yaml>   워크스페이스 config 파일 경로
+
+probe 옵션:
+  --slot <slot>   배치할 위치. 기본값 left-half
+  --app <name>    단일 앱만 검증. 기본값은 표본 전부
+  --fullscreen    배치 후 전체화면 전환까지 검증
+  --warm-only     콜드 스타트를 건너뛴다. 앱을 종료하지 않고 현재 상태 그대로 검증
+"""
+
+AppKitBootstrap.ensureGUIApplication()
+
+let arguments = Array(CommandLine.arguments.dropFirst())
+
+guard let command = arguments.first else {
+    print(usage)
+    exit(2)
+}
+
+switch command {
+case "open":
+    guard arguments.count >= 2 else {
+        print("open 뒤에 config 파일 경로가 필요합니다")
+        print("")
+        print(usage)
+        exit(2)
     }
+    let code = await OpenCommand.run(path: arguments[1])
+    exit(code)
+case "probe":
+    do {
+        let options = try ProbeOptions.parse(Array(arguments.dropFirst()))
+        let code = await ProbeCommand.run(options)
+        exit(code)
+    } catch {
+        print(error)
+        print("")
+        print(usage)
+        exit(2)
+    }
+default:
+    print("알 수 없는 명령: \(command)")
+    print("")
+    print(usage)
+    exit(2)
 }
