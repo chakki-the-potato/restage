@@ -10,6 +10,8 @@ public enum ConfigError: Error, CustomStringConvertible {
     case emptyItems(screenID: String)
     case duplicateScreenID(String)
     case anchorNotInItems(screenID: String, anchor: AppID)
+    case directoryNotFound(path: String)
+    case workspaceNotFound(name: String, path: String, available: [String])
 
     public var description: String {
         switch self {
@@ -31,6 +33,19 @@ public enum ConfigError: Error, CustomStringConvertible {
             return "화면 id가 중복됩니다: \(id)"
         case .anchorNotInItems(let screenID, let anchor):
             return "화면 '\(screenID)'의 anchor '\(anchor.rawValue)'가 그 화면의 items에 없습니다"
+        case .directoryNotFound(let path):
+            return """
+                워크스페이스 디렉토리가 없습니다: \(path)
+                mkdir -p \(path) 로 만들고 <이름>.yaml 파일을 두세요
+                """
+        case .workspaceNotFound(let name, let path, let available):
+            let known = available.isEmpty
+                ? "등록된 워크스페이스가 없습니다"
+                : "등록된 워크스페이스: \(available.joined(separator: ", "))"
+            return """
+                '\(name)' 워크스페이스를 찾을 수 없습니다: \(path)
+                \(known)
+                """
         }
     }
 }
