@@ -60,6 +60,11 @@ public enum WindowWaiter {
         if let found { return found }
         if let fixedSizeCandidate { return fixedSizeCandidate }
         if let lastError { throw lastError }
+
+        let existing = WindowInventory.windowCount(pid: pid)
+        if existing > 0 {
+            throw EngineError.windowOnOtherSpace(pid: pid, windowCount: existing)
+        }
         throw EngineError.windowTimeout(pid: pid, seconds: seconds(of: timeout))
     }
 

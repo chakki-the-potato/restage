@@ -4,6 +4,7 @@ public enum EngineError: Error, CustomStringConvertible {
     case applicationNotFound(bundleID: String)
     case launchFailed(bundleID: String, underlying: String)
     case windowTimeout(pid: Int32, seconds: Double)
+    case windowOnOtherSpace(pid: Int32, windowCount: Int)
     case axDisabled
 
     public var description: String {
@@ -18,6 +19,8 @@ public enum EngineError: Error, CustomStringConvertible {
             return "실행 실패: \(bundleID) — \(underlying)"
         case .windowTimeout(let pid, let seconds):
             return "\(seconds)초 안에 창이 뜨지 않았습니다 (pid \(pid))"
+        case .windowOnOtherSpace(let pid, let count):
+            return "창 \(count)개가 다른 Space에 있어 접근할 수 없습니다 (pid \(pid))"
         case .axDisabled:
             return "AX API가 비활성 상태입니다 (kAXErrorAPIDisabled). 접근성 권한을 확인하세요."
         }

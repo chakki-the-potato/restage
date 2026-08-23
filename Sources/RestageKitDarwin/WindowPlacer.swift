@@ -70,6 +70,12 @@ public enum WindowPlacer {
             return .failed(expected: target, actual: nil, reason: "창 좌표를 조회할 수 없습니다")
         }
 
+        if window.isFullScreen {
+            return .constrained(
+                actual: observed, expected: target,
+                reason: "전체화면 상태라 배치할 수 없습니다 (AX로 해제 불가, ctrl+cmd+F로 직접 해제)")
+        }
+
         if !window.isSizeSettable {
             return .constrained(
                 actual: observed, expected: target, reason: "크기를 바꿀 수 없는 창입니다")
@@ -112,7 +118,14 @@ public enum WindowPlacer {
     /// 판별 근거는 "한 축은 요청대로 맞았는데 다른 축만 요청보다 크게 고정된" 상태다.
     /// 한 축이 맞았다는 것은 앱이 크기 변경을 받아들였다는 뜻이므로, 남은 축의 차이는
     /// 우리가 못 맞춘 것이 아니라 앱이 막은 것이다.
+    ///
+    /// 위치가 목표와 다르면 판별하지 않는다. 위치까지 어긋났다는 것은 크기 제약이 아니라
+    /// 다른 문제(전체화면, 다른 Space 등)라는 뜻이고, 그때 최소 크기라고 보고하면
+    /// 원인을 감추는 잘못된 사유가 된다.
     private static func inferredMinimumReason(target: CGRect, observed: CGRect) -> String? {
+        guard abs(observed.minX - target.minX) <= tolerance,
+              abs(observed.minY - target.minY) <= tolerance else { return nil }
+
         let widthStuckLarger = observed.width > target.width + tolerance
         let heightStuckLarger = observed.height > target.height + tolerance
         let widthMatches = abs(observed.width - target.width) <= tolerance
