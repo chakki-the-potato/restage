@@ -5,7 +5,7 @@ import RestageKit
 /// 새 브라우저를 지원하려면 여기에 항목을 추가하면 된다.
 struct BrowserDialect {
     let applicationName: String
-    private let makesWindowWithURL: Bool
+    let makesWindowWithURL: Bool
 
     /// 탭 제어 어휘를 외부에 열어두지 않은 브라우저. Chromium 문법이 통하지 않는다.
     /// 되는 척하지 않고 명확히 실패로 보고하기 위해 목록으로 둔다.
@@ -84,12 +84,12 @@ struct BrowserDialect {
         """
     }
 
-    /// 창 제목과 각 탭 URL을 줄 단위로 돌려준다.
+    /// 창 좌표와 각 탭 URL을 줄 단위로 돌려준다. 앞 네 칸이 bounds다.
     ///
-    /// `readWindowsScript`가 창 id를 쓰는 것과 달리 제목을 쓰는 이유는, 현재 배치를 config로
+    /// `readWindowsScript`가 창 id를 쓰는 것과 달리 좌표를 쓰는 이유는, 현재 배치를 config로
     /// 옮길 때 AX가 본 창과 브라우저가 아는 창을 맞춰야 하는데 둘 사이에 공통된 id가 없기
-    /// 때문이다. 브라우저 창 제목은 활성 탭 제목이라 AX의 `AXTitle`과 같은 값이다.
-    func readWindowTitlesScript() -> String {
+    /// 때문이다. 제목은 두 API가 서로 다르게 주지만 `bounds`는 AX의 위치·크기와 정확히 같다.
+    func readWindowGeometryScript() -> String {
         """
         set fieldSeparator to character id 9
         set lineSeparator to character id 10
@@ -97,7 +97,9 @@ struct BrowserDialect {
         tell application "\(applicationName)"
           repeat with w in windows
             try
-              set out to out & (name of w)
+              set b to bounds of w
+              set out to out & (item 1 of b) & fieldSeparator & (item 2 of b) ¬
+                & fieldSeparator & (item 3 of b) & fieldSeparator & (item 4 of b)
               repeat with t in tabs of w
                 set out to out & fieldSeparator & (URL of t)
               end repeat

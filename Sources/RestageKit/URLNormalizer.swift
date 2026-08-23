@@ -8,6 +8,21 @@ import Foundation
 public enum URLNormalizer {
     private static let defaultScheme = "https://"
 
+    /// config에 담을 만한 주소인지.
+    ///
+    /// 브라우저 내부 페이지는 담지 않는다. Safari의 시작 페이지는 `favorites://`,
+    /// Chrome의 새 탭은 `chrome://newtab/`으로 나오는데, 이런 것을 config에 적으면
+    /// 나중에 `restage open`이 열 수 없는 주소를 열려고 한다.
+    ///
+    /// 스킴이 없으면 담는다. 사용자가 `example.com`이라고 적는 경로를 막지 않기 위해서다.
+    public static func isSavable(_ raw: String) -> Bool {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        guard let range = trimmed.range(of: "://") else { return !trimmed.contains(":") }
+        let scheme = trimmed[trimmed.startIndex..<range.lowerBound].lowercased()
+        return scheme == "http" || scheme == "https"
+    }
+
     public static func normalize(_ raw: String) -> String {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         let withScheme = hasScheme(trimmed) ? trimmed : defaultScheme + trimmed

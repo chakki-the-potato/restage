@@ -4,15 +4,20 @@ import RestageKit
 
 enum RunReport {
     static func render(workspace: String, outcomes: [ItemOutcome]) -> String {
+        let screens = ["SCREEN"] + outcomes.map(\.screenID)
+        let apps = ["APP"] + outcomes.map { $0.app?.rawValue ?? "-" }
+        let screenWidth = width(of: screens)
+        let appWidth = width(of: apps)
+
         var lines: [String] = ["워크스페이스: \(workspace)", ""]
         lines.append(
-            pad("SCREEN", 12) + pad("APP", 12) + pad("RESULT", 18)
+            pad("SCREEN", screenWidth) + pad("APP", appWidth) + pad("RESULT", 18)
             + pad("EXPECTED", 23) + pad("ACTUAL", 23) + "NOTE")
-        lines.append(String(repeating: "-", count: 110))
+        lines.append(String(repeating: "-", count: screenWidth + appWidth + 70))
 
         for outcome in outcomes {
             lines.append(
-                pad(outcome.screenID, 12) + pad(outcome.app?.rawValue ?? "-", 12)
+                pad(outcome.screenID, screenWidth) + pad(outcome.app?.rawValue ?? "-", appWidth)
                 + pad(outcome.status.rawValue, 18)
                 + pad(outcome.expected.map(format) ?? "-", 23)
                 + pad(outcome.actual.map(format) ?? "-", 23)
@@ -38,6 +43,12 @@ enum RunReport {
 
     static func hasFailure(_ outcomes: [ItemOutcome]) -> Bool {
         outcomes.contains { !$0.status.isSuccess }
+    }
+
+    /// 열 너비를 내용에 맞춘다. 앱 이름은 사용자 컴퓨터에서 오는 값이라
+    /// "Google Chrome"이나 "Microsoft PowerPoint"처럼 길 수 있다.
+    private static func width(of values: [String]) -> Int {
+        (values.map(\.count).max() ?? 0) + 2
     }
 
     /// 열 너비를 넘는 값이 와도 최소 한 칸은 띄운다. 그러지 않으면 긴 앱 이름 뒤에
