@@ -76,6 +76,16 @@ enum ProbeReport {
         return "\(parts.joined(separator: " / "))  총 \(rows.count)건 — \(verdict)"
     }
 
+    /// 전체화면 해제 실패는 그 자체로 실패다. 되돌리지 못하면 앱이 전용 Space에 남아
+    /// 이후 측정과 사용자 환경을 모두 오염시킨다.
+    static func markRestoreFailure(_ row: ProbeRow) -> ProbeRow {
+        ProbeRow(
+            app: row.app, start: row.start, label: "FAIL",
+            expected: row.expected, actual: row.actual,
+            attempts: row.attempts, elapsedMS: row.elapsedMS,
+            note: "전체화면 해제 실패 (Space 잔류). \(row.note)")
+    }
+
     static func hasFailure(_ rows: [ProbeRow]) -> Bool {
         rows.contains { $0.label == "FAIL" }
     }

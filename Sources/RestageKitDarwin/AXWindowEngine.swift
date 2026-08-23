@@ -50,8 +50,9 @@ public struct AXWindowEngine: WindowEngine {
         return await FullScreenController.enter(axWindow)
     }
 
-    public func exitFullscreen(_ window: WindowHandle) async {
-        guard let axWindow = window as? AXWindow else { return }
-        await FullScreenController.exit(axWindow)
+    /// 전체화면을 해제하고 성공 여부를 반환한다. 실패하면 앱이 전용 Space에 남는다.
+    public func exitFullscreen(_ window: WindowHandle) async -> Bool {
+        guard let axWindow = window as? AXWindow else { return false }
+        return await FullScreenController.exit(axWindow)
     }
 }

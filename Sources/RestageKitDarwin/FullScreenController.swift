@@ -55,23 +55,27 @@ enum FullScreenController {
     /// 진입과 대칭이어야 한다. 앱을 최전면으로 올리고 대상 창을 주 창으로 지정하지 않으면
     /// `AXFullScreen = false` 설정이 무시되고, 앱이 전체화면 Space에 남는다.
     /// 이 대칭이 깨져 있던 동안 probe가 검증한 앱마다 Space를 하나씩 남겼다.
-    static func exit(_ window: AXWindow) async {
-        guard window.isFullScreen else { return }
+    @discardableResult
+    static func exit(_ window: AXWindow) async -> Bool {
+        guard window.isFullScreen else { return true }
         let before = window.currentFrame
 
         await raiseAndWait(pid: window.pid)
         window.setMain(true)
         window.setFullScreen(false)
 
-        _ = await Polling.poll(timeout: transitionTimeout) {
+        let cleared = await Polling.poll(timeout: transitionTimeout) {
             window.isFullScreen ? nil : true
         }
+        guard cleared == true else { return false }
+
         if let before {
             _ = await Polling.poll(timeout: transitionTimeout) {
                 window.currentFrame.map { $0 != before } == true ? true : nil
             }
         }
         _ = await Polling.settle(timeout: transitionTimeout) { window.currentFrame }
+        return !window.isFullScreen
     }
 
     /// 앱을 최전면으로 올리고 실제로 올라올 때까지 기다린다.
