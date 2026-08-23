@@ -16,6 +16,13 @@ private func resolve(_ yaml: String, _ displays: DisplayList) throws -> Resolved
         try ConfigLoader.validated(WorkspaceConfig.decode(yaml: yaml)), displays: displays)
 }
 
+private func firstPlacement(_ screen: ScreenPlan) -> Placement? {
+    for item in screen.items {
+        if case .place(let placement) = item { return placement }
+    }
+    return nil
+}
+
 @Test func resolvesBuiltinToPrimary() throws {
     let result = try resolve("""
     workspace: dev
@@ -25,7 +32,7 @@ private func resolve(_ yaml: String, _ displays: DisplayList) throws -> Resolved
         items: [{type: app, app: safari, slot: left-half}]
     """, twoDisplays)
     #expect(result.screens.count == 1)
-    #expect(result.screens[0].placements[0].target
+    #expect(firstPlacement(result.screens[0])!.target
         == SlotGeometry.frame(for: .leftHalf, in: builtin.visibleFrame, primaryMaxY: 1117))
 }
 
@@ -49,7 +56,7 @@ private func resolve(_ yaml: String, _ displays: DisplayList) throws -> Resolved
         items: [{type: app, app: safari, slot: full}]
     """, twoDisplays)
     #expect(result.screens[0].display.visibleFrame == external.visibleFrame)
-    #expect(result.screens[0].placements[0].target
+    #expect(firstPlacement(result.screens[0])!.target
         == SlotGeometry.frame(for: .full, in: external.visibleFrame, primaryMaxY: 1117))
 }
 
@@ -61,7 +68,7 @@ private func resolve(_ yaml: String, _ displays: DisplayList) throws -> Resolved
         display: external-1
         items: [{type: app, app: safari, slot: full}]
     """, twoDisplays)
-    #expect(result.screens[0].placements[0].target.minY < 0)
+    #expect(firstPlacement(result.screens[0])!.target.minY < 0)
 }
 
 @Test func skipsScreenWhenDisplayMissing() throws {
@@ -96,7 +103,7 @@ private func resolve(_ yaml: String, _ displays: DisplayList) throws -> Resolved
     #expect(result.screens.map(\.id) == ["code"])
 }
 
-@Test func browserItemsBecomeUnsupported() throws {
+@Test func browserItemsBecomeTabPlans() throws {
     let result = try resolve("""
     workspace: dev
     screens:
@@ -105,11 +112,40 @@ private func resolve(_ yaml: String, _ displays: DisplayList) throws -> Resolved
           - {type: app, app: safari, slot: left-half}
           - type: browser
             app: chrome
+            tabs: [example.com/a, https://example.com/b/]
+    """, singleDisplay)
+    #expect(result.screens[0].items.count == 2)
+    guard case .tabs(let plan) = result.screens[0].items[1] else {
+        Issue.record("tabs 항목이 아님")
+        return
+    }
+    #expect(plan.app == AppID("chrome"))
+    #expect(plan.window == .separate)
+    #expect(plan.slot == nil)
+    #expect(plan.target == nil)
+    #expect(plan.tabs == ["https://example.com/a", "https://example.com/b"])
+}
+
+@Test func browserSlotProducesTarget() throws {
+    let result = try resolve("""
+    workspace: dev
+    screens:
+      - id: web
+        items:
+          - type: browser
+            app: safari
+            window: shared
+            slot: right-half
             tabs: [https://example.com]
     """, singleDisplay)
-    #expect(result.screens[0].placements.count == 1)
-    #expect(result.screens[0].unsupported.count == 1)
-    #expect(result.screens[0].unsupported[0].app == AppID("chrome"))
+    guard case .tabs(let plan) = result.screens[0].items[0] else {
+        Issue.record("tabs 항목이 아님")
+        return
+    }
+    #expect(plan.window == .shared)
+    #expect(plan.slot == .rightHalf)
+    #expect(plan.target
+        == SlotGeometry.frame(for: .rightHalf, in: builtin.visibleFrame, primaryMaxY: 1117))
 }
 
 @Test func preservesItemOrder() throws {
@@ -122,7 +158,7 @@ private func resolve(_ yaml: String, _ displays: DisplayList) throws -> Resolved
           - {type: app, app: iterm, slot: right-half}
           - {type: app, app: notion, slot: q1}
     """, singleDisplay)
-    #expect(result.screens[0].placements.map(\.app.rawValue) == ["safari", "iterm", "notion"])
+    #expect(result.screens[0].items.map(\.app.rawValue) == ["safari", "iterm", "notion"])
 }
 
 @Test func carriesModeAndAnchor() throws {

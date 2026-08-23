@@ -84,14 +84,24 @@ public struct AppItem: Sendable, Equatable {
     public let slot: Slot
 }
 
+public enum BrowserWindowMode: String, Decodable, Sendable {
+    /// 워크스페이스 전용 창. config의 첫 URL을 첫 탭으로 가진 창을 찾는다.
+    case separate
+    /// 사용자 창을 빌려 쓴다. 맨 앞 창에 없는 탭만 추가한다.
+    case shared
+}
+
 public struct BrowserItem: Sendable, Equatable {
     public let app: AppID
+    public let window: BrowserWindowMode
+    /// 없으면 창 크기와 위치를 건드리지 않는다.
+    public let slot: Slot?
     public let tabs: [String]
 }
 
 extension ItemConfig: Decodable {
     private enum Keys: String, CodingKey {
-        case type, app, slot, tabs
+        case type, app, slot, tabs, window
     }
 
     public init(from decoder: Decoder) throws {
@@ -105,7 +115,10 @@ extension ItemConfig: Decodable {
             self = .app(AppItem(app: app, slot: slot))
         case "browser":
             let tabs = try container.decodeIfPresent([String].self, forKey: .tabs) ?? []
-            self = .browser(BrowserItem(app: app, tabs: tabs))
+            let window = try container.decodeIfPresent(
+                BrowserWindowMode.self, forKey: .window) ?? .separate
+            let slot = try container.decodeIfPresent(Slot.self, forKey: .slot)
+            self = .browser(BrowserItem(app: app, window: window, slot: slot, tabs: tabs))
         default:
             throw ConfigError.unknownItemType(type)
         }

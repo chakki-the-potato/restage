@@ -22,24 +22,26 @@ public enum WorkspaceResolver {
     }
 
     private static func plan(for screen: ScreenConfig, on display: DisplayInfo) -> ScreenPlan {
-        var placements: [Placement] = []
-        var unsupported: [UnsupportedItem] = []
-
-        for item in screen.items {
+        let items = screen.items.map { item -> PlannedItem in
             switch item {
             case .app(let app):
                 let target = SlotGeometry.frame(
                     for: app.slot, in: display.visibleFrame, primaryMaxY: display.primaryMaxY)
-                placements.append(Placement(app: app.app, slot: app.slot, target: target))
+                return .place(Placement(app: app.app, slot: app.slot, target: target))
             case .browser(let browser):
-                unsupported.append(UnsupportedItem(
-                    app: browser.app, reason: "브라우저 탭 제어는 아직 구현되지 않았습니다"))
+                let target = browser.slot.map {
+                    SlotGeometry.frame(
+                        for: $0, in: display.visibleFrame, primaryMaxY: display.primaryMaxY)
+                }
+                return .tabs(TabPlan(
+                    app: browser.app, window: browser.window, slot: browser.slot,
+                    target: target, tabs: browser.tabs.map(URLNormalizer.normalize)))
             }
         }
 
         return ScreenPlan(
             id: screen.id, display: display, mode: screen.mode,
-            anchor: screen.anchor, placements: placements, unsupported: unsupported)
+            anchor: screen.anchor, items: items)
     }
 
     private static func display(

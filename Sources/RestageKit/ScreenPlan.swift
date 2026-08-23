@@ -24,14 +24,36 @@ public struct Placement: Sendable, Equatable {
     }
 }
 
-/// 이번 스코프에서 실행하지 않는 항목.
-public struct UnsupportedItem: Sendable, Equatable {
+/// 브라우저 항목의 해석 결과. tabs는 정규화되어 있다.
+public struct TabPlan: Sendable, Equatable {
     public let app: AppID
-    public let reason: String
+    public let window: BrowserWindowMode
+    public let slot: Slot?
+    /// slot이 있을 때만 값이 있다.
+    public let target: CGRect?
+    public let tabs: [String]
 
-    public init(app: AppID, reason: String) {
+    public init(
+        app: AppID, window: BrowserWindowMode, slot: Slot?, target: CGRect?, tabs: [String]
+    ) {
         self.app = app
-        self.reason = reason
+        self.window = window
+        self.slot = slot
+        self.target = target
+        self.tabs = tabs
+    }
+}
+
+/// 화면의 항목 하나. config 배열 순서를 그대로 유지한다.
+public enum PlannedItem: Sendable, Equatable {
+    case place(Placement)
+    case tabs(TabPlan)
+
+    public var app: AppID {
+        switch self {
+        case .place(let placement): return placement.app
+        case .tabs(let plan): return plan.app
+        }
     }
 }
 
@@ -40,8 +62,7 @@ public struct ScreenPlan: Sendable {
     public let display: DisplayInfo
     public let mode: ScreenMode
     public let anchor: AppID?
-    public let placements: [Placement]
-    public let unsupported: [UnsupportedItem]
+    public let items: [PlannedItem]
 }
 
 public struct SkippedScreen: Sendable, Equatable {

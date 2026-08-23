@@ -34,28 +34,31 @@ public struct WorkspaceRunner {
 
         // 실행은 먼저 전부 시도해 여러 앱의 기동 시간이 겹치게 하고,
         // 보고는 선언 순서대로 낸다.
-        for placement in screen.placements {
+        for item in screen.items {
+            guard handles[item.app] == nil, launchFailures[item.app] == nil else { continue }
             do {
-                handles[placement.app] = try await engine.launch(placement.app)
+                handles[item.app] = try await engine.launch(item.app)
             } catch {
-                launchFailures[placement.app] = String(describing: error)
+                launchFailures[item.app] = String(describing: error)
             }
         }
 
-        for placement in screen.placements {
-            if let reason = launchFailures[placement.app] {
+        for item in screen.items {
+            if let reason = launchFailures[item.app] {
                 outcomes.append(ItemOutcome(
-                    screenID: screen.id, app: placement.app, status: .failed,
-                    expected: placement.target, detail: reason))
+                    screenID: screen.id, app: item.app, status: .failed, detail: reason))
                 continue
             }
-            guard let handle = handles[placement.app] else { continue }
-            outcomes.append(await apply(placement, handle: handle, screen: screen))
-        }
+            guard let handle = handles[item.app] else { continue }
 
-        for item in screen.unsupported {
-            outcomes.append(ItemOutcome(
-                screenID: screen.id, app: item.app, status: .skipped, detail: item.reason))
+            switch item {
+            case .place(let placement):
+                outcomes.append(await apply(placement, handle: handle, screen: screen))
+            case .tabs(let plan):
+                outcomes.append(ItemOutcome(
+                    screenID: screen.id, app: plan.app, status: .skipped,
+                    detail: "브라우저 탭 제어는 아직 구현되지 않았습니다"))
+            }
         }
 
         if let anchor = screen.anchor, let handle = handles[anchor] {
