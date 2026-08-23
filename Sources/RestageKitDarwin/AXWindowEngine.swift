@@ -17,9 +17,9 @@ public struct AXWindowEngine: WindowEngine {
     }
 
     public func waitForWindow(
-        _ handle: ProcessHandle, timeout: Duration
+        _ handle: ProcessHandle, selector: WindowSelector, timeout: Duration
     ) async throws -> WindowHandle {
-        try await WindowWaiter.wait(pid: handle.pid, timeout: timeout)
+        try await WindowWaiter.wait(pid: handle.pid, timeout: timeout, selector: selector)
     }
 
     public func place(

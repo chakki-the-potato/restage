@@ -51,6 +51,7 @@ public struct AXWindow: WindowHandle {
     }
 
     public var role: String? { string(AXAttributes.role) }
+    public var title: String? { string(AXAttributes.title) }
     public var minSize: CGSize? { size(AXAttributes.minSize) }
     var isMinimized: Bool { bool(AXAttributes.minimized) ?? false }
     var isFullScreen: Bool { bool(AXAttributes.fullScreen) ?? false }

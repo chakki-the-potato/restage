@@ -111,7 +111,8 @@ enum ProbeCommand {
     ) async -> ProbeRow {
         do {
             let handle = try await engine.launch(app)
-            let window = try await engine.waitForWindow(handle, timeout: windowTimeout)
+            let window = try await engine.waitForWindow(
+                handle, selector: .mostRecentlyActive, timeout: windowTimeout)
             let result = await engine.place(window, slot: options.slot, display: display)
 
             guard options.includeFullScreen, result.isPass else {
