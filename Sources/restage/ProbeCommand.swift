@@ -26,7 +26,13 @@ struct ProbeOptions {
                 guard index < arguments.count else {
                     throw ProbeError.usage("--app 뒤에 앱 이름이 필요합니다")
                 }
-                options.apps = [AppID(arguments[index])]
+                let requested = AppID(arguments[index])
+                guard !AppRegistry.isProtected(requested) else {
+                    throw ProbeError.usage(
+                        "'\(requested.rawValue)'는 보호된 앱이라 probe로 검증할 수 없습니다. "
+                        + "probe는 콜드 스타트를 위해 앱을 종료합니다")
+                }
+                options.apps = [requested]
             case "--fullscreen":
                 options.includeFullScreen = true
             case "--warm-only":
