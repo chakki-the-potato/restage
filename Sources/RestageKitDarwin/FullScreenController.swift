@@ -50,11 +50,14 @@ enum FullScreenController {
             reason: "전체화면 전환이 완료되지 않았습니다")
     }
 
-    /// 전체화면을 해제한다.
+    /// 전체화면을 해제한다. 대부분 실패하며, 그것이 정상이다.
     ///
-    /// 진입과 대칭이어야 한다. 앱을 최전면으로 올리고 대상 창을 주 창으로 지정하지 않으면
-    /// `AXFullScreen = false` 설정이 무시되고, 앱이 전체화면 Space에 남는다.
-    /// 이 대칭이 깨져 있던 동안 probe가 검증한 앱마다 Space를 하나씩 남겼다.
+    /// 앱이 전체화면이 되면 macOS가 전용 Space로 옮긴다. 화면은 그 Space로 전환되지 않고,
+    /// AX는 현재 Space의 창만 열거하므로 해제할 창에 도달할 수 없다. `AXFrontmost`로
+    /// 앱을 최전면으로 만들어도 Space는 바뀌지 않는다. 즉 AX만으로 전체화면은 편도다.
+    ///
+    /// 이 함수는 아직 창에 도달할 수 있는 경우에만 성공한다. 실패는 호출자가 사용자에게
+    /// 알리기 위한 신호이지 재시도할 대상이 아니다.
     @discardableResult
     static func exit(_ window: AXWindow) async -> Bool {
         guard window.isFullScreen else { return true }

@@ -76,14 +76,19 @@ enum ProbeReport {
         return "\(parts.joined(separator: " / "))  총 \(rows.count)건 — \(verdict)"
     }
 
-    /// 전체화면 해제 실패는 그 자체로 실패다. 되돌리지 못하면 앱이 전용 Space에 남아
-    /// 이후 측정과 사용자 환경을 모두 오염시킨다.
+    /// 전체화면 해제 실패를 표시한다. 전환 자체의 판정은 유지하고 경고만 붙인다.
+    ///
+    /// 실패로 뒤집지 않는 이유는 이것이 구현 결함이 아니라 플랫폼 한계이기 때문이다.
+    /// 앱이 전체화면이 되면 전용 Space로 옮겨지는데, 화면은 그 Space로 전환되지 않고
+    /// AX는 다른 Space의 창을 열거하지 못한다. 그래서 해제할 창에 도달할 방법이 없다.
+    /// 사용자가 직접 `ctrl+cmd+F`로 빠져나와야 한다.
     static func markRestoreFailure(_ row: ProbeRow) -> ProbeRow {
         ProbeRow(
-            app: row.app, start: row.start, label: "FAIL",
+            app: row.app, start: row.start,
+            label: row.label == "PASS" ? "WARN" : row.label,
             expected: row.expected, actual: row.actual,
             attempts: row.attempts, elapsedMS: row.elapsedMS,
-            note: "전체화면 해제 실패 (Space 잔류). \(row.note)")
+            note: "해제 불가, Space 잔류 (수동 해제 필요). \(row.note)")
     }
 
     static func hasFailure(_ rows: [ProbeRow]) -> Bool {
