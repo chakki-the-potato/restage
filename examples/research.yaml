@@ -1,0 +1,13 @@
+workspace: research
+screens:
+  - id: web
+    display: builtin
+    mode: desktop
+    items:
+      - type: browser
+        app: safari
+        window: separate
+        slot: right-half
+        tabs:
+          - https://example.com/
+          - https://example.org/
