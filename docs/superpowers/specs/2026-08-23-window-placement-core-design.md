@@ -4,6 +4,12 @@
 스코프: 전체 스펙 8절 작업 순서의 1~2단계
 상태: 승인됨
 
+> **이후 변경 (2026-08-24)**
+> `AppRegistry`는 삭제되었고 `InstalledApps`가 그 자리를 대신한다. 고정 매핑 대신 설치된 앱을
+> 검색해 이름을 해석한다. `probeSample`과 `protected`도 없앴다. 이유와 측정값은
+> [dynamic-apps-and-new-command-results](../plans/2026-08-24-dynamic-apps-and-new-command-results.md)에 있다.
+> `bundle ID는 한 파일에만 존재한다`는 규칙은 그대로이며, 그 파일이 `InstalledApps.swift`로 옮겨졌다.
+
 ## 1. 목표
 
 접근성 권한 1회 승인으로, 지정한 앱을 지정한 slot에 배치하고 네이티브 전체화면으로 전환하는 엔진 코어를 만든다.
