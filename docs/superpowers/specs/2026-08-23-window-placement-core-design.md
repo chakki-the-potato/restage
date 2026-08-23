@@ -10,8 +10,8 @@
 
 완료 기준은 두 단계로 나뉜다.
 
-- 1단계: 검증 표본 10종 × (콜드 스타트, 웜 스타트) × `left-half` = 20케이스가 전부 `PASS` 또는 사유가 명시된 `CONSTRAINED`.
-- 2단계: 같은 10종에 대해 `fullscreen` 20케이스 추가 통과.
+- 1단계: 검증 표본 9종 × (콜드 스타트, 웜 스타트) × `left-half` = 18케이스가 전부 `PASS` 또는 사유가 명시된 `CONSTRAINED`.
+- 2단계: 같은 9종에 대해 `fullscreen` 18케이스 추가 통과.
 
 이 범위에는 YAML 파서, 화면 단위 실행 루프, 브라우저 탭 제어, 메뉴바 UI, 단축키가 **포함되지 않는다**. 그것들은 후속 사이클에서 별도 스펙으로 다룬다.
 
@@ -179,8 +179,8 @@ Electron 기반 앱은 set이 성공한 뒤 자기 렌더러가 뒤늦게 크기
 검증은 XCTest가 아니라 배포 바이너리 자신의 서브커맨드로 수행한다. XCTest는 `xctest` 러너 프로세스가 실행하는데 이 바이너리는 빌드마다 경로와 서명이 바뀌어 TCC 승인이 계속 무효화되고, 결국 배포물과 다른 조건에서 검증하게 되기 때문이다. probe를 본체 바이너리에 두면 권한이 한 번만 필요하고, 검증 코드가 실제 배포 경로와 동일한 코드를 탄다.
 
 ```
-restage probe --slot left-half                    표본 10종 전부, 콜드와 웜 각각
-restage probe --app cursor --slot q1              단일 앱
+restage probe --slot left-half                    표본 9종 전부, 콜드와 웜 각각
+restage probe --app notion --slot q1              단일 앱
 restage probe --slot left-half --fullscreen       배치 후 전체화면까지
 ```
 
@@ -199,13 +199,14 @@ restage probe --slot left-half --fullscreen       배치 후 전체화면까지
 | Xcode | `com.apple.dt.Xcode` | 느린 기동, waitForWindow 타임아웃 경계 |
 | IINA | `com.colliderli.iina` | 미디어 앱, 종횡비 제약 |
 | Google Chrome | `com.google.Chrome` | Chromium, Electron과 다른 창 관리 |
-| Cursor | `com.todesktop.230313mzl4w4u92` | Electron, 자가 리사이즈 |
 | Discord | `com.hnc.Discord` | Electron, 최소 너비 제약 (CONSTRAINED 후보) |
 | Notion | `notion.id` | Electron |
 | Claude | `com.anthropic.claudefordesktop` | Electron |
 | KakaoTalk | `com.kakao.KakaoTalkMac` | 비표준 창 구조, AXRole 필터링 검증 |
 
-`AppRegistry`는 이 매핑을 보유하며, 논리 이름(`safari`, `cursor` 등)으로 조회한다.
+`AppRegistry`는 이 매핑을 보유하며, 논리 이름(`safari`, `chrome` 등)으로 조회한다.
+
+Cursor는 매핑에는 두되 표본에서는 제외한다. probe의 콜드 스타트가 대상 앱을 종료하는데, 이 저장소의 개발이 Cursor 안에서 이뤄지므로 자기 자신을 죽이게 된다. Electron 자가 리사이즈는 Discord, Notion, Claude 3종이 덮는다.
 
 측정 중에는 Rectangle을 비활성화한다. 창 관리자가 배치 직후 창을 다시 잡으면 측정 결과가 오염된다.
 
