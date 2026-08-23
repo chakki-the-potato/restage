@@ -60,9 +60,41 @@ ln -s "$PWD/.build/release/restage" /usr/local/bin/restage
 
 권한이 없으면 `restage`가 안내 메시지를 출력하고 멈춘다.
 
-## 워크스페이스 작성
+## 워크스페이스 만들기
 
-config는 `~/.config/restage/<이름>.yaml`에 둔다.
+창을 원하는 대로 배치해두고 명령 하나면 된다.
+
+```bash
+restage new dev
+```
+
+지금 열린 창을 읽어 이렇게 보여준다.
+
+```
+현재 창 배치를 읽었습니다.
+
+  main
+    1. Safari         왼쪽 절반   탭 2개
+    2. Notion         오른쪽 절반
+  external-1
+    3. iTerm          좌하?
+
+  ? 는 자리가 애매하다는 뜻입니다. 번호를 눌러 직접 고르세요.
+[Enter] 저장   [숫자] 자리 바꾸기   [-숫자] 제외   [+] 앱 추가   [w] 웹 추가   [q] 취소
+```
+
+Enter를 누르면 `~/.config/restage/dev.yaml`이 만들어진다.
+
+- 브라우저는 **열려 있는 탭까지 함께 담는다.** 시작 페이지나 새 탭은 담지 않는다
+- 자리가 애매하면 `?`가 붙는다. **조용히 추측하지 않는다.** 번호를 눌러 직접 고른다
+- 안 켜둔 앱은 `+`로, 지금 안 열려 있는 URL은 `w`로 추가한다
+- 좌표가 아니라 `left-half` 같은 이름으로 저장된다
+
+**현재 Space에 보이는 창만 읽는다.** 다른 데스크탑에 있거나 전체화면인 창은 보이지 않는다. macOS 제약이라 넘을 수 없다.
+
+## config 직접 쓰기
+
+`restage new` 없이 손으로 써도 된다. config는 `~/.config/restage/<이름>.yaml`에 둔다.
 
 ```bash
 mkdir -p ~/.config/restage
@@ -126,23 +158,34 @@ items:
 
 없으면 가장 최근 활성 창을 고른다.
 
-### 지원하는 앱 이름
+### 앱 이름
 
-`app:`에 적는 이름은 논리 이름이며 `Sources/RestageKitDarwin/AppRegistry.swift`에 매핑되어 있다.
+**설치된 앱이면 무엇이든 쓸 수 있다.** Finder에 보이는 이름을 그대로 적는다.
+
+```yaml
+- {type: app, app: Figma,           slot: left-half}
+- {type: app, app: Microsoft Word,  slot: right-half}
+- {type: app, app: KakaoTalk,       slot: q4}
+```
+
+대소문자를 가리지 않고, 짧은 이름도 알아듣는다. `chrome`은 `Google Chrome`을, `edge`는 `Microsoft Edge`를 가리킨다. 정확히 일치하는 이름이 있으면 항상 그쪽이 이긴다.
+
+이름이 여럿에 걸리면 후보를 알려주고 멈춘다.
 
 ```
-safari  iterm  xcode  iina  chrome  cursor  discord  notion  claude  kakaotalk
+'microsoft'에 해당하는 앱이 여럿입니다: Microsoft Edge, Microsoft Word
 ```
 
-여기 없는 앱을 쓰려면 그 파일에 bundle ID를 추가한다. bundle ID는 다음으로 확인한다.
+없는 이름이면 비슷한 것을 제안한다.
 
-```bash
-mdls -name kMDItemCFBundleIdentifier -r /Applications/앱이름.app
+```
+'Noton'이라는 이름의 앱이 설치되어 있지 않습니다. 혹시 이건가요: Notion
 ```
 
 ## 사용법
 
 ```bash
+restage new dev               # 현재 창 배치로 새로 만들기
 restage open dev              # 이름으로
 restage open ./my.yaml        # 경로로
 restage list                  # 등록된 워크스페이스
@@ -201,7 +244,11 @@ macOS가 허용하지 않아 생기는 제약이 대부분이다.
 
 **브라우저 탭 순서는 첫 실행에만 정확하다.** 이후 추가되는 탭은 창 끝에 붙는다. 순서를 보장하려면 기존 탭을 닫아야 하는데 사용자 작업을 지우게 되므로 그렇게 하지 않는다.
 
-**브라우저는 Chrome과 Safari만 지원한다.** 브라우저 탭 제어에는 Apple Events 권한이 대상 앱별로 최초 1회 필요하다.
+**Firefox 계열은 탭을 다룰 수 없다.** 탭 제어 어휘를 외부에 열어두지 않기 때문이다. 창 배치는 되지만 `tabs`는 실패로 보고한다.
+
+Safari와 Chromium 계열(Chrome, Edge, Brave, Arc, Whale, Vivaldi)은 같은 경로로 동작한다. 다만 **실제로 검증한 것은 Safari와 Chrome 둘뿐이다.** 나머지는 같은 코드를 타지만 확인하지 않았다.
+
+브라우저 탭 제어에는 Apple Events 권한이 대상 앱별로 최초 1회 필요하다.
 
 **화면이 잠겨 있으면 동작하지 않는다.** 잠긴 상태에서는 접근성 API가 창을 조회하지 못한다. `restage`가 이를 감지해 사유를 밝히고 멈춘다.
 
@@ -209,24 +256,28 @@ macOS가 허용하지 않아 생기는 제약이 대부분이다.
 
 ```bash
 swift build
-swift test        # 97개
+swift test        # 125개
 ```
 
 검증용 하네스가 있다.
 
 ```bash
-restage probe --slot left-half --warm-only
+restage probe --slot left-half
 ```
 
-실제 앱을 띄워 배치 성공률을 측정한다. `--warm-only` 없이 실행하면 콜드 스타트를 재현하려고 **앱을 종료했다 다시 띄운다.** 작업 중인 앱이 있다면 주의한다.
+실행 중인 앱을 대상으로 배치 성공률을 측정한다. 기본값은 아무 앱도 종료하지 않는다.
 
-`AppRegistry.protected`에 있는 앱은 probe 대상에서 제외된다.
+콜드 스타트까지 보려면 `--cold`를 준다. 대상 앱을 **강제 종료하므로** `--app`으로 하나만 지정해야 하고, 실행 전에 확인을 받는다.
+
+```bash
+restage probe --app Safari --cold
+```
 
 ### 저장소 구성
 
 ```
 Sources/RestageKit/         OS에 의존하지 않는 스키마·검증·좌표 계산
-Sources/RestageKitDarwin/   AX·AppKit·AppleScript 구현
+Sources/RestageKitDarwin/   AX·AppKit·AppleScript 구현, 설치된 앱 검색
 Sources/restage/            CLI와 메뉴바
 docs/superpowers/           설계 스펙과 검증 기록
 ```

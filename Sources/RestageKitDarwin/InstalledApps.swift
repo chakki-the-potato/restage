@@ -124,7 +124,7 @@ public enum InstalledApps {
     /// 단계를 나눈 이유는 `chrome`이 `Google Chrome`을, `edge`가 `Microsoft Edge`를 가리키게
     /// 하면서도 `Claude`가 `Claude Code Notifier`로 새지 않게 하기 위해서다. 정확히 일치하는
     /// 이름이 있으면 항상 그쪽이 이긴다.
-    public static func match(_ query: String, in apps: [InstalledApp]) -> MatchResult {
+    public nonisolated static func match(_ query: String, in apps: [InstalledApp]) -> MatchResult {
         let trimmed = query.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return .notFound }
         let lowered = trimmed.lowercased()
@@ -152,15 +152,15 @@ public enum InstalledApps {
         return .notFound
     }
 
-    private static func single(_ apps: [InstalledApp]) -> InstalledApp? {
+    private nonisolated static func single(_ apps: [InstalledApp]) -> InstalledApp? {
         apps.count == 1 ? apps[0] : nil
     }
 
-    private static func normalized(_ text: String) -> String {
+    private nonisolated static func normalized(_ text: String) -> String {
         text.lowercased().filter { $0.isLetter || $0.isNumber }
     }
 
-    private static func words(_ text: String) -> Set<String> {
+    private nonisolated static func words(_ text: String) -> Set<String> {
         Set(text.lowercased().split { !($0.isLetter || $0.isNumber) }.map(String.init))
     }
 
