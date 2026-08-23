@@ -47,11 +47,15 @@ public enum WindowPlacer {
         return classifyFailure(window, target: target, observed: lastObserved)
     }
 
-    /// 적용 순서. 멀티 디스플레이 지원 시 position → size → position 3단으로 교체한다.
-    /// 지금은 주 디스플레이만 다루므로 화면 경계 clamp가 발생하지 않는다.
+    /// position → size → position 3단 적용.
+    ///
+    /// 크기부터 적용하면 창이 아직 원래 디스플레이에 있어 그 화면 경계로 clamp된다.
+    /// 첫 position으로 목표 화면에 진입시키고, size를 적용한 뒤, size 적용 중 밀린
+    /// position을 다시 맞춘다. 단일 디스플레이에서는 2단 적용과 결과가 같다.
     private static func apply(_ target: CGRect, to window: AXWindow) {
         window.setPosition(target.origin)
         window.setSize(target.size)
+        window.setPosition(target.origin)
     }
 
     private static func matches(_ actual: CGRect, _ target: CGRect) -> Bool {
