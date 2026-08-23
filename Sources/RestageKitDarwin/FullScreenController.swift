@@ -1,3 +1,4 @@
+import AppKit
 import CoreGraphics
 import Foundation
 import RestageKit
@@ -17,10 +18,17 @@ enum FullScreenController {
             return .ok(actual: before ?? .zero, attempts: 0, elapsed: .zero, warnings: [])
         }
 
+        guard window.hasFullScreenButton else {
+            return .constrained(
+                actual: before ?? .zero,
+                expected: before ?? .zero,
+                reason: "전체화면을 지원하지 않는 창입니다")
+        }
+
         let clock = ContinuousClock()
         let start = clock.now
 
-        AXWindow.setApplicationFrontmost(pid: window.pid)
+        await raiseAndWait(pid: window.pid)
 
         if window.setFullScreen(true), await confirmed(window, changedFrom: before) {
             return success(window, start: start, attempts: 1)
@@ -29,13 +37,6 @@ enum FullScreenController {
         if window.isFullScreen { window.setFullScreen(false) }
         _ = await Polling.poll(timeout: frameChangeTimeout) {
             window.isFullScreen ? nil : true
-        }
-
-        guard window.hasFullScreenButton else {
-            return .constrained(
-                actual: window.currentFrame ?? .zero,
-                expected: before ?? .zero,
-                reason: "전체화면을 지원하지 않는 창입니다")
         }
 
         if window.pressFullScreenButton(), await confirmed(window, changedFrom: before) {
@@ -55,6 +56,15 @@ enum FullScreenController {
             window.isFullScreen ? nil : true
         }
         _ = await Polling.settle(timeout: transitionTimeout) { window.currentFrame }
+    }
+
+    /// 앱을 최전면으로 올리고 실제로 올라올 때까지 기다린다.
+    /// 요청 직후 바로 전환을 시도하면 아직 최전면이 아니어서 전환이 무시되는 경우가 있다.
+    private static func raiseAndWait(pid: Int32) async {
+        AXWindow.setApplicationFrontmost(pid: pid)
+        _ = await Polling.poll(timeout: frameChangeTimeout) {
+            NSWorkspace.shared.frontmostApplication?.processIdentifier == pid ? true : nil
+        }
     }
 
     /// 전환 전에 앱을 최전면으로 올린다. 최전면이 아니면 `AXFullScreen` 설정이
@@ -80,6 +90,8 @@ enum FullScreenController {
             guard changed == true else { return false }
         }
         _ = await Polling.settle(timeout: transitionTimeout) { window.currentFrame }
+
+        if let before, window.currentFrame == before { return false }
         return true
     }
 
