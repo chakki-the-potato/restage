@@ -1,0 +1,15 @@
+workspace: split
+screens:
+  - id: main
+    display: builtin
+    mode: desktop
+    anchor: safari
+    items:
+      - {type: app, app: safari, slot: left-half}
+      - {type: app, app: notion, slot: right-half}
+
+  - id: side
+    display: external-1
+    mode: desktop
+    items:
+      - {type: app, app: iterm, slot: full}
