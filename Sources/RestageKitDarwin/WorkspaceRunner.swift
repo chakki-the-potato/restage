@@ -29,19 +29,26 @@ public struct WorkspaceRunner {
 
     private func runScreen(_ screen: ScreenPlan) async -> [ItemOutcome] {
         var handles: [AppID: ProcessHandle] = [:]
+        var launchFailures: [AppID: String] = [:]
         var outcomes: [ItemOutcome] = []
 
+        // 실행은 먼저 전부 시도해 여러 앱의 기동 시간이 겹치게 하고,
+        // 보고는 선언 순서대로 낸다.
         for placement in screen.placements {
             do {
                 handles[placement.app] = try await engine.launch(placement.app)
             } catch {
-                outcomes.append(ItemOutcome(
-                    screenID: screen.id, app: placement.app, status: .failed,
-                    expected: placement.target, detail: String(describing: error)))
+                launchFailures[placement.app] = String(describing: error)
             }
         }
 
         for placement in screen.placements {
+            if let reason = launchFailures[placement.app] {
+                outcomes.append(ItemOutcome(
+                    screenID: screen.id, app: placement.app, status: .failed,
+                    expected: placement.target, detail: reason))
+                continue
+            }
             guard let handle = handles[placement.app] else { continue }
             outcomes.append(await apply(placement, handle: handle, screen: screen))
         }

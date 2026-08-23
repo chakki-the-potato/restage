@@ -40,8 +40,11 @@ enum RunReport {
         outcomes.contains { !$0.status.isSuccess }
     }
 
+    /// 열 너비를 넘는 값이 와도 최소 한 칸은 띄운다. 그러지 않으면 긴 앱 이름 뒤에
+    /// 다음 열이 붙어 표가 깨진다.
     private static func pad(_ text: String, _ width: Int) -> String {
-        text.count >= width ? text : text + String(repeating: " ", count: width - text.count)
+        let padding = max(1, width - text.count)
+        return text + String(repeating: " ", count: padding)
     }
 
     private static func format(_ rect: CGRect) -> String {
