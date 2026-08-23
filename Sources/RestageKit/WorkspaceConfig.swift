@@ -82,6 +82,9 @@ public enum ItemConfig: Sendable, Equatable {
 public struct AppItem: Sendable, Equatable {
     public let app: AppID
     public let slot: Slot
+    /// 창이 여러 개인 앱에서 어느 창을 옮길지 지정한다. 창 제목의 일부를 적는다.
+    /// 없으면 가장 최근 활성 창을 고른다.
+    public let title: String?
 }
 
 public enum BrowserWindowMode: String, Decodable, Sendable {
@@ -101,7 +104,7 @@ public struct BrowserItem: Sendable, Equatable {
 
 extension ItemConfig: Decodable {
     private enum Keys: String, CodingKey {
-        case type, app, slot, tabs, window
+        case type, app, slot, tabs, window, title
     }
 
     public init(from decoder: Decoder) throws {
@@ -112,7 +115,8 @@ extension ItemConfig: Decodable {
         switch type {
         case "app":
             let slot = try container.decodeIfPresent(Slot.self, forKey: .slot) ?? .full
-            self = .app(AppItem(app: app, slot: slot))
+            let title = try container.decodeIfPresent(String.self, forKey: .title)
+            self = .app(AppItem(app: app, slot: slot, title: title))
         case "browser":
             let tabs = try container.decodeIfPresent([String].self, forKey: .tabs) ?? []
             let window = try container.decodeIfPresent(
