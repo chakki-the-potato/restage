@@ -19,8 +19,13 @@ import RestageKit
     #expect(try AppRegistry.bundleID(for: AppID("KakaoTalk")) == "com.kakao.KakaoTalkMac")
 }
 
-@Test func sampleSetHasTenApps() {
-    #expect(AppRegistry.probeSample.count == 10)
+@Test func sampleExcludesCursor() {
+    #expect(AppRegistry.probeSample.count == 9)
+    #expect(!AppRegistry.probeSample.contains(AppID("cursor")))
+}
+
+@Test func cursorStillResolvesEvenThoughExcludedFromSample() throws {
+    #expect(try AppRegistry.bundleID(for: AppID("cursor")) == "com.todesktop.230313mzl4w4u92")
 }
 
 @Test func everySampleAppResolves() throws {

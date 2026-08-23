@@ -17,13 +17,16 @@ public enum AppRegistry {
     ]
 
     /// 창 배치 검증 표본. 실패 유형이 서로 다른 군을 덮도록 선정했다.
+    ///
+    /// cursor는 매핑에는 있지만 표본에서 뺐다. probe의 콜드 스타트가 앱을 종료하는데,
+    /// 이 저장소의 개발이 Cursor 안에서 이뤄지므로 자기 자신을 죽이게 된다.
+    /// Electron 계열은 discord, notion, claude 3종이 대신 덮는다.
     public static let probeSample: [AppID] = [
         AppID("safari"),
         AppID("iterm"),
         AppID("xcode"),
         AppID("iina"),
         AppID("chrome"),
-        AppID("cursor"),
         AppID("discord"),
         AppID("notion"),
         AppID("claude"),
