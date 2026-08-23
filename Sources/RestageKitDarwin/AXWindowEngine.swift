@@ -44,6 +44,14 @@ public struct AXWindowEngine: WindowEngine {
     }
 
     public func fullscreen(_ window: WindowHandle) async -> PlacementResult {
-        .failed(expected: .zero, actual: nil, reason: "미구현")
+        guard let axWindow = window as? AXWindow else {
+            return .failed(expected: .zero, actual: nil, reason: "지원하지 않는 WindowHandle 구현")
+        }
+        return await FullScreenController.enter(axWindow)
+    }
+
+    public func exitFullscreen(_ window: WindowHandle) async {
+        guard let axWindow = window as? AXWindow else { return }
+        await FullScreenController.exit(axWindow)
     }
 }

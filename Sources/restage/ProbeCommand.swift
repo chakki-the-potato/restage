@@ -103,6 +103,7 @@ enum ProbeCommand {
                 return ProbeReport.row(app: app, start: start, result: result)
             }
             let fullScreenResult = await engine.fullscreen(window)
+            await engine.exitFullscreen(window)
             return ProbeReport.row(app: app, start: start + "+fs", result: fullScreenResult)
         } catch {
             return ProbeReport.errorRow(app: app, start: start, error: error)
