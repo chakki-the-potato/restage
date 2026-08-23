@@ -21,11 +21,11 @@ enum ProbeReport {
                 app: app.rawValue, start: start, label: result.label,
                 expected: nil, actual: actual, attempts: attempts,
                 elapsedMS: milliseconds(elapsed), note: warnings.joined(separator: "; "))
-        case .constrained(let actual, let expected, let minSize):
+        case .constrained(let actual, let expected, let reason):
             return ProbeRow(
                 app: app.rawValue, start: start, label: result.label,
                 expected: expected, actual: actual, attempts: nil, elapsedMS: nil,
-                note: "최소 크기 \(fmt(minSize))")
+                note: reason)
         case .failed(let expected, let actual, let reason):
             return ProbeRow(
                 app: app.rawValue, start: start, label: result.label,
@@ -90,10 +90,6 @@ enum ProbeReport {
 
     private static func fmt(_ rect: CGRect) -> String {
         String(format: "%.0f,%.0f %.0fx%.0f", rect.minX, rect.minY, rect.width, rect.height)
-    }
-
-    private static func fmt(_ size: CGSize) -> String {
-        String(format: "%.0fx%.0f", size.width, size.height)
     }
 
     private static func milliseconds(_ duration: Duration) -> Int {

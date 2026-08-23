@@ -49,6 +49,17 @@ public struct AXWindow: WindowHandle {
     var isFullScreen: Bool { bool(AXAttributes.fullScreen) ?? false }
     var hasFullScreenButton: Bool { rawAttribute(AXAttributes.fullScreenButton) != nil }
 
+    /// 앱이 이 창의 크기 변경을 허용하는지. IINA의 시작 창처럼 위치만 바뀌고
+    /// 크기는 거부되는 창이 있어, 배치 실패 원인을 가릴 때 필요하다.
+    var isSizeSettable: Bool { isSettable(AXAttributes.size) }
+
+    private func isSettable(_ attribute: String) -> Bool {
+        var settable = DarwinBoolean(false)
+        guard AXUIElementIsAttributeSettable(
+            element, attribute as CFString, &settable) == .success else { return false }
+        return settable.boolValue
+    }
+
     @discardableResult
     func setPosition(_ value: CGPoint) -> Bool {
         var mutable = value

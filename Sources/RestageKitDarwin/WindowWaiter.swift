@@ -16,6 +16,7 @@ public enum WindowWaiter {
     /// 마지막에 지정 앱으로 포커스를 주는 동작과 충돌하기 때문이다.
     public static func wait(pid: Int32, timeout: Duration) async throws -> AXWindow {
         var lastError: Error?
+        var fixedSizeCandidate: AXWindow?
         var activated = false
         let clock = ContinuousClock()
         let activationDeadline = clock.now.advanced(by: activationGrace)
@@ -24,6 +25,9 @@ public enum WindowWaiter {
             do {
                 let windows = try AXWindow.windows(ofPID: pid)
                 if let window = windows.first(where: isPlaceable) { return window }
+                if fixedSizeCandidate == nil {
+                    fixedSizeCandidate = windows.first(where: isRealWindow)
+                }
             } catch {
                 lastError = error
                 return nil
@@ -37,6 +41,7 @@ public enum WindowWaiter {
         }
 
         if let found { return found }
+        if let fixedSizeCandidate { return fixedSizeCandidate }
         if let lastError { throw lastError }
         throw EngineError.windowTimeout(pid: pid, seconds: seconds(of: timeout))
     }
@@ -54,7 +59,21 @@ public enum WindowWaiter {
         }
     }
 
+    /// 크기까지 바꿀 수 있는 창. 배치 대상으로 우선 선택한다.
+    ///
+    /// 크기 변경 가능 여부를 조건에 넣은 이유는 Electron 앱의 스플래시 창 때문이다.
+    /// Discord는 기동 직후 300x300 고정 크기 창을 먼저 띄우고 잠시 뒤 1280x870 본창으로
+    /// 교체한다. 이 조건이 없으면 스플래시를 잡아 위치만 옮기고 크기는 실패한다.
     private static func isPlaceable(_ window: AXWindow) -> Bool {
+        isRealWindow(window) && window.isSizeSettable
+    }
+
+    /// 크기 고정 여부와 무관한 실제 창. 타임아웃 시 폴백으로 쓴다.
+    ///
+    /// IINA의 시작 창처럼 앱이 가진 창이 전부 크기 고정인 경우가 있다. 그때 아무것도
+    /// 반환하지 않으면 "창이 없다"는 잘못된 보고가 나가므로, 이 창을 넘겨서
+    /// 배치 단계가 크기 제약을 사유로 CONSTRAINED를 내도록 한다.
+    private static func isRealWindow(_ window: AXWindow) -> Bool {
         guard window.role == AXAttributes.windowRole else { return false }
         guard !window.isMinimized else { return false }
         guard let frame = window.currentFrame else { return false }

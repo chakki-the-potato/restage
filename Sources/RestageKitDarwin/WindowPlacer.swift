@@ -5,8 +5,8 @@ import RestageKit
 @MainActor
 public enum WindowPlacer {
     static let tolerance: CGFloat = 2
-    static let maxAttempts = 3
-    static let totalTimeout: Duration = .seconds(3)
+    static let maxAttempts = 10
+    static let totalTimeout: Duration = .seconds(6)
     static let settleTimeout: Duration = .milliseconds(800)
 
     public static func place(_ window: AXWindow, target: CGRect) async -> PlacementResult {
@@ -58,13 +58,18 @@ public enum WindowPlacer {
             && abs(actual.height - target.height) <= tolerance
     }
 
-    /// 도달 실패의 원인이 앱의 최소 크기 제약인지 판별한다.
-    /// 제약이 원인이면 고칠 수 없는 것이므로 실패가 아니라 constrained로 분류한다.
+    /// 도달 실패의 원인이 앱이 허용하지 않는 것인지 판별한다.
+    /// 앱이 막은 것이면 고칠 수 없으므로 실패가 아니라 constrained로 분류한다.
     private static func classifyFailure(
         _ window: AXWindow, target: CGRect, observed: CGRect?
     ) -> PlacementResult {
         guard let observed else {
             return .failed(expected: target, actual: nil, reason: "창 좌표를 조회할 수 없습니다")
+        }
+
+        if !window.isSizeSettable {
+            return .constrained(
+                actual: observed, expected: target, reason: "크기를 바꿀 수 없는 창입니다")
         }
 
         if let minSize = window.minSize {
@@ -74,7 +79,9 @@ public enum WindowPlacer {
             let heightSettledAtMin = abs(observed.height - minSize.height) <= tolerance
 
             if (widthBlocked && widthSettledAtMin) || (heightBlocked && heightSettledAtMin) {
-                return .constrained(actual: observed, expected: target, minSize: minSize)
+                return .constrained(
+                    actual: observed, expected: target,
+                    reason: "최소 크기 \(Int(minSize.width))x\(Int(minSize.height))")
             }
         }
 
