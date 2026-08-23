@@ -5,9 +5,12 @@ import RestageKit
 @MainActor
 public struct AXWindow: WindowHandle {
     let element: AXUIElement
+    /// 이 창을 소유한 프로세스. 요소가 무효화됐을 때 재획득하려면 필요하다.
+    public let pid: Int32
 
-    init(element: AXUIElement) {
+    init(element: AXUIElement, pid: Int32) {
         self.element = element
+        self.pid = pid
     }
 
     /// 해당 프로세스의 창 목록. 첫 번째가 가장 최근 활성 창이다.
@@ -18,7 +21,7 @@ public struct AXWindow: WindowHandle {
 
         if status == .apiDisabled { throw EngineError.axDisabled }
         guard status == .success, let list = raw as? [AXUIElement] else { return [] }
-        return list.map(AXWindow.init(element:))
+        return list.map { AXWindow(element: $0, pid: pid) }
     }
 
     /// 앱을 최전면으로 올린다.
@@ -38,6 +41,10 @@ public struct AXWindow: WindowHandle {
               let extent = size(AXAttributes.size) else { return nil }
         return CGRect(origin: origin, size: extent)
     }
+
+    /// AX 요소가 더 이상 유효하지 않은 상태. Electron 앱은 기동 중 창을 파괴하고
+    /// 새로 만드는 경우가 있어, 잡아둔 요소가 도중에 무효화될 수 있다.
+    public var isStale: Bool { currentFrame == nil }
 
     public var isOnActiveSpace: Bool {
         currentFrame != nil

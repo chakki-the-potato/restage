@@ -3,6 +3,9 @@ import RestageKit
 
 @MainActor
 public struct AXWindowEngine: WindowEngine {
+    /// 창 요소가 무효화됐을 때 새 창을 다시 찾는 데 허용하는 시간.
+    static let staleRetryTimeout: Duration = .seconds(10)
+
     public init() {}
 
     public func launch(_ app: AppID) async throws -> ProcessHandle {
@@ -25,10 +28,19 @@ public struct AXWindowEngine: WindowEngine {
         guard let axWindow = window as? AXWindow else {
             return .failed(expected: .zero, actual: nil, reason: "지원하지 않는 WindowHandle 구현")
         }
-        await WindowWaiter.prepareForDesktopPlacement(axWindow)
         let target = SlotGeometry.frame(
             for: slot, in: display.visibleFrame, primaryMaxY: display.primaryMaxY)
-        return await WindowPlacer.place(axWindow, target: target)
+        let result = await placeOnce(axWindow, target: target)
+
+        guard case .failed = result, axWindow.isStale else { return result }
+        guard let fresh = try? await WindowWaiter.wait(
+            pid: axWindow.pid, timeout: Self.staleRetryTimeout) else { return result }
+        return await placeOnce(fresh, target: target)
+    }
+
+    private func placeOnce(_ window: AXWindow, target: CGRect) async -> PlacementResult {
+        await WindowWaiter.prepareForDesktopPlacement(window)
+        return await WindowPlacer.place(window, target: target)
     }
 
     public func fullscreen(_ window: WindowHandle) async -> PlacementResult {
