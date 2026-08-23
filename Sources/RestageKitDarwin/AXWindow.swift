@@ -89,6 +89,14 @@ public struct AXWindow: WindowHandle {
             element, AXAttributes.minimized as CFString, value as CFTypeRef) == .success
     }
 
+    /// 이 창을 앱의 주 창으로 만든다. 전체화면 전환은 주 창에만 적용되므로,
+    /// 앱만 최전면으로 올리고 창을 지정하지 않으면 전환이 무시될 수 있다.
+    @discardableResult
+    func setMain(_ value: Bool) -> Bool {
+        AXUIElementSetAttributeValue(
+            element, AXAttributes.main as CFString, value as CFTypeRef) == .success
+    }
+
     @discardableResult
     func setFullScreen(_ value: Bool) -> Bool {
         AXUIElementSetAttributeValue(

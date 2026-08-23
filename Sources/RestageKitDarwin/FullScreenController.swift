@@ -29,6 +29,7 @@ enum FullScreenController {
         let start = clock.now
 
         await raiseAndWait(pid: window.pid)
+        window.setMain(true)
 
         if window.setFullScreen(true), await confirmed(window, changedFrom: before) {
             return success(window, start: start, attempts: 1)

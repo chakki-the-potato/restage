@@ -3,6 +3,7 @@
 enum AXAttributes {
     static let windows = "AXWindows"
     static let frontmost = "AXFrontmost"
+    static let main = "AXMain"
     static let role = "AXRole"
     static let position = "AXPosition"
     static let size = "AXSize"
