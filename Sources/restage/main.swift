@@ -30,6 +30,7 @@ AppKitBootstrap.ensureGUIApplication()
 let arguments = Array(CommandLine.arguments.dropFirst())
 
 guard let command = arguments.first else {
+    if LaunchContext.isInsideAppBundle { MenuBarCommand.run() }
     print(usage)
     exit(2)
 }
