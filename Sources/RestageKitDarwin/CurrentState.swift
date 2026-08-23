@@ -24,19 +24,11 @@ public enum CurrentState {
     ///
     /// 전체화면 창은 메뉴바 영역까지 덮어 `visibleFrame`보다 크므로 90% 기준을 쓴다.
     public static func isFullScreen(pid: Int32, on display: DisplayInfo) -> Bool {
-        let bounds = axBounds(of: display)
+        let bounds = display.axBounds
         return windowRects(pid: pid).contains { rect in
             guard bounds.contains(CGPoint(x: rect.midX, y: rect.midY)) else { return false }
             return rect.width >= bounds.width * 0.9 && rect.height >= bounds.height * 0.9
         }
-    }
-
-    /// 디스플레이의 가용 영역을 AX 좌표계로 변환한다.
-    private static func axBounds(of display: DisplayInfo) -> CGRect {
-        let frame = display.visibleFrame
-        return CGRect(
-            x: frame.minX, y: display.primaryMaxY - frame.maxY,
-            width: frame.width, height: frame.height)
     }
 
     /// 해당 프로세스가 가진 창의 개수. 0이 아닌데 AX가 못 보면 다른 Space에 있다는 뜻이다.

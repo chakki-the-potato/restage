@@ -12,7 +12,7 @@ public struct AXWindowEngine: WindowEngine {
         guard AccessibilityPermission.isTrusted() else {
             throw EngineError.accessibilityNotTrusted
         }
-        let bundleID = try AppRegistry.bundleID(for: app)
+        let bundleID = try InstalledApps.bundleID(for: app)
         return try await AppLauncher.launch(bundleID: bundleID)
     }
 

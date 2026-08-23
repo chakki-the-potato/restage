@@ -7,13 +7,35 @@ struct BrowserDialect {
     let applicationName: String
     private let makesWindowWithURL: Bool
 
-    private static let dialects: [String: BrowserDialect] = [
-        "safari": BrowserDialect(applicationName: "Safari", makesWindowWithURL: true),
-        "chrome": BrowserDialect(applicationName: "Google Chrome", makesWindowWithURL: false),
+    /// 탭 제어 어휘를 외부에 열어두지 않은 브라우저. Chromium 문법이 통하지 않는다.
+    /// 되는 척하지 않고 명확히 실패로 보고하기 위해 목록으로 둔다.
+    private static let withoutTabControl: Set<String> = [
+        "firefox", "firefox developer edition", "firefox nightly",
+        "librewolf", "waterfox", "tor browser", "zen", "zen browser",
     ]
 
-    static func forApp(_ app: AppID) -> BrowserDialect? {
-        dialects[app.rawValue.lowercased()]
+    private static let safariName = "safari"
+
+    /// Safari만 독자 어휘를 쓰고 나머지는 전부 Chromium 계열과 같은 문법을 쓴다.
+    ///
+    /// 브라우저를 하나씩 등록하지 않는 이유는, 목록에 없는 브라우저를 쓰는 사람이 이 파일을
+    /// 고치고 다시 빌드해야 하는 상황을 만들지 않기 위해서다. Chrome, Edge, Brave, Arc,
+    /// Whale, Vivaldi는 모두 Chromium 경로를 그대로 탄다.
+    ///
+    /// 검증한 것은 Safari와 Chrome 둘뿐이다. 나머지는 같은 코드 경로를 타지만 실제로
+    /// 확인하지는 않았다.
+    @MainActor
+    static func forApp(_ app: AppID) throws -> BrowserDialect {
+        let bundleID = try InstalledApps.bundleID(for: app)
+        let name = InstalledApps.displayName(bundleID: bundleID) ?? app.rawValue
+        guard InstalledApps.isBrowser(bundleID: bundleID) else {
+            throw EngineError.notABrowser(name: name)
+        }
+        guard !withoutTabControl.contains(name.lowercased()) else {
+            throw EngineError.browserWithoutTabControl(name: name)
+        }
+        return BrowserDialect(
+            applicationName: name, makesWindowWithURL: name.lowercased() == safariName)
     }
 
     /// 창 id와 각 창의 탭 URL을 줄 단위로 돌려준다.
@@ -59,6 +81,31 @@ struct BrowserDialect {
           set w to make new window
           set URL of active tab of w to "\(escape(url))"
         end tell
+        """
+    }
+
+    /// 창 제목과 각 탭 URL을 줄 단위로 돌려준다.
+    ///
+    /// `readWindowsScript`가 창 id를 쓰는 것과 달리 제목을 쓰는 이유는, 현재 배치를 config로
+    /// 옮길 때 AX가 본 창과 브라우저가 아는 창을 맞춰야 하는데 둘 사이에 공통된 id가 없기
+    /// 때문이다. 브라우저 창 제목은 활성 탭 제목이라 AX의 `AXTitle`과 같은 값이다.
+    func readWindowTitlesScript() -> String {
+        """
+        set fieldSeparator to character id 9
+        set lineSeparator to character id 10
+        set out to ""
+        tell application "\(applicationName)"
+          repeat with w in windows
+            try
+              set out to out & (name of w)
+              repeat with t in tabs of w
+                set out to out & fieldSeparator & (URL of t)
+              end repeat
+              set out to out & lineSeparator
+            end try
+          end repeat
+        end tell
+        return out
         """
     }
 
