@@ -69,7 +69,8 @@ public struct WorkspaceRunner {
     private func apply(
         _ placement: Placement, handle: ProcessHandle, screen: ScreenPlan
     ) async -> ItemOutcome {
-        if isSatisfied(placement, handle: handle, screen: screen) {
+        if placement.selector.titleContains == nil,
+           isSatisfied(placement, handle: handle, screen: screen) {
             return ItemOutcome(
                 screenID: screen.id, app: placement.app, status: .alreadySatisfied,
                 expected: placement.target, detail: "이미 목표 상태")
@@ -77,13 +78,20 @@ public struct WorkspaceRunner {
 
         let window: WindowHandle
         do {
-            window = try await engine.waitForWindow(handle, timeout: Self.windowTimeout)
+            window = try await engine.waitForWindow(
+                handle, selector: placement.selector, timeout: Self.windowTimeout)
         } catch {
-            let status: OutcomeStatus = CurrentState.windowCount(pid: handle.pid) > 0
-                ? .unreachable : .failed
             return ItemOutcome(
-                screenID: screen.id, app: placement.app, status: status,
+                screenID: screen.id, app: placement.app,
+                status: status(for: error, pid: handle.pid),
                 expected: placement.target, detail: String(describing: error))
+        }
+
+        if placement.selector.titleContains != nil, screen.mode != .fullscreen,
+           let frame = window.currentFrame, CurrentState.matches(frame, placement.target) {
+            return ItemOutcome(
+                screenID: screen.id, app: placement.app, status: .alreadySatisfied,
+                expected: placement.target, actual: frame, detail: "이미 목표 상태")
         }
 
         let result = await engine.place(window, slot: placement.slot, display: screen.display)
@@ -105,7 +113,8 @@ public struct WorkspaceRunner {
         }
 
         do {
-            _ = try await engine.waitForWindow(handle, timeout: Self.windowTimeout)
+            _ = try await engine.waitForWindow(
+                handle, selector: .mostRecentlyActive, timeout: Self.windowTimeout)
         } catch {
             let status: OutcomeStatus = CurrentState.windowCount(pid: handle.pid) > 0
                 ? .unreachable : .failed
@@ -145,7 +154,8 @@ public struct WorkspaceRunner {
         }
 
         AXWindow.setApplicationFrontmost(pid: handle.pid)
-        guard let window = try? await engine.waitForWindow(handle, timeout: Self.windowTimeout)
+        guard let window = try? await engine.waitForWindow(
+            handle, selector: .mostRecentlyActive, timeout: Self.windowTimeout)
         else {
             return tabOutcome(tabs, plan: plan, screen: screen)
         }
@@ -174,7 +184,18 @@ public struct WorkspaceRunner {
             detail: "탭 \(result.openedCount)개 추가")
     }
 
+    /// 제목이 안 맞는 것은 config를 고쳐야 하는 문제이므로 `unreachable`이 아니라 `failed`다.
+    /// `unreachable`은 다른 Space에 있어 손댈 수 없다는 뜻으로만 쓴다.
+    private func status(for error: Error, pid: Int32) -> OutcomeStatus {
+        if case EngineError.noWindowMatchingTitle = error { return .failed }
+        return CurrentState.windowCount(pid: pid) > 0 ? .unreachable : .failed
+    }
+
     /// 이미 목표 상태인지 판정한다. 이것이 멱등성의 핵심이다.
+    ///
+    /// 제목을 지정한 항목에는 쓰지 않는다. 이 판정은 그 앱의 아무 창이나 목표에 있으면
+    /// 참을 내므로, 창이 여러 개인 앱에서 엉뚱한 창을 보고 통과시킨다.
+    /// 그 경우에는 창을 먼저 찾은 뒤 그 창의 좌표를 직접 비교한다.
     ///
     /// 전체화면 목표는 AX로 판정할 수 없다. 전체화면 앱의 창은 다른 Space에 있어
     /// `AXWindows`가 비어 있기 때문이다. `CurrentState`가 `CGWindowList`로 판정한다.

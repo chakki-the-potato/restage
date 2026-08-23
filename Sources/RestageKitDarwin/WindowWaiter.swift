@@ -22,17 +22,23 @@ public enum WindowWaiter {
     /// 그래서 `activationGrace` 안에 창을 못 찾으면 한 번만 앱을 활성화하고 계속 폴링한다.
     /// 활성화를 처음부터 하지 않는 이유는 배치 도중 앱들이 서로 포커스를 뺏으면
     /// 마지막에 지정 앱으로 포커스를 주는 동작과 충돌하기 때문이다.
-    public static func wait(pid: Int32, timeout: Duration) async throws -> AXWindow {
+    public static func wait(
+        pid: Int32, timeout: Duration, selector: WindowSelector = .mostRecentlyActive
+    ) async throws -> AXWindow {
         var lastError: Error?
         var fixedSizeCandidate: AXWindow?
         var fixedSizeSeenAt: ContinuousClock.Instant?
+        var seenTitles: [String] = []
         var activated = false
         let clock = ContinuousClock()
         let activationDeadline = clock.now.advanced(by: activationGrace)
 
         let found = await Polling.poll(timeout: timeout) { () -> AXWindow? in
             do {
-                let windows = try AXWindow.windows(ofPID: pid)
+                let all = try AXWindow.windows(ofPID: pid)
+                let titles = all.filter(isRealWindow).compactMap { $0.title }
+                if !titles.isEmpty { seenTitles = titles }
+                let windows = matching(all, selector)
                 if let window = windows.first(where: isPlaceable) { return window }
 
                 if let candidate = windows.first(where: isRealWindow) {
@@ -61,6 +67,11 @@ public enum WindowWaiter {
         if let fixedSizeCandidate { return fixedSizeCandidate }
         if let lastError { throw lastError }
 
+        if let wanted = selector.titleContains {
+            throw EngineError.noWindowMatchingTitle(
+                pid: pid, wanted: wanted, available: seenTitles)
+        }
+
         let existing = WindowInventory.windowCount(pid: pid)
         if existing > 0 {
             throw EngineError.windowOnOtherSpace(pid: pid, windowCount: existing)
@@ -80,6 +91,18 @@ public enum WindowWaiter {
             _ = await Polling.settle(timeout: .seconds(3)) { window.currentFrame }
         }
         _ = await Polling.settle(timeout: layoutSettleTimeout) { window.currentFrame }
+    }
+
+    /// 폴링 중에 본 제목을 기억해두는 이유는 타임아웃 후 다시 조회하면 그 시점에
+    /// 앱이 최전면이 아니라 AX가 빈 배열을 돌려주기 때문이다. 그러면 "열린 창이 없습니다"라는
+    /// 사실과 다른 안내가 나간다.
+    ///
+    /// 제목이 지정되면 그것을 포함하는 창만 남긴다. 대소문자는 가리지 않는다.
+    ///
+    /// 여럿이 걸리면 그중 가장 최근 활성 창이 앞에 온다. AX 창 목록이 최근 활성 순이기 때문이다.
+    private static func matching(_ windows: [AXWindow], _ selector: WindowSelector) -> [AXWindow] {
+        guard let wanted = selector.titleContains?.lowercased() else { return windows }
+        return windows.filter { $0.title?.lowercased().contains(wanted) == true }
     }
 
     /// 크기까지 바꿀 수 있는 창. 배치 대상으로 우선 선택한다.

@@ -16,11 +16,31 @@ public struct Placement: Sendable, Equatable {
     public let app: AppID
     public let slot: Slot
     public let target: CGRect
+    public let selector: WindowSelector
 
-    public init(app: AppID, slot: Slot, target: CGRect) {
+    public init(
+        app: AppID, slot: Slot, target: CGRect,
+        selector: WindowSelector = .mostRecentlyActive
+    ) {
         self.app = app
         self.slot = slot
         self.target = target
+        self.selector = selector
+    }
+}
+
+/// 앱에 창이 여러 개일 때 어느 것을 고를지 정한다.
+///
+/// 기본값은 가장 최근 활성 창이다. 실사용에서 이 규칙만으로는 어느 창이 옮겨질지
+/// 예측하기 어렵다는 점이 드러나 제목 지정을 추가했다.
+public struct WindowSelector: Sendable, Equatable {
+    /// nil이면 가장 최근 활성 창을 고른다.
+    public let titleContains: String?
+
+    public static let mostRecentlyActive = WindowSelector(titleContains: nil)
+
+    public init(titleContains: String?) {
+        self.titleContains = titleContains
     }
 }
 

@@ -44,7 +44,7 @@ public enum CurrentState {
         windowRects(pid: pid).count
     }
 
-    private static func matches(_ rect: CGRect, _ target: CGRect) -> Bool {
+    public static func matches(_ rect: CGRect, _ target: CGRect) -> Bool {
         abs(rect.minX - target.minX) <= tolerance
             && abs(rect.minY - target.minY) <= tolerance
             && abs(rect.width - target.width) <= tolerance
