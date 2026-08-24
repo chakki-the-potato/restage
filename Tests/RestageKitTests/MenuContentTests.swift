@@ -28,7 +28,7 @@ private func entry(_ name: String, error: String? = nil) -> WorkspaceEntry {
 
 @Test func emptyDirectoryShowsNotice() {
     let entries = MenuContent.entries(for: .success([]))
-    #expect(entries == [.notice("등록된 워크스페이스가 없습니다")])
+    #expect(entries == [.notice(L10n.string("error.config.no_workspaces"))])
     #expect(!entries[0].isEnabled)
 }
 

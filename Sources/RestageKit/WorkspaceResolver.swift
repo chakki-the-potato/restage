@@ -63,9 +63,9 @@ public enum WorkspaceResolver {
     private static func reason(forMissing selector: DisplaySelector) -> String {
         switch selector {
         case .builtin, .any:
-            return "주 디스플레이를 찾을 수 없습니다"
+            return L10n.string("error.display.no_primary")
         case .external(let index):
-            return "외장 디스플레이 \(index)번이 연결되어 있지 않습니다"
+            return L10n.string("error.display.external_missing", index)
         }
     }
 }

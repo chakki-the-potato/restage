@@ -73,5 +73,5 @@ private func placements(_ result: ResolvedWorkspace) -> [Placement] {
 
 @Test func noWindowMatchingTitleErrorHandlesEmptyList() {
     let error = EngineError.noWindowMatchingTitle(pid: 1, wanted: "설정", available: [])
-    #expect("\(error)".contains("열린 창이 없습니다"))
+    #expect("\(error)".contains(L10n.string("error.engine.no_windows_open")))
 }

@@ -16,7 +16,7 @@ public enum MenuEntry: Equatable, Sendable {
         case .workspace(let name): return name
         case .brokenWorkspace(let name, _): return name
         case .notice(let text): return text
-        case .permissionNeeded: return "접근성 권한을 허용하세요"
+        case .permissionNeeded: return L10n.string("menu.permission_needed")
         }
     }
 
@@ -53,7 +53,7 @@ public enum MenuContent {
         case .failure(let error):
             return [.notice(firstLine(of: "\(error)"))]
         case .success(let entries) where entries.isEmpty:
-            return [.notice("등록된 워크스페이스가 없습니다")]
+            return [.notice(L10n.string("error.config.no_workspaces"))]
         case .success(let entries):
             return entries.map { entry in
                 guard let error = entry.error else { return .workspace(name: entry.name) }

@@ -78,3 +78,53 @@
 "slot.centered" = "Centered";
 "placement.fullscreen" = "Full screen";
 "placement.keep_size" = "Keep size";
+
+/* 오류 · 엔진 */
+"error.engine.accessibility_not_trusted" = "restage doesn't have Accessibility permission. Approve this app in System Settings.";
+"error.engine.app_not_found" = "There is no app installed named '%@'.";
+"error.engine.app_not_found.suggestion" = " Did you mean: %@";
+"error.engine.ambiguous_app" = "More than one app matches '%1$@': %2$@";
+"error.engine.application_not_found" = "That app is not installed: %@";
+"error.engine.launch_failed" = "Couldn't launch %1$@ — %2$@";
+"error.engine.window_timeout" = "No window appeared within %1$g seconds (pid %2$d)";
+"error.engine.no_window_matching_title" = "Couldn't find a window with '%1$@' in its title. %2$@";
+"error.engine.windows_open" = "Open windows: %@";
+"error.engine.no_windows_open" = "No windows are open";
+"error.engine.window_on_other_space" = "%1$d windows are on another Space and can't be reached (pid %2$d)";
+"error.engine.ax_disabled" = "The accessibility API is disabled (kAXErrorAPIDisabled). Check Accessibility permission.";
+"error.engine.browser_without_tab_control" = "%@ doesn't support tab control. Windows are still placed, but tabs can't be opened.";
+"error.engine.not_a_browser" = "%@ is not a browser. Change its type to app.";
+
+/* 오류 · config */
+"error.config.file_not_found" = "Couldn't find the config file: %@";
+"error.config.unreadable" = "Couldn't read the config file: %1$@ — %2$@";
+"error.config.malformed" = "The config isn't valid. %@";
+"error.config.unknown_item_type" = "Unknown item type: %@. Valid values: app, browser";
+"error.config.invalid_display" = "Unknown display: %@. Valid values: builtin, any, external-1 and up";
+"error.config.empty_screens" = "screens is empty. Declare at least one screen";
+"error.config.empty_items" = "items is empty on screen '%@'";
+"error.config.duplicate_screen_id" = "Duplicate screen id: %@";
+"error.config.anchor_not_in_items" = "anchor '%2$@' is not among the items of screen '%1$@'";
+"error.config.directory_not_found" = "There is no workspace directory: %1$@\nCreate it with mkdir -p %1$@ and put <name>.yaml files in it";
+"error.config.invalid_hotkey" = "The hotkey format isn't valid: '%1$@'. %2$@";
+"error.config.workspace_not_found" = "Couldn't find the workspace '%1$@': %2$@\n%3$@";
+"error.config.known_workspaces" = "Saved workspaces: %@";
+"error.config.no_workspaces" = "No workspaces saved yet";
+
+/* 오류 · 이름과 단축키 */
+"error.name.empty" = "Enter a name";
+"error.name.too_long" = "That name is too long. Keep it under %d characters";
+"error.name.slash" = "A name can't contain /";
+"error.name.dot" = "A name can't contain a dot. The extension is added for you";
+"error.name.newline" = "A name can't contain a line break";
+"error.name.invalid" = "That name contains a character it can't use";
+"error.hotkey.format" = "Join modifiers and a key with +. For example: ctrl+alt+cmd+1";
+"error.hotkey.unknown_modifier" = "Unknown modifier: %@. Valid values: cmd, ctrl, alt, shift";
+"error.hotkey.unknown_key" = "Unknown key: %@. Valid values: 0-9, a-z, f1-f12, space, return, tab, escape";
+
+/* 오류 · 디스플레이 */
+"error.display.no_primary" = "Couldn't find the primary display";
+"error.display.external_missing" = "External display %d isn't connected";
+
+/* 메뉴 */
+"menu.permission_needed" = "Grant Accessibility permission";

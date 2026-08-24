@@ -59,22 +59,26 @@ private func specifiers(_ text: String) -> [Int: String] {
     }
 }
 
-@Test func lookupFollowsTheChosenLanguage() {
-    let original = L10n.language
-    defer { L10n.language = original }
+/// 언어는 프로세스 전체가 공유하는 값이라 이 둘은 나란히 돌 수 없다.
+@Suite(.serialized)
+struct LanguageSelectionTests {
+    @Test func lookupFollowsTheChosenLanguage() {
+        let original = L10n.language
+        defer { L10n.language = original }
 
-    L10n.language = .english
-    #expect(L10n.string("panel.retry") == "Retry")
+        L10n.language = .english
+        #expect(L10n.string("panel.retry") == "Retry")
 
-    L10n.language = .korean
-    #expect(L10n.string("panel.retry") == "다시 시도")
-}
+        L10n.language = .korean
+        #expect(L10n.string("panel.retry") == "다시 시도")
+    }
 
-/// 번역이 없는 키는 키 자체로 떨어져야 한다. 화면에 키가 보이면 빠진 것을 바로 안다.
-@Test func unknownKeyFallsBackToItself() {
-    let original = L10n.language
-    defer { L10n.language = original }
+    /// 번역이 없는 키는 키 자체로 떨어져야 한다. 화면에 키가 보이면 빠진 것을 바로 안다.
+    @Test func unknownKeyFallsBackToItself() {
+        let original = L10n.language
+        defer { L10n.language = original }
 
-    L10n.language = .korean
-    #expect(L10n.string("no.such.key") == "no.such.key")
+        L10n.language = .korean
+        #expect(L10n.string("no.such.key") == "no.such.key")
+    }
 }
