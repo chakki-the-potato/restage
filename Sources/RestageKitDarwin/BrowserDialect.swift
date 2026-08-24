@@ -111,15 +111,17 @@ struct BrowserDialect {
         """
     }
 
+    /// 창 id로 직접 지목해 탭을 붙인다.
+    ///
+    /// `repeat`로 창을 훑어 `tabs of w`에 넣는 방식은 Brave에서 조용히 무시된다. 오류도
+    /// 나지 않고 탭도 생기지 않아, 성공으로 보고하면서 아무 일도 하지 않는다. 실제로 겪었다.
+    /// `tell window id`로 지목하면 Brave, Chrome, Safari 모두에서 동작한다.
     func addTabScript(windowID: Int, url: String) -> String {
         """
         tell application "\(applicationName)"
-          repeat with w in windows
-            if (id of w) is \(windowID) then
-              make new tab at end of tabs of w with properties {URL:"\(escape(url))"}
-              exit repeat
-            end if
-          end repeat
+          tell window id \(windowID)
+            make new tab at end of tabs with properties {URL:"\(escape(url))"}
+          end tell
         end tell
         """
     }

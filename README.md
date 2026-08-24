@@ -333,7 +333,7 @@ defaults delete com.apple.dock workspaces-auto-swoosh && killall Dock
 
 **Firefox 계열은 탭을 다룰 수 없다.** 탭 제어 어휘를 외부에 열어두지 않기 때문이다. 창 배치는 되지만 `tabs`는 실패로 보고한다.
 
-Safari와 Chromium 계열(Chrome, Edge, Brave, Arc, Whale, Vivaldi)은 같은 경로로 동작한다. 다만 **실제로 검증한 것은 Safari와 Chrome 둘뿐이다.** 나머지는 같은 코드를 타지만 확인하지 않았다.
+Safari와 Chromium 계열(Chrome, Edge, Brave, Arc, Whale, Vivaldi)은 같은 경로로 동작한다. **Safari, Chrome, Brave 세 가지로 검증했다.** Edge, Arc, Whale, Vivaldi는 같은 코드를 타지만 확인하지 않았다.
 
 브라우저 탭 제어에는 Apple Events 권한이 대상 앱별로 최초 1회 필요하다.
 
