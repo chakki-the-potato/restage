@@ -98,8 +98,24 @@ struct DraftEditorView: View {
         let placement: Placement
         /// 자리 분류에 확신이 없는 항목. 사용자가 고르면 사라진다.
         let isUncertain: Bool
+        /// 창과 고른 자리가 얼마나 겹치는지. 물음표를 설명할 때 쓴다.
+        let overlap: Double?
         let isOnOtherSpace: Bool
         let allowsKeepSize: Bool
+
+        /// 물음표에 마우스를 올렸을 때 보여줄 설명.
+        ///
+        /// "애매하다"만 적으면 무엇이 애매한지 알 수 없다. 어느 자리와 얼마나 어긋나는지를
+        /// 보여줘야 그대로 둘지 다른 자리를 고를지 판단할 수 있다.
+        var uncertaintyDetail: String {
+            let percent = overlap.map { Int(($0 * 100).rounded()) }
+            let match = percent.map { "\($0)%만 겹칩니다" } ?? "잘 맞지 않습니다"
+            return """
+                창 크기가 '\(placement.label)'과 \(match).
+                가장 가까운 자리로 골라둔 것이며 그대로 저장해도 됩니다.
+                직접 고르면 이 표시가 사라집니다.
+                """
+        }
     }
 
     var body: some View {
@@ -187,7 +203,9 @@ struct DraftEditorView: View {
                 Text("?")
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(.orange)
-                    .help("자리가 애매합니다. 골라주세요.")
+                    .frame(width: 12)
+                    .contentShape(Rectangle())
+                    .help(row.uncertaintyDetail)
             }
             picker(for: row)
         }
@@ -212,6 +230,7 @@ struct DraftEditorView: View {
         }
         .labelsHidden()
         .frame(width: 120)
+        .help("실행할 때 이 창을 놓을 자리입니다. 고른 대로 정확히 배치됩니다.")
     }
 
     private func addedLine(_ offset: Int, _ item: ItemDraft) -> some View {
@@ -303,6 +322,7 @@ extension DraftEditorView {
                 tabCount: tabCount(of: entry.item),
                 placement: placement(of: entry.item),
                 isUncertain: !entry.item.isConfident,
+                overlap: entry.item.overlap,
                 isOnOtherSpace: !entry.item.wasOnCurrentSpace,
                 allowsKeepSize: entry.item.slot == nil)
         }
