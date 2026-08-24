@@ -105,10 +105,22 @@ struct WorkspaceCard: View {
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
-            ProgressView(value: fraction)
-                .progressViewStyle(.linear)
-                .frame(height: 3)
+            progressBar
         }
+    }
+
+    /// 막대를 직접 그린다. `ProgressView`는 AppKit 컨트롤이라 3pt 높이도, 카드 안의
+    /// 색도 우리가 정한 대로 나오지 않는다.
+    private var progressBar: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.primary.opacity(0.10))
+                Capsule()
+                    .fill(Color.accentColor)
+                    .frame(width: proxy.size.width * fraction)
+            }
+        }
+        .frame(height: 3)
     }
 
     private var progressText: String {
@@ -208,8 +220,10 @@ struct WorkspaceCard: View {
                 Button(action: onRetry) {
                     Text(L10n.string("panel.retry"))
                         .font(.system(size: 11))
+                        .foregroundStyle(Color.accentColor)
+                        .contentShape(Rectangle())
                 }
-                .buttonStyle(.link)
+                .buttonStyle(.plain)
                 .disabled(isBusy)
             }
             if let onDismiss {

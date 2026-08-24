@@ -19,5 +19,6 @@ let package = Package(
         .executableTarget(name: "restage-icon", dependencies: ["RestageBrand"]),
         .testTarget(name: "RestageKitTests", dependencies: ["RestageKit"]),
         .testTarget(name: "RestageKitDarwinTests", dependencies: ["RestageKitDarwin"]),
+        .testTarget(name: "RestageAppTests", dependencies: ["restage"]),
     ]
 )
