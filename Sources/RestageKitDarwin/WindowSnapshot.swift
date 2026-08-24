@@ -9,12 +9,18 @@ public struct CapturedWindow: Sendable, Equatable {
     public let title: String
     /// AX 좌표계 사각형.
     public let frame: CGRect
+    /// 지금 보고 있는 데스크탑에 있는지. 아니면 다른 Space에 있거나 전체화면이다.
+    public let isOnCurrentSpace: Bool
 
-    public init(appName: String, bundleID: String, title: String, frame: CGRect) {
+    public init(
+        appName: String, bundleID: String, title: String, frame: CGRect,
+        isOnCurrentSpace: Bool
+    ) {
         self.appName = appName
         self.bundleID = bundleID
         self.title = title
         self.frame = frame
+        self.isOnCurrentSpace = isOnCurrentSpace
     }
 }
 
@@ -24,17 +30,54 @@ public enum WindowSnapshot {
     /// 도구 창이나 팔레트를 걸러내는 최소 크기.
     private static let minimumSide: CGFloat = 100
 
-    /// 현재 Space에 보이는 창 목록.
+    /// 열려 있는 창 목록. 다른 데스크탑에 있는 창도 포함한다.
     ///
-    /// AX로 읽는 이유는 창 제목 때문이다. `CGWindowList`로도 창을 볼 수 있지만 제목을
-    /// 얻으려면 화면 기록 권한이 따로 필요하다. AX는 이미 받은 접근성 권한만으로 제목까지 읽는다.
+    /// AX가 아니라 `CGWindowList`로 읽는다. AX는 현재 Space의 창만 보여주므로 다른
+    /// 데스크탑에 둔 창이 통째로 빠진다. `CGWindowList`는 Space와 무관하게 전부 보고,
+    /// 위치·크기·제목을 함께 준다.
     ///
-    /// 대신 AX는 현재 Space의 창만 본다. 다른 Space나 전체화면으로 넘어간 창은 여기 없다.
-    /// 이 제약은 호출자가 사용자에게 알려야 한다.
-    public static func current() throws -> [CapturedWindow] {
-        let selfPID = ProcessInfo.processInfo.processIdentifier
-        var captured: [CapturedWindow] = []
+    /// 제목까지 나오는지는 이 컴퓨터에서 확인했다. 화면 기록 권한이 없어도 나왔다.
+    /// 다만 항상 보장되지는 않아 빈 문자열이 올 수 있고, 그때는 창을 구분할 수 없다.
+    public static func current() -> [CapturedWindow] {
+        let apps = regularApps()
+        let visible = onScreenWindowIDs()
 
+        let all = CGWindowListCopyWindowInfo(
+            [.optionAll, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] ?? []
+
+        return all.compactMap { window -> CapturedWindow? in
+            guard let pid = window[kCGWindowOwnerPID as String] as? Int32,
+                  let app = apps[pid],
+                  window[kCGWindowLayer as String] as? Int == 0,
+                  let frame = rect(from: window),
+                  frame.width >= minimumSide, frame.height >= minimumSide else { return nil }
+
+            let id = window[kCGWindowNumber as String] as? Int ?? -1
+            return CapturedWindow(
+                appName: app.name,
+                bundleID: app.bundleID,
+                title: (window[kCGWindowName as String] as? String) ?? "",
+                frame: frame,
+                isOnCurrentSpace: visible.contains(id))
+        }
+        .sorted { lhs, rhs in
+            if lhs.isOnCurrentSpace != rhs.isOnCurrentSpace { return lhs.isOnCurrentSpace }
+            if lhs.frame.minX != rhs.frame.minX { return lhs.frame.minX < rhs.frame.minX }
+            if lhs.frame.minY != rhs.frame.minY { return lhs.frame.minY < rhs.frame.minY }
+            return lhs.appName < rhs.appName
+        }
+    }
+
+    private struct AppInfo {
+        let name: String
+        let bundleID: String
+    }
+
+    /// Dock에 아이콘이 있는 앱만 센다. 배경 도우미의 창은 사용자가 배치할 대상이 아니다.
+    /// 자기 자신도 뺀다.
+    private static func regularApps() -> [Int32: AppInfo] {
+        let selfPID = ProcessInfo.processInfo.processIdentifier
+        var result: [Int32: AppInfo] = [:]
         for app in NSWorkspace.shared.runningApplications
         where app.activationPolicy == .regular
             && !app.isTerminated
@@ -42,23 +85,24 @@ public enum WindowSnapshot {
             guard let bundleID = app.bundleIdentifier else { continue }
             let name = InstalledApps.displayName(bundleID: bundleID)
                 ?? app.localizedName ?? bundleID
-
-            for window in try AXWindow.windows(ofPID: app.processIdentifier) {
-                guard window.role == AXAttributes.windowRole,
-                      !window.isMinimized,
-                      let frame = window.currentFrame,
-                      frame.width >= minimumSide, frame.height >= minimumSide else { continue }
-                captured.append(
-                    CapturedWindow(
-                        appName: name, bundleID: bundleID,
-                        title: window.title ?? "", frame: frame))
-            }
+            result[app.processIdentifier] = AppInfo(name: name, bundleID: bundleID)
         }
+        return result
+    }
 
-        return captured.sorted { lhs, rhs in
-            if lhs.frame.minX != rhs.frame.minX { return lhs.frame.minX < rhs.frame.minX }
-            if lhs.frame.minY != rhs.frame.minY { return lhs.frame.minY < rhs.frame.minY }
-            return lhs.appName < rhs.appName
-        }
+    /// 현재 데스크탑에 보이는 창의 번호. 이것과 대조해 다른 Space에 있는 창을 가려낸다.
+    private static func onScreenWindowIDs() -> Set<Int> {
+        let onScreen = CGWindowListCopyWindowInfo(
+            [.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]]
+            ?? []
+        return Set(onScreen.compactMap { $0[kCGWindowNumber as String] as? Int })
+    }
+
+    private static func rect(from window: [String: Any]) -> CGRect? {
+        guard let bounds = window[kCGWindowBounds as String] as? [String: Any],
+              let x = bounds["X"] as? Double, let y = bounds["Y"] as? Double,
+              let width = bounds["Width"] as? Double,
+              let height = bounds["Height"] as? Double else { return nil }
+        return CGRect(x: x, y: y, width: width, height: height)
     }
 }
