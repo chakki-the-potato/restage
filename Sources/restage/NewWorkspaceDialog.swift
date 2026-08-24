@@ -75,6 +75,11 @@ enum NewWorkspaceDialog {
         hosting.frame = NSRect(x: 0, y: 0, width: 380, height: 260)
 
         var notes: [String] = []
+        for (app, count) in captured.indistinguishable.sorted(by: { $0.key < $1.key }) {
+            notes.append(
+                "\(app) 창 \(count)개는 담지 않았습니다. 제목이 같거나 비어 있어 실행할 때 "
+                + "어느 창인지 정할 수 없습니다.")
+        }
         for skipped in captured.browsersWithoutTabs {
             notes.append("\(skipped.app)의 탭을 읽지 못해 창 위치만 담았습니다.")
         }

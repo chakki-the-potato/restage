@@ -14,6 +14,8 @@ enum WorkspaceCapture {
         let browsersWithoutTabs: [SkippedBrowser]
         /// 다른 데스크탑에 있어 실행 시 접근하지 못할 수 있는 항목의 개수.
         let onOtherSpaceCount: Int
+        /// 창을 골라낼 수 없어 담지 않은 개수. 앱 이름별로 센다.
+        let indistinguishable: [String: Int]
     }
 
     struct SkippedBrowser {
@@ -22,15 +24,20 @@ enum WorkspaceCapture {
     }
 
     static func capture(name: String, displays: DisplayList) -> Result {
-        let windows = WindowSnapshot.current()
-        let titles = distinguishableTitles(in: windows)
+        let all = WindowSnapshot.current()
+        let selection = WindowIdentity.select(
+            all.map { WindowIdentity.Candidate(app: $0.appName, title: $0.title) })
+        let windows = selection.kept.map { all[$0] }
+        let needsTitle = Set(selection.kept.enumerated().compactMap { position, original in
+            selection.needsTitle.contains(original) ? position : nil
+        })
 
         var tabsByApp: [String: [CapturedBrowserWindow]] = [:]
         var itemsByScreen: [String: [ItemDraft]] = [:]
         var order: [DisplaySelector] = []
         var withoutTabs: [String: String] = [:]
 
-        for window in windows {
+        for (position, window) in windows.enumerated() {
             let selector = displays.selector(containing: window.frame)
             guard let display = displays.info(for: selector) else { continue }
             let key = screenID(for: selector)
@@ -42,7 +49,7 @@ enum WorkspaceCapture {
             let match = SlotClassifier.classify(frame: window.frame, in: display)
             let item = draft(
                 for: window, slot: match?.slot, overlap: match?.overlap,
-                title: titles[window.title] == true ? window.title : nil,
+                title: needsTitle.contains(position) ? window.title : nil,
                 tabsByApp: &tabsByApp, withoutTabs: &withoutTabs)
             itemsByScreen[key]?.append(item)
         }
@@ -56,31 +63,8 @@ enum WorkspaceCapture {
             draft: WorkspaceDraft(name: name, screens: screens),
             browsersWithoutTabs: withoutTabs.sorted { $0.key < $1.key }
                 .map { SkippedBrowser(app: $0.key, reason: $0.value) },
-            onOtherSpaceCount: windows.filter { !$0.isOnCurrentSpace }.count)
-    }
-
-    /// 창을 골라낼 수 있는 제목만 남긴다.
-    ///
-    /// 한 앱의 창이 여럿이면 `title`을 적어야 실행 때 어느 창을 옮길지 정해진다. 다만 제목이
-    /// 비어 있거나 두 창이 같은 제목을 쓰면 골라낼 수 없으므로 적지 않는다. 적어두면 매번
-    /// 같은 창이 두 번 잡혀 다른 창은 영영 배치되지 않는다.
-    private static func distinguishableTitles(in windows: [CapturedWindow]) -> [String: Bool] {
-        var countsByApp: [String: [String: Int]] = [:]
-        for window in windows {
-            countsByApp[window.appName, default: [:]][window.title, default: 0] += 1
-        }
-
-        var result: [String: Bool] = [:]
-        for (app, titles) in countsByApp {
-            let windowCount = titles.values.reduce(0, +)
-            for (title, count) in titles {
-                // 창이 하나뿐이면 제목이 필요 없다. 제목이 바뀌면 오히려 못 찾게 된다.
-                guard windowCount > 1, count == 1, !title.isEmpty else { continue }
-                result[title] = true
-            }
-            _ = app
-        }
-        return result
+            onOtherSpaceCount: windows.filter { !$0.isOnCurrentSpace }.count,
+            indistinguishable: selection.droppedByApp)
     }
 
     /// 브라우저면 열린 탭까지 담고, 아니면 창 위치만 담는다.
