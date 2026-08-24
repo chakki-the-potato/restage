@@ -89,7 +89,7 @@ public struct WorkspaceRunner {
            isSatisfied(placement, handle: handle, screen: screen) {
             return ItemOutcome(
                 screenID: screen.id, app: placement.app, status: .alreadySatisfied,
-                expected: placement.target, detail: "이미 목표 상태")
+                expected: placement.target, detail: L10n.string("outcome.already_satisfied"))
         }
 
         let window: WindowHandle
@@ -107,7 +107,7 @@ public struct WorkspaceRunner {
            let frame = window.currentFrame, CurrentState.matches(frame, placement.target) {
             return ItemOutcome(
                 screenID: screen.id, app: placement.app, status: .alreadySatisfied,
-                expected: placement.target, actual: frame, detail: "이미 목표 상태")
+                expected: placement.target, actual: frame, detail: L10n.string("outcome.already_satisfied"))
         }
 
         let result = await engine.place(window, slot: placement.slot, display: screen.display)
@@ -171,7 +171,7 @@ public struct WorkspaceRunner {
         if tabs.openedCount == 0, CurrentState.isPlaced(pid: handle.pid, target: target) {
             return ItemOutcome(
                 screenID: screen.id, app: plan.app, status: .alreadySatisfied,
-                expected: target, detail: "탭 \(plan.tabs.count)개와 창 위치 모두 이미 목표 상태")
+                expected: target, detail: L10n.string("outcome.tabs_and_placement_satisfied", plan.tabs.count))
         }
 
         AXWindow.setApplicationFrontmost(pid: handle.pid)
@@ -189,7 +189,7 @@ public struct WorkspaceRunner {
         return ItemOutcome(
             screenID: placed.screenID, app: placed.app, status: placed.status,
             expected: placed.expected, actual: placed.actual,
-            detail: "탭 \(tabs.openedCount)개 추가. \(placed.detail)")
+            detail: L10n.string("outcome.tabs_added_with_placement", tabs.openedCount, placed.detail))
     }
 
     private func tabOutcome(
@@ -198,11 +198,11 @@ public struct WorkspaceRunner {
         guard result.openedCount > 0 else {
             return ItemOutcome(
                 screenID: screen.id, app: plan.app, status: .alreadySatisfied,
-                detail: "탭 \(plan.tabs.count)개 모두 이미 열려 있음")
+                detail: L10n.string("outcome.tabs_all_open", plan.tabs.count))
         }
         return ItemOutcome(
             screenID: screen.id, app: plan.app, status: .placed,
-            detail: "탭 \(result.openedCount)개 추가")
+            detail: L10n.string("outcome.tabs_added", result.openedCount))
     }
 
     /// 제목이 안 맞는 것은 config를 고쳐야 하는 문제이므로 `unreachable`이 아니라 `failed`다.

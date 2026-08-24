@@ -1,4 +1,5 @@
 import Foundation
+import RestageKit
 
 enum AppleScriptError: Error, CustomStringConvertible {
     case permissionDenied(applicationName: String)
@@ -13,9 +14,9 @@ enum AppleScriptError: Error, CustomStringConvertible {
                 자동화에서 restage가 \(name)을(를) 제어하도록 허용하세요
                 """
         case .compilationFailed(let message):
-            return "AppleScript 컴파일 실패: \(message)"
+            return L10n.string("error.applescript.compile_failed", message)
         case .executionFailed(let code, let message):
-            return "AppleScript 실행 실패(\(code)): \(message)"
+            return L10n.string("error.applescript.execute_failed", Int(code), message)
         }
     }
 }
@@ -34,7 +35,7 @@ enum AppleScriptRunner {
 
         if let error {
             let code = error[NSAppleScript.errorNumber] as? Int ?? 0
-            let message = error[NSAppleScript.errorMessage] as? String ?? "알 수 없는 오류"
+            let message = error[NSAppleScript.errorMessage] as? String ?? L10n.string("error.applescript.unknown")
             if code == permissionDeniedCode {
                 throw AppleScriptError.permissionDenied(applicationName: applicationName)
             }

@@ -19,7 +19,7 @@ enum TabController {
 
     static func apply(_ plan: TabPlan, dialect: BrowserDialect) async throws -> Result {
         guard let first = plan.tabs.first else {
-            throw AppleScriptError.executionFailed(code: 0, message: "탭이 비어 있습니다")
+            throw AppleScriptError.executionFailed(code: 0, message: L10n.string("error.tabs.empty"))
         }
 
         let windowID: Int
@@ -62,7 +62,7 @@ enum TabController {
         }
         guard let appeared else {
             throw AppleScriptError.executionFailed(
-                code: 0, message: "새 창이 나타나지 않았습니다")
+                code: 0, message: L10n.string("error.tabs.no_new_window"))
         }
         return appeared
     }
@@ -80,7 +80,7 @@ enum TabController {
         let retry = try AppleScriptRunner.run(
             dialect.frontWindowIDScript(), applicationName: dialect.applicationName)
         guard let id = Int(retry.trimmingCharacters(in: .whitespacesAndNewlines)) else {
-            throw AppleScriptError.executionFailed(code: 0, message: "창을 찾을 수 없습니다")
+            throw AppleScriptError.executionFailed(code: 0, message: L10n.string("error.tabs.window_not_found"))
         }
         return id
     }

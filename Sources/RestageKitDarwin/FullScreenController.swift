@@ -22,7 +22,7 @@ enum FullScreenController {
             return .constrained(
                 actual: before ?? .zero,
                 expected: before ?? .zero,
-                reason: "전체화면을 지원하지 않는 창입니다")
+                reason: L10n.string("error.fullscreen.unsupported"))
         }
 
         let clock = ContinuousClock()
@@ -47,7 +47,7 @@ enum FullScreenController {
         return .failed(
             expected: before ?? .zero,
             actual: window.currentFrame,
-            reason: "전체화면 전환이 완료되지 않았습니다")
+            reason: L10n.string("error.fullscreen.not_completed"))
     }
 
     /// 전체화면을 해제한다. 대부분 실패하며, 그것이 정상이다.

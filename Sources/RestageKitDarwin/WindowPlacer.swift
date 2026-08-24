@@ -32,7 +32,7 @@ public enum WindowPlacer {
             if matches(settled, target) {
                 var warnings: [String] = []
                 if !window.isOnActiveSpace {
-                    warnings.append("다른 Space에 있어 화면에 보이지 않습니다")
+                    warnings.append(L10n.string("warn.other_space"))
                 }
                 return .ok(
                     actual: settled,
@@ -71,18 +71,18 @@ public enum WindowPlacer {
         _ window: AXWindow, target: CGRect, observed: CGRect?
     ) -> PlacementResult {
         guard let observed else {
-            return .failed(expected: target, actual: nil, reason: "창 좌표를 조회할 수 없습니다")
+            return .failed(expected: target, actual: nil, reason: L10n.string("error.place.no_frame"))
         }
 
         if window.isFullScreen {
             return .constrained(
                 actual: observed, expected: target,
-                reason: "전체화면 상태라 배치할 수 없습니다 (AX로 해제 불가, ctrl+cmd+F로 직접 해제)")
+                reason: L10n.string("error.place.fullscreen_blocked"))
         }
 
         if !window.isSizeSettable {
             return .constrained(
-                actual: observed, expected: target, reason: "크기를 바꿀 수 없는 창입니다")
+                actual: observed, expected: target, reason: L10n.string("error.place.not_resizable"))
         }
 
         if let minSize = window.minSize,
@@ -97,7 +97,7 @@ public enum WindowPlacer {
         return .failed(
             expected: target,
             actual: observed,
-            reason: "\(maxAttempts)회 시도 후에도 목표 좌표에 도달하지 못했습니다")
+            reason: L10n.string("error.place.retries_exhausted", maxAttempts))
     }
 
     /// 앱이 `AXMinSize`로 최소 크기를 알려주는 경우.
@@ -111,7 +111,7 @@ public enum WindowPlacer {
 
         guard (widthBlocked && widthSettledAtMin) || (heightBlocked && heightSettledAtMin)
         else { return nil }
-        return "최소 크기 \(Int(minSize.width))x\(Int(minSize.height))"
+        return L10n.string("constraint.min_size", Int(minSize.width), Int(minSize.height))
     }
 
     /// `AXMinSize`를 노출하지 않으면서 최소 크기를 강제하는 앱을 동작으로 판별한다.
@@ -136,13 +136,13 @@ public enum WindowPlacer {
         let heightMatches = abs(observed.height - target.height) <= tolerance
 
         if widthStuckLarger && heightMatches {
-            return "최소 너비 \(Int(observed.width)) (앱이 AXMinSize를 노출하지 않음)"
+            return L10n.string("constraint.min_width_unexposed", Int(observed.width))
         }
         if heightStuckLarger && widthMatches {
-            return "최소 높이 \(Int(observed.height)) (앱이 AXMinSize를 노출하지 않음)"
+            return L10n.string("constraint.min_height_unexposed", Int(observed.height))
         }
         if widthStuckLarger && heightStuckLarger {
-            return "최소 크기 \(Int(observed.width))x\(Int(observed.height)) (앱이 AXMinSize를 노출하지 않음)"
+            return L10n.string("constraint.min_size_unexposed", Int(observed.width), Int(observed.height))
         }
         return nil
     }
