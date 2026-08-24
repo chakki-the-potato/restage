@@ -1,0 +1,28 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 빌드
+        run: swift build -c release
+
+      - name: 테스트
+        run: swift test
+
+      # 번들 조립이 깨지면 릴리스 때가 아니라 여기서 걸려야 한다.
+      # 서명은 러너에 인증서가 없으므로 adhoc으로 떨어진다.
+      - name: 앱 번들 조립 확인
+        run: |
+          scripts/make-release.sh 0.0.0-ci
+          ditto -x -k build/release/restage-0.0.0-ci-macos.zip "$RUNNER_TEMP/unzip"
+          test -x "$RUNNER_TEMP/unzip/restage.app/Contents/MacOS/restage"
+          test -f "$RUNNER_TEMP/unzip/restage.app/Contents/Resources/restage.icns"
+          codesign --verify --strict "$RUNNER_TEMP/unzip/restage.app"

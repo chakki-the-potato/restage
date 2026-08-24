@@ -12,9 +12,11 @@ public enum AppIconRenderer {
     private static let plateInsetRatio: CGFloat = 100.0 / 1024.0
     private static let plateCornerRatio: CGFloat = 0.2247
 
-    private static let topColor = CGColor(srgbRed: 0.36, green: 0.61, blue: 1.00, alpha: 1)
-    private static let bottomColor = CGColor(srgbRed: 0.13, green: 0.29, blue: 0.79, alpha: 1)
-    private static let markColor = CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 1)
+    /// 흰 판에 먹색 마크. 흰 배경에서는 판 자체가 묻히지만 아래로 갈수록 어두워지는
+    /// 그라디언트와 그림자가 경계를 만든다. 테두리를 덧대지 않는 이유다.
+    private static let topColor = CGColor(srgbRed: 0.99, green: 0.99, blue: 1.00, alpha: 1)
+    private static let bottomColor = CGColor(srgbRed: 0.87, green: 0.88, blue: 0.91, alpha: 1)
+    private static let markColor = CGColor(srgbRed: 0.13, green: 0.14, blue: 0.17, alpha: 1)
 
     public static func render(pixels: Int) -> CGImage? {
         let side = CGFloat(pixels)
@@ -91,3 +93,4 @@ public enum AppIconRenderer {
         context.strokePath()
     }
 }
+

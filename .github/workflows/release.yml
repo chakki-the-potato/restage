@@ -1,0 +1,28 @@
+name: release
+
+# 태그를 밀면 앱을 빌드해 Release에 붙인다.
+#   git tag v0.1.0 && git push origin v0.1.0
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 태그에서 버전 뽑기
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: 앱과 zip 만들기
+        run: scripts/make-release.sh "$VERSION"
+
+      - name: Release에 붙이기
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" build/release/*.zip --generate-notes

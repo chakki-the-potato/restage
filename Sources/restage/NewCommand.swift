@@ -14,8 +14,8 @@ enum NewCommand {
     }
 
     static func run(name: String) -> Int32 {
-        guard isValidName(name) else {
-            print("워크스페이스 이름에 / 나 . 은 쓸 수 없습니다: \(name)")
+        if let reason = WorkspaceName.validate(name) {
+            print(reason)
             return 2
         }
         guard AccessibilityPermission.isTrusted() else {
@@ -31,14 +31,7 @@ enum NewCommand {
             return 1
         }
 
-        let captured: WorkspaceCapture.Result
-        do {
-            captured = try WorkspaceCapture.capture(name: name, displays: displays)
-        } catch {
-            print("창 목록을 읽지 못했습니다: \(error)")
-            return 1
-        }
-
+        let captured = WorkspaceCapture.capture(name: name, displays: displays)
         var draft = captured.draft
         printIntro(captured)
         return edit(&draft)
@@ -46,7 +39,14 @@ enum NewCommand {
 
     private static func printIntro(_ captured: WorkspaceCapture.Result) {
         print("현재 창 배치를 읽었습니다.")
-        print("다른 Space에 있거나 전체화면인 창은 보이지 않습니다.")
+        if captured.onOtherSpaceCount > 0 {
+            print("이 중 \(captured.onOtherSpaceCount)개는 다른 데스크탑에 있습니다. "
+                + "앱이 꺼진 상태에서 실행하면 정상 배치되고, 이미 떠 있으면 실패합니다.")
+        }
+        for (app, count) in captured.indistinguishable.sorted(by: { $0.key < $1.key }) {
+            print("\(app) 창 \(count)개는 담지 않았습니다. 제목이 같거나 비어 있어 "
+                + "실행할 때 어느 창인지 정할 수 없습니다.")
+        }
         for skipped in captured.browsersWithoutTabs {
             print("\(skipped.app)의 탭을 읽지 못해 창 위치만 담았습니다: \(skipped.reason)")
         }
@@ -207,29 +207,10 @@ enum NewCommand {
         guard draft.itemCount > 0 else {
             return "담긴 항목이 없습니다. [+]로 앱을, [w]로 웹을 추가하세요."
         }
-        var lines: [String] = []
-        var number = 0
-
-        for screen in draft.screens {
-            lines.append("  \(screen.id)")
-            for item in screen.items {
-                number += 1
-                let slot = item.slot.map(SlotLabel.text) ?? "크기 유지"
-                let marker = item.isConfident ? " " : "?"
-                let tabs: String
-                if case .browser(let urls) = item.kind, !urls.isEmpty {
-                    tabs = "  탭 \(urls.count)개"
-                } else {
-                    tabs = ""
-                }
-                lines.append(
-                    "   \(String(format: "%2d", number)). "
-                    + item.app.padded(to: 22) + slot + marker + tabs)
-            }
-        }
-        if draft.screens.contains(where: { $0.items.contains { !$0.isConfident } }) {
+        var lines = DraftSummary.lines(draft, numbered: true)
+        if DraftSummary.hasUncertainItem(draft) {
             lines.append("")
-            lines.append("  ? 는 자리가 애매하다는 뜻입니다. 번호를 눌러 직접 고르세요.")
+            lines.append("  \(DraftSummary.uncertaintyNote) 번호를 눌러 직접 고르세요.")
         }
         return lines.joined(separator: "\n")
     }
@@ -257,8 +238,7 @@ enum NewCommand {
             print("담긴 항목이 없어 저장하지 않았습니다")
             return 1
         }
-        let directory = WorkspaceRegistry.defaultDirectory
-        let path = "\(directory)/\(draft.name).yaml"
+        let path = "\(WorkspaceRegistry.defaultDirectory)/\(draft.name).yaml"
 
         if FileManager.default.fileExists(atPath: path) {
             guard Console.confirm("\(path)가 이미 있습니다. 덮어쓸까요?") else {
@@ -267,22 +247,9 @@ enum NewCommand {
             }
         }
 
-        do {
-            try FileManager.default.createDirectory(
-                atPath: directory, withIntermediateDirectories: true)
-            try ConfigWriter.yaml(for: draft).write(
-                toFile: path, atomically: true, encoding: .utf8)
-        } catch {
-            print("저장하지 못했습니다: \(error)")
-            return 1
-        }
-
-        // 쓴 파일을 다시 읽어 실제로 열리는지 확인한다. 확인 없이 성공을 알리지 않는다.
-        do {
-            _ = try ConfigLoader.load(path: path)
-        } catch {
-            print("저장은 됐지만 다시 읽지 못했습니다. 파일을 확인하세요: \(path)")
-            print(error)
+        // 저장 뒤 다시 읽어 실제로 열리는지 확인한다. 확인 없이 성공을 알리지 않는다.
+        if let reason = WorkspaceFiles.save(draft) {
+            print(reason)
             return 1
         }
 
@@ -291,9 +258,6 @@ enum NewCommand {
         return 0
     }
 
-    private static func isValidName(_ name: String) -> Bool {
-        !name.isEmpty && !name.contains("/") && !name.contains(".")
-    }
 }
 
 extension String {
