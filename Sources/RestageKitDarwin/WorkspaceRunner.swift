@@ -95,7 +95,9 @@ public struct WorkspaceRunner {
         }
 
         let result = await engine.place(window, slot: placement.slot, display: screen.display)
-        guard screen.mode == .fullscreen, result.isPass else {
+        // 화면 단위 mode와 항목 단위 fullscreen 중 하나라도 켜져 있으면 전용 데스크탑으로 보낸다.
+        let wantsFullScreen = screen.mode == .fullscreen || placement.fullscreen
+        guard wantsFullScreen, result.isPass else {
             return outcome(from: result, placement: placement, screen: screen)
         }
 

@@ -71,3 +71,113 @@ private let draft = WorkspaceDraft(
     #expect(config.screens[0].items.count == 1)
     #expect(config.screens[1].items.count == 1)
 }
+
+// MARK: - 자리 바꾸기
+
+@Test func slotOverrideReplacesSavedSlot() {
+    let result = DraftSelection.apply(excluding: [], slots: [0: .q4], to: draft)
+    #expect(result.screens[0].items[0].slot == .q4)
+    #expect(result.screens[0].items[1].slot == .rightHalf)
+}
+
+/// 사용자가 직접 고른 자리에는 물음표가 붙지 않아야 한다.
+@Test func slotOverrideClearsUncertainty() {
+    var uncertain = draft
+    uncertain.screens[0].items[0].overlap = 0.4
+    #expect(!uncertain.screens[0].items[0].isConfident)
+
+    let result = DraftSelection.apply(excluding: [], slots: [0: .full], to: uncertain)
+    #expect(result.screens[0].items[0].isConfident)
+}
+
+@Test func slotOverrideAppliesAcrossScreens() {
+    let result = DraftSelection.apply(excluding: [], slots: [3: .bottomHalf], to: draft)
+    #expect(result.screens[1].items[1].slot == .bottomHalf)
+}
+
+/// 제외한 항목의 자리를 바꿔도 결과에 영향이 없어야 한다.
+@Test func slotOverrideOnExcludedItemIsIgnored() {
+    let result = DraftSelection.apply(excluding: [0], slots: [0: .q4], to: draft)
+    #expect(result.screens[0].items.map(\.app) == ["Notion"])
+}
+
+@Test func slotOverrideSurvivesRoundTrip() throws {
+    let result = DraftSelection.apply(excluding: [], slots: [2: .centered], to: draft)
+    let config = try WorkspaceConfig.decode(yaml: ConfigWriter.yaml(for: result))
+    guard case .app(let item) = config.screens[1].items[0] else {
+        Issue.record("app 항목이 아닙니다")
+        return
+    }
+    #expect(item.slot == .centered)
+}
+
+// MARK: - 전체 화면과 직접 추가
+
+@Test func fullscreenOverrideIsApplied() {
+    let result = DraftSelection.apply(excluding: [], fullscreen: [0: true], to: draft)
+    #expect(result.screens[0].items[0].fullscreen)
+    #expect(!result.screens[0].items[1].fullscreen)
+}
+
+@Test func fullscreenSurvivesRoundTrip() throws {
+    let result = DraftSelection.apply(excluding: [], fullscreen: [0: true], to: draft)
+    let config = try WorkspaceConfig.decode(yaml: ConfigWriter.yaml(for: result))
+    guard case .app(let item) = config.screens[0].items[0] else {
+        Issue.record("app 항목이 아닙니다")
+        return
+    }
+    #expect(item.fullscreen)
+}
+
+/// 전체화면을 끄면 자리 배치로 돌아가야 한다.
+@Test func fullscreenCanBeTurnedOff() {
+    var withFullScreen = draft
+    withFullScreen.screens[0].items[0].fullscreen = true
+    let result = DraftSelection.apply(excluding: [], fullscreen: [0: false], to: withFullScreen)
+    #expect(!result.screens[0].items[0].fullscreen)
+}
+
+@Test func addedItemsGoToFirstScreen() {
+    let result = DraftSelection.apply(
+        excluding: [], added: [.app("Figma", slot: .q1)], to: draft)
+    #expect(result.screens[0].items.map(\.app) == ["Safari", "Notion", "Figma"])
+    #expect(result.itemCount == 5)
+}
+
+/// 담은 것이 하나도 없어도 직접 추가한 것이 있으면 화면을 만들어야 한다.
+@Test func addedItemsCreateScreenWhenAllExcluded() {
+    let result = DraftSelection.apply(
+        excluding: [0, 1, 2, 3], added: [.app("Figma", slot: .full)], to: draft)
+    #expect(result.screens.count == 1)
+    #expect(result.screens[0].id == "main")
+    #expect(result.screens[0].items.map(\.app) == ["Figma"])
+}
+
+@Test func addedFullscreenItemParsesBack() throws {
+    let result = DraftSelection.apply(
+        excluding: [], added: [.app("Figma", slot: .full, fullscreen: true)], to: draft)
+    let config = try WorkspaceConfig.decode(yaml: ConfigWriter.yaml(for: result))
+    guard case .app(let item) = config.screens[0].items.last else {
+        Issue.record("app 항목이 아닙니다")
+        return
+    }
+    #expect(item.app == AppID("Figma"))
+    #expect(item.fullscreen)
+}
+
+/// 기존 config에 fullscreen이 없으면 false여야 한다. 옛 파일이 깨지면 안 된다.
+@Test func missingFullscreenDefaultsToFalse() throws {
+    let config = try WorkspaceConfig.decode(yaml: """
+        workspace: old
+        screens:
+          - id: main
+            display: builtin
+            items:
+              - {type: app, app: Safari, slot: full}
+        """)
+    guard case .app(let item) = config.screens[0].items[0] else {
+        Issue.record("app 항목이 아닙니다")
+        return
+    }
+    #expect(!item.fullscreen)
+}

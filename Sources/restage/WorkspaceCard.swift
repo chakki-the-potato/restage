@@ -2,8 +2,11 @@ import SwiftUI
 
 /// 워크스페이스 하나를 나타내는 카드.
 ///
-/// 카드 전체가 실행 버튼이다. 편집·삭제는 마우스를 올렸을 때만 나타난다. 매일 누르는 것은
-/// 실행이고 관리는 가끔이므로, 관리 버튼이 늘 보이면 실행을 누를 자리가 좁아진다.
+/// 카드 전체가 실행 버튼이다. 편집과 더보기는 마우스를 올렸을 때만 나타난다. 매일 누르는
+/// 것은 실행이고 관리는 가끔이므로, 관리 버튼이 늘 보이면 실행을 누를 자리가 좁아진다.
+///
+/// 더보기 메뉴는 카드가 아니라 패널이 그린다. 카드 안에 그리면 다음 카드에 가려지고
+/// 카드 높이도 늘어나 목록이 밀린다. 카드는 버튼 위치만 올려보낸다.
 struct WorkspaceCard: View {
     let item: PanelStore.Item
     let isRunning: Bool
@@ -12,10 +15,7 @@ struct WorkspaceCard: View {
 
     let onRun: () -> Void
     let onEdit: () -> Void
-    let onRename: () -> Void
-    let onSetHotkey: () -> Void
-    let onReveal: () -> Void
-    let onDelete: () -> Void
+    let onToggleActions: () -> Void
     let onDismissMessage: () -> Void
 
     @State private var isHovering = false
@@ -84,20 +84,8 @@ struct WorkspaceCard: View {
         } else if isHovering {
             HStack(spacing: 2) {
                 iconButton("pencil", "편집", onEdit)
-                Menu {
-                    Button("단축키 설정…", action: onSetHotkey)
-                    Button("이름 바꾸기…", action: onRename)
-                    Button("Finder에서 보기", action: onReveal)
-                    Divider()
-                    Button("삭제…", role: .destructive, action: onDelete)
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 12))
-                        .frame(width: 22, height: 22)
-                }
-                .menuStyle(.borderlessButton)
-                .menuIndicator(.hidden)
-                .frame(width: 22)
+                iconButton("ellipsis", "더보기", onToggleActions)
+                    .menuAnchor(item.name)
             }
             .foregroundStyle(.secondary)
         } else if let hotkey = item.hotkey {

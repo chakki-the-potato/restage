@@ -29,7 +29,8 @@ public enum WorkspaceResolver {
                     for: app.slot, in: display.visibleFrame, primaryMaxY: display.primaryMaxY)
                 return .place(Placement(
                     app: app.app, slot: app.slot, target: target,
-                    selector: WindowSelector(titleContains: app.title)))
+                    selector: WindowSelector(titleContains: app.title),
+                    fullscreen: app.fullscreen))
             case .browser(let browser):
                 let target = browser.slot.map {
                     SlotGeometry.frame(

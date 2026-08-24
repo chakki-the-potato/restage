@@ -28,9 +28,15 @@ public enum DraftSelection {
         return result
     }
 
-    /// 제외한 인덱스를 뺀 초안. 항목이 하나도 남지 않은 화면은 통째로 뺀다.
-    public static func apply(excluding excluded: Set<Int>, to draft: WorkspaceDraft)
-        -> WorkspaceDraft {
+    /// 제외한 인덱스를 빼고 바꾼 자리를 적용한 초안.
+    ///
+    /// 항목이 하나도 남지 않은 화면은 통째로 뺀다. 빈 화면이 남으면 파싱에 실패한다.
+    /// 자리를 직접 고른 항목은 확신도를 지운다. 사용자가 정한 값에 물음표가 붙으면
+    /// 도구가 그 선택을 의심하는 것처럼 보인다.
+    public static func apply(
+        excluding excluded: Set<Int>, slots: [Int: Slot] = [:],
+        fullscreen: [Int: Bool] = [:], added: [ItemDraft] = [], to draft: WorkspaceDraft
+    ) -> WorkspaceDraft {
         var index = 0
         var screens: [ScreenDraft] = []
 
@@ -39,7 +45,16 @@ public enum DraftSelection {
             for item in screen.items {
                 defer { index += 1 }
                 guard !excluded.contains(index) else { continue }
-                kept.append(item)
+                var updated = item
+                if let slot = slots[index] {
+                    updated.slot = slot
+                    updated.overlap = nil
+                }
+                if let wantsFullScreen = fullscreen[index] {
+                    updated.fullscreen = wantsFullScreen
+                    updated.overlap = nil
+                }
+                kept.append(updated)
             }
             guard !kept.isEmpty else { continue }
             screens.append(ScreenDraft(id: screen.id, display: screen.display, items: kept))
@@ -47,6 +62,14 @@ public enum DraftSelection {
 
         var result = draft
         result.screens = screens
+        guard !added.isEmpty else { return result }
+
+        // 새로 넣은 항목은 첫 화면에 붙인다. 화면이 하나도 없으면 주 디스플레이로 만든다.
+        if result.screens.isEmpty {
+            result.screens = [ScreenDraft(id: "main", display: .builtin, items: added)]
+        } else {
+            result.screens[0].items.append(contentsOf: added)
+        }
         return result
     }
 }

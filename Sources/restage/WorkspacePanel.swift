@@ -1,3 +1,5 @@
+import AppKit
+import RestageKit
 import RestageKitDarwin
 import SwiftUI
 
@@ -7,8 +9,14 @@ struct WorkspacePanel: View {
 
     /// 창을 여는 동작 전에 패널을 닫는다. 알림 창이 패널 뒤에 가리면 눌 수 없다.
     let dismiss: () -> Void
+    /// 창을 닫은 뒤 패널을 다시 여는 길.
+    let reopen: () -> Void
+    /// 시스템 메뉴를 띄우는 길. 두 번째 인자는 버튼의 창 좌표다.
+    let presentMenu: ([PanelMenu.Item], CGRect) -> Void
     let onQuit: () -> Void
 
+    /// 각 카드의 더보기 버튼 위치. 그 자리에 메뉴를 띄운다.
+    @State private var anchors: [String: CGRect] = [:]
     private var isBusy: Bool { store.runningName != nil }
 
     var body: some View {
@@ -23,6 +31,53 @@ struct WorkspacePanel: View {
         // 팝오버 기본 재질을 그대로 두면 앱이 비활성일 때 어두워진다. 다른 창을 클릭했을
         // 뿐인데 패널 색이 바뀌면 무언가 꺼진 것처럼 보인다. 불투명 배경으로 덮는다.
         .background(Color(nsColor: .windowBackgroundColor))
+        .onPreferenceChange(MenuAnchorKey.self) { anchors = $0 }
+        .onExitCommand { dismiss() }
+    }
+
+    private static let optionsAnchor = "__options"
+
+    /// 카드의 더보기 메뉴 항목.
+    private func cardMenuItems(_ item: PanelStore.Item) -> [PanelMenu.Item] {
+        [
+            PanelMenu.Item(title: "이름 변경", symbol: "pencil.line") {
+                act { rename(item.name) }
+            },
+            PanelMenu.Item(title: "단축키 변경", symbol: "keyboard") {
+                act { setHotkey(for: item) }
+            },
+            PanelMenu.Item(title: "파일로 열기", symbol: "doc.text") {
+                act { WorkspaceFiles.revealInFinder(item.name) }
+            },
+            PanelMenu.separator(),
+            PanelMenu.Item(title: "삭제", symbol: "trash", isDestructive: true) {
+                act { delete(item.name) }
+            },
+        ]
+    }
+
+    private var optionsMenuItems: [PanelMenu.Item] {
+        var items: [PanelMenu.Item] = []
+        if store.loginItemSupported {
+            items.append(
+                PanelMenu.Item(
+                    title: "로그인 시 자동 실행", symbol: "arrow.up.forward.app",
+                    isChecked: store.loginItemEnabled, keepsPanelOpen: true
+                ) {
+                    store.toggleLoginItem()
+                })
+        }
+        items.append(
+            PanelMenu.Item(title: "업데이트 확인", symbol: "arrow.down.circle") {
+                checkForUpdate()
+            })
+        items.append(
+            PanelMenu.Item(title: "config 폴더 열기", symbol: "folder") {
+                act { WorkspaceFiles.revealConfigFolder(); return nil }
+            })
+        items.append(PanelMenu.separator())
+        items.append(PanelMenu.Item(title: "종료", symbol: "power") { onQuit() })
+        return items
     }
 
     // MARK: - 머리말
@@ -34,6 +89,9 @@ struct WorkspacePanel: View {
                 .foregroundStyle(Color.accentColor)
             Text("restage")
                 .font(.system(size: 13, weight: .semibold))
+            Text("v\(Bundle.main.shortVersion)")
+                .font(.system(size: 11))
+                .foregroundStyle(.tertiary)
             Spacer()
         }
         .padding(.horizontal, 14)
@@ -66,11 +124,11 @@ struct WorkspacePanel: View {
             isBusy: isBusy,
             message: store.messages[item.name],
             onRun: { store.run(item.name) },
-            onEdit: { act { WorkspaceFiles.openInEditor(item.name) } },
-            onRename: { act { rename(item.name) } },
-            onSetHotkey: { act { setHotkey(for: item) } },
-            onReveal: { act { WorkspaceFiles.revealInFinder(item.name) } },
-            onDelete: { act { delete(item.name) } },
+            onEdit: { act { editWorkspace(item.name) } },
+            onToggleActions: {
+                guard let anchor = anchors[item.name] else { return }
+                presentMenu(cardMenuItems(item), anchor)
+            },
             onDismissMessage: { store.dismissMessage(for: item.name) })
     }
 
@@ -158,25 +216,22 @@ struct WorkspacePanel: View {
 
     private var footer: some View {
         HStack {
-            Text("restage \(Bundle.main.shortVersion)")
-                .font(.system(size: 11))
-                .foregroundStyle(.tertiary)
             Spacer()
-            Menu {
-                if store.loginItemSupported {
-                    Toggle("로그인 시 자동 실행", isOn: Binding(
-                        get: { store.loginItemEnabled },
-                        set: { _ in store.toggleLoginItem() }))
-                }
-                Button("config 폴더 열기") { act { WorkspaceFiles.revealConfigFolder(); return nil } }
-                Divider()
-                Button("종료") { onQuit() }
+            Button {
+                guard let anchor = anchors[Self.optionsAnchor] else { return }
+                presentMenu(optionsMenuItems, anchor)
             } label: {
-                Text("Options")
-                    .font(.system(size: 11))
+                HStack(spacing: 3) {
+                    Text("Options")
+                        .font(.system(size: 11))
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 8, weight: .semibold))
+                }
+                .foregroundStyle(.secondary)
+                .contentShape(Rectangle())
             }
-            .menuStyle(.borderlessButton)
-            .fixedSize()
+            .buttonStyle(.plain)
+            .menuAnchor(Self.optionsAnchor)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 9)
@@ -190,6 +245,51 @@ struct WorkspacePanel: View {
                 Prompt.message("처리하지 못했습니다", failure)
             }
             store.reload()
+            // 창이 끝나면 패널을 다시 연다. 이름을 바꾸고 단축키도 정하려면 매번 메뉴바를
+            // 다시 눌러야 하는데, 한 번에 하나만 하라는 뜻이 아니다.
+            reopen()
+        }
+    }
+
+    /// 저장된 config를 설정 창으로 불러와 고친다.
+    ///
+    /// 파일을 편집기로 여는 방식이었을 때는 자리 이름을 외워야 했고, 자리가 애매하다는
+    /// 표시를 봐도 그 자리에서 고칠 수 없었다.
+    private func editWorkspace(_ name: String) -> String? {
+        let existing: WorkspaceDraft
+        do {
+            let path = try WorkspaceRegistry().resolve(name)
+            existing = DraftFromConfig.draft(from: try ConfigLoader.load(path: path))
+        } catch {
+            return "'\(name)'을 읽지 못했습니다: \(error)"
+        }
+
+        guard case .saved(let edited) = DraftDialog.edit(
+            existing, title: "'\(name)' 편집", notes: [])
+        else { return nil }
+        return WorkspaceFiles.save(edited)
+    }
+
+    /// 새 버전이 있는지 GitHub에 물어본다. 사용자가 누를 때만 부른다.
+    private func checkForUpdate() {
+        dismiss()
+        Task { @MainActor in
+            switch await UpdateChecker.check(current: Bundle.main.shortVersion) {
+            case .upToDate(let version):
+                Prompt.message("최신 버전입니다", "v\(version)을 쓰고 있습니다.")
+            case .available(let latest, let url):
+                if Prompt.confirmDestructive(
+                    title: "새 버전 v\(latest)이 있습니다",
+                    body: "지금 쓰는 것은 v\(Bundle.main.shortVersion)입니다.\n"
+                        + "받는 방법은 릴리스 페이지에 있습니다.",
+                    confirmTitle: "릴리스 페이지 열기", destructive: false),
+                   let page = URL(string: url) {
+                    NSWorkspace.shared.open(page)
+                }
+            case .failed(let reason):
+                Prompt.message("업데이트를 확인하지 못했습니다", reason)
+            }
+            reopen()
         }
     }
 

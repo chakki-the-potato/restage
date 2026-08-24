@@ -75,8 +75,10 @@ enum WorkspaceCapture {
         tabsByApp: inout [String: [CapturedBrowserWindow]], withoutTabs: inout [String: String]
     ) -> ItemDraft {
         let asApp = ItemDraft.app(
-            window.appName, slot: slot ?? .full, title: title, overlap: overlap,
-            wasOnCurrentSpace: window.isOnCurrentSpace)
+            window.appName, slot: slot ?? .full, title: title,
+            overlap: window.isFullScreen ? nil : overlap,
+            wasOnCurrentSpace: window.isOnCurrentSpace,
+            fullscreen: window.isFullScreen)
         guard InstalledApps.isBrowser(bundleID: window.bundleID) else { return asApp }
 
         if tabsByApp[window.appName] == nil {

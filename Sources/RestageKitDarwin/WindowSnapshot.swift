@@ -11,16 +11,19 @@ public struct CapturedWindow: Sendable, Equatable {
     public let frame: CGRect
     /// 지금 보고 있는 데스크탑에 있는지. 아니면 다른 Space에 있거나 전체화면이다.
     public let isOnCurrentSpace: Bool
+    /// 전용 데스크탑을 차지한 전체화면 창인지.
+    public let isFullScreen: Bool
 
     public init(
         appName: String, bundleID: String, title: String, frame: CGRect,
-        isOnCurrentSpace: Bool
+        isOnCurrentSpace: Bool, isFullScreen: Bool = false
     ) {
         self.appName = appName
         self.bundleID = bundleID
         self.title = title
         self.frame = frame
         self.isOnCurrentSpace = isOnCurrentSpace
+        self.isFullScreen = isFullScreen
     }
 }
 
@@ -41,6 +44,7 @@ public enum WindowSnapshot {
     public static func current() -> [CapturedWindow] {
         let apps = regularApps()
         let visible = onScreenWindowIDs()
+        let displays = NSScreen.screens.map(\.frame)
 
         let all = CGWindowListCopyWindowInfo(
             [.optionAll, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] ?? []
@@ -53,12 +57,14 @@ public enum WindowSnapshot {
                   frame.width >= minimumSide, frame.height >= minimumSide else { return nil }
 
             let id = window[kCGWindowNumber as String] as? Int ?? -1
+            let onCurrentSpace = visible.contains(id)
             return CapturedWindow(
                 appName: app.name,
                 bundleID: app.bundleID,
                 title: (window[kCGWindowName as String] as? String) ?? "",
                 frame: frame,
-                isOnCurrentSpace: visible.contains(id))
+                isOnCurrentSpace: onCurrentSpace,
+                isFullScreen: !onCurrentSpace && coversWholeDisplay(frame, displays))
         }
         .sorted { lhs, rhs in
             if lhs.isOnCurrentSpace != rhs.isOnCurrentSpace { return lhs.isOnCurrentSpace }
@@ -97,6 +103,19 @@ public enum WindowSnapshot {
             ?? []
         return Set(onScreen.compactMap { $0[kCGWindowNumber as String] as? Int })
     }
+
+    /// 디스플레이 하나를 통째로 덮는 창인지. 전체화면 창은 메뉴바 자리까지 차지한다.
+    ///
+    /// 전용 데스크탑에 있으면서 화면을 꽉 채우면 전체화면으로 본다. 그냥 최대화한 창은
+    /// 현재 데스크탑에 있으므로 여기까지 오지 않는다.
+    private static func coversWholeDisplay(_ frame: CGRect, _ displays: [CGRect]) -> Bool {
+        displays.contains { display in
+            abs(frame.width - display.width) <= fullScreenTolerance
+                && abs(frame.height - display.height) <= fullScreenTolerance
+        }
+    }
+
+    private static let fullScreenTolerance: CGFloat = 4
 
     private static func rect(from window: [String: Any]) -> CGRect? {
         guard let bounds = window[kCGWindowBounds as String] as? [String: Any],

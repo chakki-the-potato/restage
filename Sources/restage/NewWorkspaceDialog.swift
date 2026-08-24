@@ -26,17 +26,31 @@ enum NewWorkspaceDialog {
             return
         }
 
-        let captured = WorkspaceCapture.capture(name: name, displays: displays)
-        guard captured.draft.itemCount > 0 else {
-            Prompt.message(
-                "담을 창이 없습니다",
-                "현재 데스크탑에 열린 창이 없습니다. 앱을 배치한 뒤 다시 시도하세요.")
-            return
-        }
-        guard let draft = confirm(captured, name: name) else { return }
+        // 다시 읽기를 고르면 창을 새로 읽어 목록을 다시 만든다. 그 사이 사용자가 창을
+        // 옮겼을 수 있으므로 앞서 고른 체크와 자리는 유지하지 않는다. 목록 자체가 달라진다.
+        while true {
+            let captured = WorkspaceCapture.capture(name: name, displays: displays)
+            guard captured.draft.itemCount > 0 else {
+                Prompt.message(
+                    "담을 창이 없습니다",
+                    "열린 창이 없습니다. 앱을 배치한 뒤 다시 시도하세요.")
+                return
+            }
 
-        if let reason = WorkspaceFiles.save(draft) {
-            Prompt.message("저장하지 못했습니다", reason)
+            switch DraftDialog.edit(
+                captured.draft, title: "'\(name)'에 담을 내용",
+                notes: notes(for: captured), allowsReload: true
+            ) {
+            case .reload:
+                continue
+            case .cancelled:
+                return
+            case .saved(let draft):
+                if let reason = WorkspaceFiles.save(draft) {
+                    Prompt.message("저장하지 못했습니다", reason)
+                }
+                return
+            }
         }
     }
 
@@ -64,43 +78,20 @@ enum NewWorkspaceDialog {
         }
     }
 
-    /// 담을 항목을 고르게 하고, 고른 것만 남긴 초안을 돌려준다. 취소하면 nil이다.
-    private static func confirm(
-        _ captured: WorkspaceCapture.Result, name: String
-    ) -> WorkspaceDraft? {
-        let selection = CaptureSelection(total: captured.draft.itemCount)
-        let view = CaptureSelectionView(
-            rows: CaptureSelectionView.rows(for: captured.draft), selection: selection)
-        let hosting = NSHostingView(rootView: view)
-        hosting.frame = NSRect(x: 0, y: 0, width: 380, height: 260)
-
+    /// 캡처에서 알아둘 것을 짧게 모은다. 길게 늘어놓으면 아무도 읽지 않는다.
+    private static func notes(for captured: WorkspaceCapture.Result) -> [String] {
         var notes: [String] = []
-        for (app, count) in captured.indistinguishable.sorted(by: { $0.key < $1.key }) {
-            notes.append(
-                "\(app) 창 \(count)개는 담지 않았습니다. 제목이 같거나 비어 있어 실행할 때 "
-                + "어느 창인지 정할 수 없습니다.")
-        }
-        for skipped in captured.browsersWithoutTabs {
-            notes.append("\(skipped.app)의 탭을 읽지 못해 창 위치만 담았습니다.")
-        }
-        if captured.onOtherSpaceCount > 0 {
-            notes.append(
-                "다른 데스크탑에 있는 창은 앱이 꺼진 상태에서 실행하면 정상 배치되고, "
-                + "이미 떠 있으면 그 항목만 실패합니다.")
-        }
 
-        let accepted = Prompt.confirm(
-            title: "'\(name)'에 담을 내용",
-            body: (["담을 창을 고르세요."] + notes).joined(separator: "\n"),
-            accessory: hosting,
-            confirmTitle: "저장")
-        guard accepted else { return nil }
-
-        let draft = DraftSelection.apply(excluding: selection.excluded, to: captured.draft)
-        guard draft.itemCount > 0 else {
-            Prompt.message("담을 항목이 없습니다", "하나 이상 고른 뒤 저장하세요.")
-            return nil
+        let dropped = captured.indistinguishable
+        if !dropped.isEmpty {
+            let total = dropped.values.reduce(0, +)
+            let apps = dropped.keys.sorted().joined(separator: ", ")
+            notes.append("창 \(total)개는 제목으로 구분할 수 없어 담지 않았습니다 (\(apps)).")
         }
-        return draft
+        if !captured.browsersWithoutTabs.isEmpty {
+            let apps = captured.browsersWithoutTabs.map(\.app).joined(separator: ", ")
+            notes.append("\(apps)의 탭은 읽지 못해 창 위치만 담았습니다.")
+        }
+        return notes
     }
 }
