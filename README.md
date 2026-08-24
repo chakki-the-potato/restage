@@ -32,49 +32,45 @@ restage open dev
 
 **선언하지 않은 것은 손대지 않는다.** config에 없는 앱은 숨기지도 종료하지도 않는다. 브라우저 탭도 이미 열린 것을 닫지 않고 없는 것만 추가한다.
 
-## 요구 사항
-
-- macOS 13 이상
-- Xcode 명령줄 도구 (Swift 6.0 이상)
-- 접근성 권한
-
 ## 설치
 
-### 앱으로 받기
-
-[Releases](https://github.com/chakki-the-potato/restage/releases)에서 `restage-<버전>-macos.zip`을 받아 압축을 풀고 `restage.app`을 `/Applications`으로 옮긴다.
-
-처음 열면 macOS가 막는다. **공증하지 않았기 때문이다.** 공증에는 유료 Apple Developer Program이 필요한데 가입하지 않았다. 앱을 우클릭하고 열기를 고른 뒤 다시 열기를 누르면 된다. 한 번만 하면 이후로는 그냥 열린다.
-
-터미널을 쓴다면 격리 속성을 지워도 된다.
+**Homebrew**
 
 ```bash
-xattr -dr com.apple.quarantine /Applications/restage.app
+brew install chakki-the-potato/tap/restage
+open $(brew --prefix restage)/restage.app
 ```
 
-서명이 adhoc이라 버전을 올릴 때마다 앱의 신원이 바뀐다. **새 버전으로 갈아끼우면 접근성 권한을 다시 켜야 한다.**
+**Homebrew가 없다면**
 
-### 소스에서 빌드
+```bash
+curl -fsSL https://raw.githubusercontent.com/chakki-the-potato/restage/main/install.sh | bash
+```
+
+둘 다 소스를 받아 이 컴퓨터에서 빌드한다. 직접 빌드한 앱은 Gatekeeper가 막지 않으므로 "확인되지 않은 개발자" 경고도, 우클릭으로 여는 번거로움도 없다.
+
+macOS 13 이상과 Xcode 명령줄 도구가 필요하다. 없으면 설치 스크립트가 안내한다.
+
+### 접근성 권한
+
+창을 옮기려면 접근성 권한이 필요하다. 앱을 처음 열면 안내가 뜬다.
+
+시스템 설정 → 개인정보 보호 및 보안 → 손쉬운 사용에서 **restage**를 켠다.
+
+터미널에서 쓸 때는 승인 대상이 **명령을 실행한 터미널 앱**이다. iTerm에서 실행한다면 iTerm을 켠다. 켠 뒤 터미널을 완전히 종료했다 다시 연다.
+
+권한이 없으면 안내 메시지를 보여주고 멈춘다.
+
+업그레이드하면 다시 켜야 할 수 있다. 무료 서명은 빌드할 때마다 앱의 신원이 바뀌기 때문이다. 이것을 없애려면 유료 Apple Developer Program의 Developer ID 인증서가 필요하다.
+
+### 소스에서 직접
 
 ```bash
 git clone https://github.com/chakki-the-potato/restage.git
 cd restage
-swift build -c release
+./scripts/make-app.sh          # 메뉴바 앱을 build/restage.app에 만든다
+swift build -c release         # CLI만 필요하면
 ```
-
-빌드된 바이너리는 `.build/release/restage`에 있다. PATH에 두려면 심볼릭 링크를 건다.
-
-```bash
-ln -s "$PWD/.build/release/restage" /usr/local/bin/restage
-```
-
-### 접근성 권한
-
-창을 옮기려면 접근성 권한이 필요하다. 승인 대상은 **명령을 실행한 터미널 앱**이다. iTerm에서 실행한다면 iTerm을 승인한다.
-
-시스템 설정 → 개인정보 보호 및 보안 → 손쉬운 사용에서 터미널 앱을 추가하고 켠다. 켠 뒤 터미널을 완전히 종료했다 다시 연다.
-
-권한이 없으면 `restage`가 안내 메시지를 출력하고 멈춘다.
 
 ## 워크스페이스 만들기
 
@@ -108,7 +104,19 @@ Enter를 누르면 `~/.config/restage/dev.yaml`이 만들어진다.
 - 안 켜둔 앱은 `+`로, 지금 안 열려 있는 URL은 `w`로 추가한다
 - 좌표가 아니라 `left-half` 같은 이름으로 저장된다
 
-메뉴바 아이콘에서 **현재 창 배치로 새로 만들기**를 눌러도 된다. 그쪽은 체크박스로 담을 항목을 고른다.
+메뉴바 아이콘에서 **현재 창 배치로 새로 만들기**를 눌러도 된다. 그쪽은 체크박스로 담을 항목을 고르고, 항목마다 자리를 드롭다운으로 바꾼다. 원하는 앱이 안 켜져 있으면 이름을 적어 넣는다.
+
+목록은 **창을 읽은 시점**의 것이다. 그 뒤에 창을 옮겼다면 **다시 읽기**를 누른다.
+
+### 전체 화면
+
+자리 대신 **전체 화면**을 고르면 그 앱만 전용 데스크탑으로 보낸다. macOS 창 메뉴의 "전체 화면"과 같다.
+
+```yaml
+- {type: app, app: Cursor, slot: full, fullscreen: true}
+```
+
+캡처할 때 이미 전체화면이던 창은 자동으로 이렇게 담긴다.
 
 ### 담기지 않는 창
 
@@ -248,12 +256,18 @@ restage menubar
 메뉴바 아이콘을 누르면 패널이 뜬다. 카드를 클릭하면 실행된다.
 
 - 마우스를 올리면 **편집**과 **더보기**가 나타난다
-- 더보기에서 **단축키 설정**, 이름 바꾸기, Finder에서 보기, 삭제
+- 더보기에서 **이름 변경**, 단축키 변경, 파일로 열기, 삭제
 - 단축키는 원하는 조합을 그냥 누르면 된다. config의 `hotkey` 줄만 바뀌고 나머지는 그대로다
 - 삭제는 확인을 받고 휴지통으로 보낸다
 - 실행에 실패하면 카드 안에 사유가 붙는다
 
+- `Options`에서 로그인 시 자동 실행, **업데이트 확인**, config 폴더 열기
+
 다른 앱이 이미 쓰는 단축키는 등록되지 않는다. 그때도 카드에 사유가 뜬다.
+
+### 편집
+
+카드의 연필 아이콘을 누르면 만들 때와 같은 창이 뜬다. 항목을 빼거나 자리를 바꾸고 저장한다. YAML을 직접 보고 싶으면 더보기의 **파일로 열기**를 쓴다.
 
 앱 번들로 만들면 Finder에서 실행하거나 로그인 시 자동 실행할 수 있다.
 
@@ -322,7 +336,7 @@ Safari와 Chromium 계열(Chrome, Edge, Brave, Arc, Whale, Vivaldi)은 같은 �
 
 ```bash
 swift build
-swift test        # 159개
+swift test        # 185개
 ```
 
 검증용 하네스가 있다.
