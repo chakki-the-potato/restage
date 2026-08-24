@@ -1,14 +1,31 @@
 import AppKit
 import RestageKit
+import RestageKitDarwin
 import SwiftUI
+
+/// 항목 하나를 어디에 놓을지. 자리와 전체화면은 서로 배타적이라 한 값으로 묶는다.
+enum Placement: Hashable {
+    case slot(Slot)
+    case fullscreen
+    /// 브라우저에서만 쓴다. 창 크기를 건드리지 않는다.
+    case keepSize
+
+    var label: String {
+        switch self {
+        case .slot(let slot): return SlotLabel.text(slot)
+        case .fullscreen: return "전체 화면"
+        case .keepSize: return "크기 유지"
+        }
+    }
+}
 
 /// 초안을 고치는 상태. 알림 창이 모달로 도는 동안 뷰가 여기에 표시를 남긴다.
 @MainActor
 final class DraftEditor: ObservableObject {
-    /// 담지 않을 항목의 인덱스. 기본은 전부 담기다.
     @Published var excluded: Set<Int> = []
-    /// 사용자가 직접 고른 자리. 비어 있으면 원래 값을 쓴다.
-    @Published var slots: [Int: Slot] = [:]
+    @Published var placements: [Int: Placement] = [:]
+    /// 목록에 없던 앱을 직접 넣은 것.
+    @Published var added: [ItemDraft] = []
 
     private let draft: WorkspaceDraft
     private let total: Int
@@ -18,7 +35,7 @@ final class DraftEditor: ObservableObject {
         self.total = draft.itemCount
     }
 
-    var keptCount: Int { total - excluded.count }
+    var keptCount: Int { total - excluded.count + added.count }
 
     func toggle(_ index: Int) {
         if excluded.contains(index) {
@@ -32,30 +49,57 @@ final class DraftEditor: ObservableObject {
         excluded = kept ? [] : Set(0..<total)
     }
 
+    func add(_ item: ItemDraft) {
+        added.append(item)
+    }
+
+    func removeAdded(at offset: Int) {
+        guard added.indices.contains(offset) else { return }
+        added.remove(at: offset)
+    }
+
     var result: WorkspaceDraft {
-        DraftSelection.apply(excluding: excluded, slots: slots, to: draft)
+        var slots: [Int: Slot] = [:]
+        var fullscreen: [Int: Bool] = [:]
+        for (index, placement) in placements {
+            switch placement {
+            case .slot(let slot):
+                slots[index] = slot
+                fullscreen[index] = false
+            case .fullscreen:
+                fullscreen[index] = true
+            case .keepSize:
+                break
+            }
+        }
+        return DraftSelection.apply(
+            excluding: excluded, slots: slots, fullscreen: fullscreen,
+            added: added, to: draft)
     }
 }
 
 /// 담을 항목과 자리를 고르는 목록.
 ///
-/// 새로 만들 때와 기존 것을 고칠 때 같은 화면을 쓴다. 편집이 YAML 파일을 여는 것이었을
-/// 때는 자리 이름을 외워야 했고, 자리가 애매하다고 표시해도 여기서 고칠 수 없었다.
+/// 새로 만들 때와 기존 것을 고칠 때 같은 화면을 쓴다.
 struct DraftEditorView: View {
     let rows: [Row]
     @ObservedObject var editor: DraftEditor
 
+    @State private var newAppName = ""
+    @State private var newPlacement: Placement = .slot(.full)
+    @State private var addError: String?
+
     struct Row: Identifiable {
         let id: Int
         let screenID: String
-        /// 이 행이 화면 묶음의 첫 항목이면 제목을 그린다.
         let startsScreen: Bool
         let app: String
         let tabCount: Int
-        let slot: Slot?
+        let placement: Placement
         /// 자리 분류에 확신이 없는 항목. 사용자가 고르면 사라진다.
         let isUncertain: Bool
         let isOnOtherSpace: Bool
+        let allowsKeepSize: Bool
     }
 
     var body: some View {
@@ -68,11 +112,19 @@ struct DraftEditorView: View {
                         if row.startsScreen { screenLabel(row.screenID) }
                         line(row)
                     }
+                    if !editor.added.isEmpty {
+                        screenLabel("직접 추가")
+                        ForEach(Array(editor.added.enumerated()), id: \.offset) { offset, item in
+                            addedLine(offset, item)
+                        }
+                    }
                 }
                 .padding(.vertical, 4)
             }
+            Divider()
+            addSection
         }
-        .frame(width: 440, height: 300)
+        .frame(width: 460, height: 340)
     }
 
     private var header: some View {
@@ -131,38 +183,111 @@ struct DraftEditorView: View {
             }
 
             Spacer(minLength: 4)
-            slotPicker(row)
+            if row.isUncertain && editor.placements[row.id] == nil {
+                Text("?")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(.orange)
+                    .help("자리가 애매합니다. 골라주세요.")
+            }
+            picker(for: row)
         }
         .opacity(isKept ? 1 : 0.45)
         .padding(.horizontal, 10)
         .padding(.vertical, 3)
     }
 
-    /// 자리를 여기서 바로 고른다. 확신이 없던 항목은 고르는 즉시 표시가 사라진다.
-    private func slotPicker(_ row: Row) -> some View {
-        let current = editor.slots[row.id] ?? row.slot
-        let unresolved = row.isUncertain && editor.slots[row.id] == nil
-        return Picker("", selection: Binding(
-            get: { current },
-            set: { editor.slots[row.id] = $0 })
+    private func picker(for row: Row) -> some View {
+        Picker("", selection: Binding(
+            get: { editor.placements[row.id] ?? row.placement },
+            set: { editor.placements[row.id] = $0 })
         ) {
             ForEach(Slot.allCases, id: \.self) { slot in
-                Text(SlotLabel.text(slot)).tag(Optional(slot))
+                Text(SlotLabel.text(slot)).tag(Placement.slot(slot))
             }
-            if row.slot == nil {
-                Text("크기 유지").tag(Optional<Slot>.none)
+            Divider()
+            Text("전체 화면").tag(Placement.fullscreen)
+            if row.allowsKeepSize {
+                Text("크기 유지").tag(Placement.keepSize)
             }
         }
         .labelsHidden()
-        .frame(width: 116)
-        .overlay(alignment: .leading) {
-            if unresolved {
-                Text("?")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(.orange)
-                    .offset(x: -10)
-                    .help("자리가 애매합니다. 골라주세요.")
+        .frame(width: 120)
+    }
+
+    private func addedLine(_ offset: Int, _ item: ItemDraft) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "plus.circle.fill")
+                .font(.system(size: 11))
+                .foregroundStyle(Color.accentColor)
+                .frame(width: 16)
+            Text(item.app)
+                .font(.system(size: 12))
+            Spacer(minLength: 0)
+            Text(item.fullscreen ? "전체 화면" : (item.slot.map(SlotLabel.text) ?? "크기 유지"))
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+            Button {
+                editor.removeAdded(at: offset)
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.secondary)
             }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 3)
+    }
+
+    /// 지금 안 켜둔 앱도 넣을 수 있게 한다. 캡처만으로는 켜져 있는 것만 담긴다.
+    private var addSection: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                TextField("앱 이름 (예: Figma)", text: $newAppName)
+                    .textFieldStyle(.roundedBorder)
+                    .font(.system(size: 12))
+                    .onSubmit { addApp() }
+                Picker("", selection: $newPlacement) {
+                    ForEach(Slot.allCases, id: \.self) { slot in
+                        Text(SlotLabel.text(slot)).tag(Placement.slot(slot))
+                    }
+                    Divider()
+                    Text("전체 화면").tag(Placement.fullscreen)
+                }
+                .labelsHidden()
+                .frame(width: 120)
+                Button("추가", action: addApp)
+                    .disabled(newAppName.trimmingCharacters(in: .whitespaces).isEmpty)
+            }
+            if let addError {
+                Text(addError)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.orange)
+                    .lineLimit(2)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+    }
+
+    private func addApp() {
+        let typed = newAppName.trimmingCharacters(in: .whitespaces)
+        guard !typed.isEmpty else { return }
+        do {
+            let bundleID = try InstalledApps.resolve(name: typed)
+            let name = InstalledApps.displayName(bundleID: bundleID) ?? typed
+            switch newPlacement {
+            case .slot(let slot):
+                editor.add(.app(name, slot: slot))
+            case .fullscreen:
+                editor.add(.app(name, slot: .full, fullscreen: true))
+            case .keepSize:
+                editor.add(.app(name, slot: .full))
+            }
+            newAppName = ""
+            addError = nil
+        } catch {
+            addError = "\(error)"
         }
     }
 }
@@ -176,10 +301,17 @@ extension DraftEditorView {
                 startsScreen: entry.startsScreen,
                 app: label(for: entry.item),
                 tabCount: tabCount(of: entry.item),
-                slot: entry.item.slot,
+                placement: placement(of: entry.item),
                 isUncertain: !entry.item.isConfident,
-                isOnOtherSpace: !entry.item.wasOnCurrentSpace)
+                isOnOtherSpace: !entry.item.wasOnCurrentSpace,
+                allowsKeepSize: entry.item.slot == nil)
         }
+    }
+
+    private static func placement(of item: ItemDraft) -> Placement {
+        if item.fullscreen { return .fullscreen }
+        guard let slot = item.slot else { return .keepSize }
+        return .slot(slot)
     }
 
     private static func label(for item: ItemDraft) -> String {

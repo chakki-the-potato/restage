@@ -12,7 +12,7 @@ enum DraftDialog {
         let editor = DraftEditor(draft: draft)
         let view = DraftEditorView(rows: DraftEditorView.rows(for: draft), editor: editor)
         let hosting = NSHostingView(rootView: view)
-        hosting.frame = NSRect(x: 0, y: 0, width: 440, height: 300)
+        hosting.frame = NSRect(x: 0, y: 0, width: 460, height: 340)
 
         let accepted = Prompt.confirm(
             title: title,

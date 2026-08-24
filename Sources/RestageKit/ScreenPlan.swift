@@ -37,15 +37,19 @@ public struct Placement: Sendable, Equatable {
     public let slot: Slot
     public let target: CGRect
     public let selector: WindowSelector
+    /// 배치한 뒤 전용 데스크탑으로 보낸다.
+    public let fullscreen: Bool
 
     public init(
         app: AppID, slot: Slot, target: CGRect,
-        selector: WindowSelector = .mostRecentlyActive
+        selector: WindowSelector = .mostRecentlyActive,
+        fullscreen: Bool = false
     ) {
         self.app = app
         self.slot = slot
         self.target = target
         self.selector = selector
+        self.fullscreen = fullscreen
     }
 }
 

@@ -33,6 +33,7 @@ final class PopoverController: NSObject, NSPopoverDelegate {
         let panel = WorkspacePanel(
             store: store,
             dismiss: { [weak self] in self?.popover.performClose(nil) },
+            reopen: { [weak self] in self?.showPanel() },
             onQuit: { NSApplication.shared.terminate(nil) })
         let controller = NSHostingController(rootView: panel)
         // 내용 높이에 맞춰 패널이 늘어나게 한다. 고정하면 워크스페이스가 늘 때 잘린다.
@@ -45,7 +46,11 @@ final class PopoverController: NSObject, NSPopoverDelegate {
             popover.performClose(nil)
             return
         }
-        guard let button = statusItem.button else { return }
+        showPanel()
+    }
+
+    func showPanel() {
+        guard let button = statusItem.button, !popover.isShown else { return }
         store.reload()
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         // 팝오버는 앱이 활성 상태가 아니면 키 입력을 받지 못한다. 이 앱은 LSUIElement라

@@ -8,6 +8,8 @@ struct WorkspacePanel: View {
 
     /// 창을 여는 동작 전에 패널을 닫는다. 알림 창이 패널 뒤에 가리면 눌 수 없다.
     let dismiss: () -> Void
+    /// 창을 닫은 뒤 패널을 다시 여는 길.
+    let reopen: () -> Void
     let onQuit: () -> Void
 
     /// 펼쳐진 카드의 이름. 한 번에 하나만 펼친다.
@@ -251,6 +253,9 @@ struct WorkspacePanel: View {
                 Prompt.message("처리하지 못했습니다", failure)
             }
             store.reload()
+            // 창이 끝나면 패널을 다시 연다. 이름을 바꾸고 단축키도 정하려면 매번 메뉴바를
+            // 다시 눌러야 하는데, 한 번에 하나만 하라는 뜻이 아니다.
+            reopen()
         }
     }
 

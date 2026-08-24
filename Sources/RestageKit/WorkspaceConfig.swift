@@ -85,6 +85,11 @@ public struct AppItem: Sendable, Equatable {
     /// 창이 여러 개인 앱에서 어느 창을 옮길지 지정한다. 창 제목의 일부를 적는다.
     /// 없으면 가장 최근 활성 창을 고른다.
     public let title: String?
+    /// 이 앱만 전용 데스크탑으로 보낸다.
+    ///
+    /// 화면 단위 `mode: fullscreen`과 달리 항목마다 정한다. 한 화면에 전체화면 앱과
+    /// 나란히 놓는 앱을 섞어 쓰는 경우가 있어 화면 단위로는 표현할 수 없다.
+    public let fullscreen: Bool
 }
 
 public enum BrowserWindowMode: String, Decodable, Sendable {
@@ -104,7 +109,7 @@ public struct BrowserItem: Sendable, Equatable {
 
 extension ItemConfig: Decodable {
     private enum Keys: String, CodingKey {
-        case type, app, slot, tabs, window, title
+        case type, app, slot, tabs, window, title, fullscreen
     }
 
     public init(from decoder: Decoder) throws {
@@ -116,7 +121,8 @@ extension ItemConfig: Decodable {
         case "app":
             let slot = try container.decodeIfPresent(Slot.self, forKey: .slot) ?? .full
             let title = try container.decodeIfPresent(String.self, forKey: .title)
-            self = .app(AppItem(app: app, slot: slot, title: title))
+            let fullscreen = try container.decodeIfPresent(Bool.self, forKey: .fullscreen) ?? false
+            self = .app(AppItem(app: app, slot: slot, title: title, fullscreen: fullscreen))
         case "browser":
             let tabs = try container.decodeIfPresent([String].self, forKey: .tabs) ?? []
             let window = try container.decodeIfPresent(
