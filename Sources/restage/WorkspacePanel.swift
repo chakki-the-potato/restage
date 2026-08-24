@@ -28,9 +28,7 @@ struct WorkspacePanel: View {
             footer
         }
         .frame(width: 320)
-        // 팝오버 기본 재질을 그대로 두면 앱이 비활성일 때 어두워진다. 다른 창을 클릭했을
-        // 뿐인데 패널 색이 바뀌면 무언가 꺼진 것처럼 보인다. 불투명 배경으로 덮는다.
-        .background(Color(nsColor: .windowBackgroundColor))
+        // 배경은 PanelChrome이 그린다. 여기서 덮으면 둥근 모서리와 화살표가 가려진다.
         .onPreferenceChange(MenuAnchorKey.self) { anchors = $0 }
         .onExitCommand { dismiss() }
     }

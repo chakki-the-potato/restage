@@ -56,7 +56,7 @@ final class PopoverController: NSObject {
         let origin = panelOrigin(under: buttonFrame)
         // 화살표가 아이콘 가운데를 가리키게 한다. 패널이 화면 가장자리에 붙어 밀리면
         // 아이콘과 어긋나므로 밀린 만큼을 화살표 위치에 되돌려준다.
-        let arrowOffset = buttonFrame.midX - origin.x
+        let arrowOffset = buttonFrame.midX - origin.x - PanelChromeMetrics.shadowMargin
 
         let panel = WorkspacePanel(
             store: store,
@@ -70,11 +70,12 @@ final class PopoverController: NSObject {
         panelWindow.contentView = view
         window = panelWindow
 
-        // SwiftUI 내용 높이를 얻으려면 폭을 먼저 정하고 배치를 한 번 돌려야 한다.
-        // 그러지 않으면 fittingSize가 0이 나와 창이 보이지 않는다.
-        view.frame = NSRect(x: 0, y: 0, width: Self.panelWidth, height: 1)
+        // 높이를 재려면 폭을 정하고 배치를 한 번 돌려야 한다. 이때 높이를 1로 두면
+        // 그 안에 욱여넣은 결과가 나와 내용이 잘린다. 넉넉히 주고 잰다.
+        let width = Self.panelWidth + PanelChromeMetrics.shadowMargin * 2
+        view.frame = NSRect(x: 0, y: 0, width: width, height: 2000)
         view.layoutSubtreeIfNeeded()
-        let size = NSSize(width: Self.panelWidth, height: max(view.fittingSize.height, 1))
+        let size = NSSize(width: width, height: max(view.fittingSize.height, 1))
 
         panelWindow.setFrame(
             NSRect(x: origin.x, y: origin.y - size.height, width: size.width, height: size.height),
@@ -104,7 +105,10 @@ final class PopoverController: NSObject {
         let x = min(
             max(button.midX - Self.panelWidth / 2, bounds.minX + Self.screenInset),
             bounds.maxX - Self.panelWidth - Self.screenInset)
-        return CGPoint(x: x, y: button.minY - Self.topGap)
+        // 창은 그림자 여백만큼 넓고 높다. 보이는 부분이 제자리에 오도록 그만큼 되민다.
+        return CGPoint(
+            x: x - PanelChromeMetrics.shadowMargin,
+            y: button.minY - Self.topGap + PanelChromeMetrics.shadowMargin)
     }
 
     // MARK: - 메뉴
