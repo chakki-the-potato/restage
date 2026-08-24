@@ -40,6 +40,22 @@ restage open dev
 
 ## 설치
 
+### 앱으로 받기
+
+[Releases](https://github.com/chakki-the-potato/restage/releases)에서 `restage-<버전>-macos.zip`을 받아 압축을 풀고 `restage.app`을 `/Applications`으로 옮긴다.
+
+처음 열면 macOS가 막는다. **공증하지 않았기 때문이다.** 공증에는 유료 Apple Developer Program이 필요한데 가입하지 않았다. 앱을 우클릭하고 열기를 고른 뒤 다시 열기를 누르면 된다. 한 번만 하면 이후로는 그냥 열린다.
+
+터미널을 쓴다면 격리 속성을 지워도 된다.
+
+```bash
+xattr -dr com.apple.quarantine /Applications/restage.app
+```
+
+서명이 adhoc이라 버전을 올릴 때마다 앱의 신원이 바뀐다. **새 버전으로 갈아끼우면 접근성 권한을 다시 켜야 한다.**
+
+### 소스에서 빌드
+
 ```bash
 git clone https://github.com/chakki-the-potato/restage.git
 cd restage
@@ -279,6 +295,8 @@ restage probe --app Safari --cold
 Sources/RestageKit/         OS에 의존하지 않는 스키마·검증·좌표 계산
 Sources/RestageKitDarwin/   AX·AppKit·AppleScript 구현, 설치된 앱 검색
 Sources/restage/            CLI와 메뉴바
+Sources/RestageBrand/       앱 아이콘과 메뉴바 아이콘의 도형 정의
+Sources/restage-icon/       .iconset을 굽는 빌드 도구. 번들에는 들어가지 않는다
 docs/superpowers/           설계 스펙과 검증 기록
 ```
 
