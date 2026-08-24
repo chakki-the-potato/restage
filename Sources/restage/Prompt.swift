@@ -46,17 +46,32 @@ enum Prompt {
         return field.stringValue
     }
 
+    enum Choice {
+        case confirmed
+        case alternate
+        case cancelled
+    }
+
     /// 임의의 뷰를 붙인 확인 창. 체크박스 목록처럼 고를 것이 있을 때 쓴다.
+    ///
+    /// `alternateTitle`을 주면 버튼이 셋이 된다. 저장도 취소도 아닌 제3의 선택을 위한 것이다.
     static func confirm(
-        title: String, body: String, accessory: NSView, confirmTitle: String
-    ) -> Bool {
+        title: String, body: String, accessory: NSView, confirmTitle: String,
+        alternateTitle: String? = nil
+    ) -> Choice {
         let alert = NSAlert()
         alert.messageText = title
         alert.informativeText = body
         alert.addButton(withTitle: confirmTitle)
+        if let alternateTitle { alert.addButton(withTitle: alternateTitle) }
         alert.addButton(withTitle: "취소")
         alert.accessoryView = accessory
-        return alert.runModal() == .alertFirstButtonReturn
+
+        switch alert.runModal() {
+        case .alertFirstButtonReturn: return .confirmed
+        case .alertSecondButtonReturn: return alternateTitle == nil ? .cancelled : .alternate
+        default: return .cancelled
+        }
     }
 
 }
