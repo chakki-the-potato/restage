@@ -126,44 +126,18 @@ struct CaptureSelectionView: View {
 }
 
 extension CaptureSelectionView {
-    /// 초안을 행 목록으로 편다. 인덱스는 화면을 가로질러 이어진다.
+    /// 초안을 행 목록으로 편다. 인덱스 계산은 `DraftSelection`이 맡고 여기서는 표시만 만든다.
     static func rows(for draft: WorkspaceDraft) -> [Row] {
-        var rows: [Row] = []
-        var index = 0
-        for screen in draft.screens {
-            for (position, item) in screen.items.enumerated() {
-                rows.append(
-                    Row(
-                        id: index,
-                        screenID: screen.id,
-                        startsScreen: position == 0,
-                        app: label(for: item),
-                        detail: detail(for: item),
-                        isUncertain: !item.isConfident,
-                        isOnOtherSpace: !item.wasOnCurrentSpace))
-                index += 1
-            }
+        DraftSelection.entries(in: draft).map { entry in
+            Row(
+                id: entry.index,
+                screenID: entry.screenID,
+                startsScreen: entry.startsScreen,
+                app: label(for: entry.item),
+                detail: detail(for: entry.item),
+                isUncertain: !entry.item.isConfident,
+                isOnOtherSpace: !entry.item.wasOnCurrentSpace)
         }
-        return rows
-    }
-
-    /// 제외한 항목을 뺀 초안. 항목이 하나도 남지 않은 화면은 통째로 뺀다.
-    static func apply(_ excluded: Set<Int>, to draft: WorkspaceDraft) -> WorkspaceDraft {
-        var result = draft
-        var index = 0
-        result.screens = draft.screens.compactMap { screen in
-            var kept: [ItemDraft] = []
-            for item in screen.items {
-                defer { index += 1 }
-                guard !excluded.contains(index) else { continue }
-                kept.append(item)
-            }
-            guard !kept.isEmpty else { return nil }
-            var updated = screen
-            updated.items = kept
-            return updated
-        }
-        return result
     }
 
     private static func label(for item: ItemDraft) -> String {
