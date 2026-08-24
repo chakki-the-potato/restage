@@ -27,7 +27,7 @@ enum NewCommand {
             return 1
         }
         guard let displays = DisplayCatalog.current() else {
-            print("디스플레이 정보를 조회할 수 없습니다")
+            print(L10n.string("error.display.unavailable"))
             return 1
         }
 
@@ -38,17 +38,15 @@ enum NewCommand {
     }
 
     private static func printIntro(_ captured: WorkspaceCapture.Result) {
-        print("현재 창 배치를 읽었습니다.")
+        print(L10n.string("new.read_layout"))
         if captured.onOtherSpaceCount > 0 {
-            print("이 중 \(captured.onOtherSpaceCount)개는 다른 데스크탑에 있습니다. "
-                + "앱이 꺼진 상태에서 실행하면 정상 배치되고, 이미 떠 있으면 실패합니다.")
+            print(L10n.string("new.on_other_space", captured.onOtherSpaceCount))
         }
         for (app, count) in captured.indistinguishable.sorted(by: { $0.key < $1.key }) {
-            print("\(app) 창 \(count)개는 담지 않았습니다. 제목이 같거나 비어 있어 "
-                + "실행할 때 어느 창인지 정할 수 없습니다.")
+            print(L10n.string("new.ambiguous_windows", app, count))
         }
         for skipped in captured.browsersWithoutTabs {
-            print("\(skipped.app)의 탭을 읽지 못해 창 위치만 담았습니다: \(skipped.reason)")
+            print(L10n.string("new.tabs_unreadable", "\(skipped.app)", skipped.reason))
         }
     }
 
@@ -58,11 +56,10 @@ enum NewCommand {
         while true {
             print("")
             print(render(draft))
-            print("[Enter] 저장   [숫자] 자리 바꾸기   [-숫자] 제외   [+] 앱 추가"
-                + "   [w] 웹 추가   [q] 취소")
+            print(L10n.string("new.commands"))
 
             guard let raw = Console.ask("> ") else {
-                print("입력이 끝나 취소했습니다. 저장하려면 빈 줄을 입력하세요")
+                print(L10n.string("new.input_closed"))
                 return 1
             }
             let command = raw.trimmingCharacters(in: .whitespaces)
@@ -71,7 +68,7 @@ enum NewCommand {
             case "":
                 return save(draft)
             case "q":
-                print("취소했습니다")
+                print(L10n.string("common.cancelled"))
                 return 1
             case "+":
                 addApp(&draft)
@@ -90,11 +87,11 @@ enum NewCommand {
             if draft.screens[position.screen].items.isEmpty {
                 draft.screens.remove(at: position.screen)
             }
-            print("제외했습니다: \(removed.app)")
+            print(L10n.string("new.removed", "\(removed.app)"))
             return
         }
         guard let number = Int(command) else {
-            print("모르는 입력입니다: \(command)")
+            print(L10n.string("new.unknown_input", command))
             return
         }
         guard let position = position(number, in: draft) else { return warnRange(number) }
@@ -103,12 +100,12 @@ enum NewCommand {
 
     private static func changeSlot(at position: Position, in draft: inout WorkspaceDraft) {
         let item = draft.screens[position.screen].items[position.item]
-        print("\(item.app)의 자리를 고르세요.")
+        print(L10n.string("new.pick_slot", "\(item.app)"))
         print(SlotLabel.picker())
-        guard let raw = Console.ask("자리 번호> "),
+        guard let raw = Console.ask(L10n.string("new.prompt.slot_number")),
               let choice = Int(raw.trimmingCharacters(in: .whitespaces)),
               let slot = SlotLabel.slot(atChoice: choice) else {
-            print("자리를 바꾸지 않았습니다")
+            print(L10n.string("new.slot_unchanged"))
             return
         }
         draft.screens[position.screen].items[position.item].slot = slot
@@ -119,16 +116,16 @@ enum NewCommand {
     // MARK: - 항목 추가
 
     private static func addApp(_ draft: inout WorkspaceDraft) {
-        guard let name = askInstalledApp("앱 이름> ") else { return }
+        guard let name = askInstalledApp(L10n.string("new.prompt.app_name")) else { return }
         guard let slot = askSlot(for: name) else { return }
         guard let screen = askScreen(in: &draft) else { return }
         draft.screens[screen].items.append(.app(name, slot: slot))
-        print("추가했습니다: \(name) \(SlotLabel.text(slot))")
+        print(L10n.string("new.added_app", name, SlotLabel.text(slot)))
     }
 
     private static func addWeb(_ draft: inout WorkspaceDraft) {
-        guard let name = askInstalledApp("브라우저 이름> ") else { return }
-        print("URL을 한 줄에 하나씩 입력하세요. 빈 줄이면 끝냅니다.")
+        guard let name = askInstalledApp(L10n.string("new.prompt.browser_name")) else { return }
+        print(L10n.string("new.enter_urls"))
         var tabs: [String] = []
         while let line = Console.ask("url> ") {
             let url = line.trimmingCharacters(in: .whitespaces)
@@ -136,13 +133,13 @@ enum NewCommand {
             tabs.append(url)
         }
         guard !tabs.isEmpty else {
-            print("URL이 없어 추가하지 않았습니다")
+            print(L10n.string("new.no_urls"))
             return
         }
         guard let screen = askScreen(in: &draft) else { return }
         let slot = askOptionalSlot(for: name)
         draft.screens[screen].items.append(.browser(name, slot: slot, tabs: tabs))
-        print("추가했습니다: \(name) 탭 \(tabs.count)개")
+        print(L10n.string("new.added_browser", name, tabs.count))
     }
 
     /// 설치된 앱 이름을 받아 표시 이름으로 정규화한다. 못 찾으면 사유를 보여주고 nil이다.
@@ -160,12 +157,12 @@ enum NewCommand {
     }
 
     private static func askSlot(for app: String) -> Slot? {
-        print("\(app)의 자리를 고르세요.")
+        print(L10n.string("new.pick_slot", app))
         print(SlotLabel.picker())
-        guard let raw = Console.ask("자리 번호> "),
+        guard let raw = Console.ask(L10n.string("new.prompt.slot_number")),
               let choice = Int(raw.trimmingCharacters(in: .whitespaces)),
               let slot = SlotLabel.slot(atChoice: choice) else {
-            print("자리를 고르지 않아 추가하지 않았습니다")
+            print(L10n.string("new.no_slot"))
             return nil
         }
         return slot
@@ -173,9 +170,9 @@ enum NewCommand {
 
     /// 브라우저는 자리를 비워둘 수 있다. 비우면 창 크기를 건드리지 않는다.
     private static func askOptionalSlot(for app: String) -> Slot? {
-        print("\(app)의 자리를 고르세요. 그냥 Enter를 누르면 창 크기를 건드리지 않습니다.")
+        print(L10n.string("new.pick_slot_optional", app))
         print(SlotLabel.picker())
-        guard let raw = Console.ask("자리 번호> "),
+        guard let raw = Console.ask(L10n.string("new.prompt.slot_number")),
               let choice = Int(raw.trimmingCharacters(in: .whitespaces)) else { return nil }
         return SlotLabel.slot(atChoice: choice)
     }
@@ -188,14 +185,14 @@ enum NewCommand {
         }
         if draft.screens.count == 1 { return 0 }
 
-        print("어느 화면인가요?")
+        print(L10n.string("new.which_screen"))
         for (index, screen) in draft.screens.enumerated() {
             print("  \(index + 1) \(screen.id)")
         }
-        guard let raw = Console.ask("화면 번호> "),
+        guard let raw = Console.ask(L10n.string("new.prompt.screen_number")),
               let choice = Int(raw.trimmingCharacters(in: .whitespaces)),
               draft.screens.indices.contains(choice - 1) else {
-            print("화면을 고르지 않아 추가하지 않았습니다")
+            print(L10n.string("new.no_screen"))
             return nil
         }
         return choice - 1
@@ -205,18 +202,18 @@ enum NewCommand {
 
     private static func render(_ draft: WorkspaceDraft) -> String {
         guard draft.itemCount > 0 else {
-            return "담긴 항목이 없습니다. [+]로 앱을, [w]로 웹을 추가하세요."
+            return L10n.string("new.empty_draft")
         }
         var lines = DraftSummary.lines(draft, numbered: true)
         if DraftSummary.hasUncertainItem(draft) {
             lines.append("")
-            lines.append("  \(DraftSummary.uncertaintyNote) 번호를 눌러 직접 고르세요.")
+            lines.append("  " + L10n.string("new.uncertainty_hint", DraftSummary.uncertaintyNote))
         }
         return lines.joined(separator: "\n")
     }
 
     private static func warnRange(_ number: Int) {
-        print("\(number)번 항목이 없습니다")
+        print(L10n.string("new.no_such_item", number))
     }
 
     private static func position(_ number: Int, in draft: WorkspaceDraft) -> Position? {
@@ -235,14 +232,14 @@ enum NewCommand {
 
     private static func save(_ draft: WorkspaceDraft) -> Int32 {
         guard draft.itemCount > 0 else {
-            print("담긴 항목이 없어 저장하지 않았습니다")
+            print(L10n.string("new.nothing_to_save"))
             return 1
         }
         let path = "\(WorkspaceRegistry.defaultDirectory)/\(draft.name).yaml"
 
         if FileManager.default.fileExists(atPath: path) {
-            guard Console.confirm("\(path)가 이미 있습니다. 덮어쓸까요?") else {
-                print("저장하지 않았습니다")
+            guard Console.confirm(L10n.string("new.overwrite_confirm", path)) else {
+                print(L10n.string("new.not_saved"))
                 return 1
             }
         }
@@ -253,8 +250,8 @@ enum NewCommand {
             return 1
         }
 
-        print("저장했습니다: \(path)")
-        print("실행하려면: restage open \(draft.name)")
+        print(L10n.string("new.saved", path))
+        print(L10n.string("new.run_hint", draft.name))
         return 0
     }
 

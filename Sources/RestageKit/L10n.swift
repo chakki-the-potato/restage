@@ -58,8 +58,14 @@ public enum L10n {
     }
 
     private static var selected: Bundle? {
-        guard let code = language.localizationCode else { return .module }
-        return lproj(code) ?? .module
+        if let code = language.localizationCode { return lproj(code) ?? .module }
+        // 사용자 언어 목록을 직접 넘긴다. 넘기지 않으면 시스템이 ko-KR인데도 en이 나온다.
+        // 인자 없는 형태는 주 번들의 언어 목록을 보는데, 터미널에서 실행한 바이너리는
+        // 그 목록이 비어 있어 첫 번째 언어로 떨어진다.
+        let preferred = Bundle.preferredLocalizations(
+            from: Bundle.module.localizations, forPreferences: Locale.preferredLanguages)
+        guard let best = preferred.first else { return .module }
+        return lproj(best) ?? .module
     }
 
     private static var english: Bundle? {

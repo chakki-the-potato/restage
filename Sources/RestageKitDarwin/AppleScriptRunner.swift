@@ -9,10 +9,7 @@ enum AppleScriptError: Error, CustomStringConvertible {
     var description: String {
         switch self {
         case .permissionDenied(let name):
-            return """
-                \(name) 자동화 권한이 없습니다. 시스템 설정 > 개인정보 보호 및 보안 > \
-                자동화에서 restage가 \(name)을(를) 제어하도록 허용하세요
-                """
+            return L10n.string("error.applescript.permission_denied", name)
         case .compilationFailed(let message):
             return L10n.string("error.applescript.compile_failed", message)
         case .executionFailed(let code, let message):

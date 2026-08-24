@@ -228,3 +228,75 @@
 "probe.no_apps" = "There is nothing to check. Open at least one app, or name one with --app";
 "probe.cold_confirm" = "This force quits %@ to test a cold start. Continue?";
 "probe.fullscreen_stuck" = "Couldn't leave full screen; it stayed on its Space (leave it by hand). %@";
+
+/* 공통 */
+"common.next" = "Next";
+"common.add" = "Add";
+
+/* 새로 만들기 */
+"new.title" = "New Workspace";
+"new.body" = "This saves the windows you have open right now. Choose a name.";
+"new.bad_name" = "That name can't be used";
+"new.screen_locked" = "The screen is locked";
+"new.display_failed" = "Couldn't read the displays";
+"new.no_windows.title" = "There are no windows to save";
+"new.no_windows.body" = "No windows are open. Arrange some apps and try again.";
+"new.contents_title" = "What '%@' will hold";
+"new.save_failed" = "Couldn't save";
+"new.exists.title" = "'%@' already exists";
+"new.exists.body" = "Overwriting removes what is in it now.";
+"new.exists.confirm" = "Overwrite";
+"new.note.ambiguous_windows" = "%1$d windows weren't saved because their titles can't tell them apart (%2$@).";
+"new.note.tabs_unreadable" = "%@'s tabs couldn't be read, so only the window position was saved.";
+"new.read_layout" = "Read the current window layout.";
+"new.on_other_space" = "%d of these are on another desktop. They are placed correctly if the app starts fresh, and fail if it's already running.";
+"new.ambiguous_windows" = "%2$d %1$@ windows weren't saved. Their titles are identical or empty, so there is no way to tell which window to use.";
+"new.tabs_unreadable" = "%1$@'s tabs couldn't be read, so only the window position was saved: %2$@";
+"new.commands" = "[Enter] save   [number] change position   [-number] remove   [+] add an app   [w] add a browser   [q] cancel";
+"new.input_closed" = "Input ended, so nothing was saved. Press Enter on an empty line to save";
+"new.removed" = "Removed: %@";
+"new.unknown_input" = "That input isn't known: %@";
+"new.pick_slot" = "Choose where %@ goes.";
+"new.pick_slot_optional" = "Choose where %@ goes. Press Enter to leave its size alone.";
+"new.slot_unchanged" = "The position was left as it was";
+"new.prompt.app_name" = "app name> ";
+"new.prompt.browser_name" = "browser name> ";
+"new.prompt.slot_number" = "position number> ";
+"new.prompt.screen_number" = "screen number> ";
+"new.added_app" = "Added: %1$@ %2$@";
+"new.added_browser" = "Added: %1$@ with %2$d tabs";
+"new.enter_urls" = "Enter one URL per line. An empty line ends the list.";
+"new.no_urls" = "No URL was given, so nothing was added";
+"new.no_slot" = "No position was chosen, so nothing was added";
+"new.which_screen" = "Which screen?";
+"new.no_screen" = "No screen was chosen, so nothing was added";
+"new.empty_draft" = "Nothing is in it. Add an app with [+] or a browser with [w].";
+"new.uncertainty_hint" = "%@ Press its number to choose one yourself.";
+"new.no_such_item" = "There is no item %d";
+"new.nothing_to_save" = "Nothing is in it, so nothing was saved";
+"new.overwrite_confirm" = "%@ already exists. Overwrite it?";
+"new.not_saved" = "Nothing was saved";
+"new.saved" = "Saved: %@";
+"new.run_hint" = "To run it: restage open %@";
+
+/* 초안 편집 */
+"draft.added_by_hand" = "Added by hand";
+"draft.keep_count" = "Keep %d";
+"draft.select_all" = "Select All";
+"draft.select_none" = "Deselect All";
+"draft.other_desktop" = "Another desktop";
+"draft.overlap_percent" = "only overlaps %d%%";
+"draft.overlap_poor" = "doesn't line up well";
+"draft.placement_help" = "Where this window goes when the workspace runs. It is placed exactly as chosen.";
+"draft.app_name_placeholder" = "App name (for example: Figma)";
+
+/* 권한과 잠금 */
+"permission.onboarding" = "restage needs Accessibility permission.\n\nOpen System Settings > Privacy & Security > Accessibility, add the app that runs this (Terminal, iTerm, or restage), and turn it on.\n\n%@";
+"screen_lock.message" = "The screen is locked.\n\nWhile it is locked the accessibility API can't list windows, so every item is recorded as a failure. Unlock the screen and run it again.";
+"error.applescript.permission_denied" = "restage isn't allowed to automate %1$@. Open System Settings > Privacy & Security > Automation and let restage control %1$@";
+
+/* 초안 편집 */
+"draft.uncertainty_detail" = "The window's size %2$@ '%1$@'.\nThis is the closest position, and saving it as is works fine.\nChoosing one yourself removes this mark.";
+
+/* 사용법 */
+"cli.usage" = "restage — a workspace restore tool\n\nUsage:\n  restage new <name>\n  restage open <name|path>\n  restage list\n  restage menubar\n  restage probe [--slot <slot>] [--app <name>] [--fullscreen] [--cold]\n\nnew:\n  Reads the windows you have open and saves them as a workspace\n  Edit the list it shows, then press Enter to save\n\nopen options:\n  <name|path>     A workspace name, or a path to a config file\n                  Names are looked up in ~/.config/restage/<name>.yaml\n\nmenubar:\n  Puts an icon in the menu bar; click a workspace to run it\n  Choose Quit from its menu to stop it\n\nprobe options:\n  --slot <slot>   Where to place windows. Defaults to left-half\n  --app <name>    Check one app. Defaults to every running app\n  --fullscreen    Also check the switch to full screen after placing\n  --cold          Also check a cold start. This force quits the target app,\n                  so --app is required and it asks before running";

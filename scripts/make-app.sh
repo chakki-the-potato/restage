@@ -65,11 +65,28 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <string>13.0</string>
   <key>LSUIElement</key>
   <true/>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>en</string>
+  <key>CFBundleLocalizations</key>
+  <array>
+    <string>en</string>
+    <string>ko</string>
+  </array>
   <key>NSAppleEventsUsageDescription</key>
-  <string>브라우저 탭을 열기 위해 자동화 권한이 필요합니다.</string>
+  <string>restage needs automation permission to open browser tabs.</string>
 </dict>
 </plist>
 PLIST
+
+# 권한 설명은 Info.plist가 아니라 InfoPlist.strings에서 언어별로 읽힌다. 시스템이 띄우는
+# 창이라 앱 안의 언어 선택과 무관하게 시스템 언어를 따른다.
+mkdir -p "$APP/Contents/Resources/en.lproj" "$APP/Contents/Resources/ko.lproj"
+cat > "$APP/Contents/Resources/en.lproj/InfoPlist.strings" <<'STRINGS'
+"NSAppleEventsUsageDescription" = "restage needs automation permission to open browser tabs.";
+STRINGS
+cat > "$APP/Contents/Resources/ko.lproj/InfoPlist.strings" <<'STRINGS'
+"NSAppleEventsUsageDescription" = "브라우저 탭을 열기 위해 자동화 권한이 필요합니다.";
+STRINGS
 
 # 서명 신원을 고르는 순서: 환경변수 -> 이 컴퓨터의 인증서 -> adhoc.
 #
