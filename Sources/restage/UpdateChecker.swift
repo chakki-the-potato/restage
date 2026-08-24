@@ -22,10 +22,10 @@ enum UpdateChecker {
 
     static func check(current raw: String) async -> Result {
         guard let current = SemanticVersion(raw) else {
-            return .failed("현재 버전을 읽지 못했습니다: \(raw)")
+            return .failed(L10n.string("error.update.bad_current", raw))
         }
         guard let url = URL(string: endpoint) else {
-            return .failed("주소가 올바르지 않습니다")
+            return .failed(L10n.string("error.update.bad_url"))
         }
 
         var request = URLRequest(url: url)
@@ -35,16 +35,16 @@ enum UpdateChecker {
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
             if let http = response as? HTTPURLResponse, http.statusCode == 404 {
-                return .failed("아직 공개된 릴리스가 없습니다")
+                return .failed(L10n.string("error.update.no_release"))
             }
             guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
                 let code = (response as? HTTPURLResponse)?.statusCode ?? 0
-                return .failed("GitHub 응답이 올바르지 않습니다 (\(code))")
+                return .failed(L10n.string("error.update.bad_response", Int(code)))
             }
             guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let tag = json["tag_name"] as? String,
                   let latest = SemanticVersion(tag) else {
-                return .failed("응답에서 버전을 찾지 못했습니다")
+                return .failed(L10n.string("error.update.no_version"))
             }
 
             guard latest > current else { return .upToDate(current) }
@@ -52,7 +52,7 @@ enum UpdateChecker {
                 ?? "https://github.com/chakki-the-potato/restage/releases"
             return .available(latest: latest, url: page)
         } catch {
-            return .failed("확인하지 못했습니다: \(error.localizedDescription)")
+            return .failed(L10n.string("error.update.failed", error.localizedDescription))
         }
     }
 }

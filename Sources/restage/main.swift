@@ -1,4 +1,5 @@
 import Foundation
+import RestageKit
 import RestageKitDarwin
 
 let usage = """
@@ -44,7 +45,7 @@ guard let command = arguments.first else {
 switch command {
 case "new":
     guard arguments.count >= 2 else {
-        print("new 뒤에 워크스페이스 이름이 필요합니다")
+        print(L10n.string("cli.new.needs_name"))
         print("")
         print(usage)
         exit(2)
@@ -52,7 +53,7 @@ case "new":
     exit(NewCommand.run(name: arguments[1]))
 case "open":
     guard arguments.count >= 2 else {
-        print("open 뒤에 워크스페이스 이름 또는 config 파일 경로가 필요합니다")
+        print(L10n.string("cli.open.needs_target"))
         print("")
         print(usage)
         exit(2)
@@ -75,7 +76,7 @@ case "probe":
         exit(2)
     }
 default:
-    print("알 수 없는 명령: \(command)")
+    print(L10n.string("cli.unknown_command", command))
     print("")
     print(usage)
     exit(2)

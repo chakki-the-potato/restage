@@ -14,7 +14,7 @@ enum OpenCommand {
             return 1
         }
         guard let displays = DisplayCatalog.current() else {
-            print("디스플레이 정보를 조회할 수 없습니다")
+            print(L10n.string("error.display.unavailable"))
             return 1
         }
 

@@ -75,7 +75,7 @@ final class HotkeyRegistry {
 
     private func register(_ spec: HotkeySpec, for workspace: String) -> Registration {
         guard let keyCode = Self.virtualKeyCode(for: spec.key) else {
-            return .invalid(reason: "지원하지 않는 키입니다: \(spec.key)")
+            return .invalid(reason: L10n.string("error.hotkey.unsupported_key", spec.key))
         }
         guard claimed.insert(spec.displayString).inserted else {
             return .conflicted(spec)

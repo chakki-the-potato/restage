@@ -1,4 +1,5 @@
 import Foundation
+import RestageKit
 import ServiceManagement
 
 /// 로그인 시 자동 실행 등록.
@@ -16,7 +17,7 @@ enum LoginItem {
 
     /// 등록 상태를 뒤집는다. 실패하면 사유를 돌려준다.
     static func toggle() -> String? {
-        guard isSupported else { return "앱 번들에서 실행할 때만 등록할 수 있습니다" }
+        guard isSupported else { return L10n.string("error.login_item.needs_bundle") }
         do {
             if isEnabled {
                 try SMAppService.mainApp.unregister()

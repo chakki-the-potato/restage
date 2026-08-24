@@ -22,14 +22,14 @@ enum HotkeyRecorder {
 
     static func record(workspace: String, current: HotkeySpec?) -> Outcome {
         let alert = NSAlert()
-        alert.messageText = "'\(workspace)' 단축키"
+        alert.messageText = L10n.string("hotkey.title", workspace)
         alert.informativeText =
-            "원하는 키 조합을 누르세요. ⌘ ⌃ ⌥ ⇧ 중 하나 이상을 함께 눌러야 합니다."
-        let save = alert.addButton(withTitle: "저장")
-        alert.addButton(withTitle: "지우기")
-        alert.addButton(withTitle: "취소")
+            L10n.string("hotkey.instructions")
+        let save = alert.addButton(withTitle: L10n.string("common.save"))
+        alert.addButton(withTitle: L10n.string("common.clear"))
+        alert.addButton(withTitle: L10n.string("common.cancel"))
 
-        let display = NSTextField(labelWithString: current?.displayString ?? "키를 누르세요")
+        let display = NSTextField(labelWithString: current?.displayString ?? L10n.string("hotkey.press_keys"))
         display.font = .systemFont(ofSize: 20, weight: .medium)
         display.alignment = .center
         display.frame = NSRect(x: 0, y: 0, width: 260, height: 34)
@@ -42,7 +42,7 @@ enum HotkeyRecorder {
             // Escape는 대화상자를 닫는 데 쓴다. 단축키로 잡으면 나갈 방법이 없다.
             guard event.keyCode != 53 else { return event }
             guard let spec = spec(from: event) else {
-                display.stringValue = "수식키를 함께 누르세요"
+                display.stringValue = L10n.string("hotkey.needs_modifier")
                 return nil
             }
             captured = spec

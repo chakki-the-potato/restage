@@ -18,14 +18,14 @@ enum WorkspaceFiles {
     /// 손으로 쓴 config가 며칠치 작업일 수 있다.
     static func moveToTrash(_ name: String) -> Failure {
         guard let path = path(for: name) else {
-            return "'\(name)' 파일을 찾을 수 없습니다"
+            return L10n.string("error.file.not_found", name)
         }
         do {
             try FileManager.default.trashItem(
                 at: URL(fileURLWithPath: path), resultingItemURL: nil)
             return nil
         } catch {
-            return "휴지통으로 보내지 못했습니다: \(error.localizedDescription)"
+            return L10n.string("error.file.trash_failed", error.localizedDescription)
         }
     }
 
@@ -35,35 +35,35 @@ enum WorkspaceFiles {
         guard target != name else { return nil }
 
         guard let source = path(for: name) else {
-            return "'\(name)' 파일을 찾을 수 없습니다"
+            return L10n.string("error.file.not_found", name)
         }
         let directory = (source as NSString).deletingLastPathComponent
         let extensionName = (source as NSString).pathExtension
         let destination = "\(directory)/\(target).\(extensionName)"
 
         guard !FileManager.default.fileExists(atPath: destination) else {
-            return "'\(target)'이라는 워크스페이스가 이미 있습니다"
+            return L10n.string("error.file.name_taken", target)
         }
         do {
             try FileManager.default.moveItem(atPath: source, toPath: destination)
             return nil
         } catch {
-            return "이름을 바꾸지 못했습니다: \(error.localizedDescription)"
+            return L10n.string("error.file.rename_failed", error.localizedDescription)
         }
     }
 
     /// 기본 편집기로 연다. 확장자 연결이 없으면 TextEdit으로 넘어간다.
     static func openInEditor(_ name: String) -> Failure {
         guard let path = path(for: name) else {
-            return "'\(name)' 파일을 찾을 수 없습니다"
+            return L10n.string("error.file.not_found", name)
         }
         return NSWorkspace.shared.open(URL(fileURLWithPath: path))
-            ? nil : "편집기를 열지 못했습니다"
+            ? nil : L10n.string("error.file.editor_failed")
     }
 
     static func revealInFinder(_ name: String) -> Failure {
         guard let path = path(for: name) else {
-            return "'\(name)' 파일을 찾을 수 없습니다"
+            return L10n.string("error.file.not_found", name)
         }
         NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)])
         return nil
@@ -79,7 +79,7 @@ enum WorkspaceFiles {
     /// config의 hotkey 줄만 갈아 끼운다. nil이면 지운다.
     static func setHotkey(_ hotkey: String?, for name: String) -> Failure {
         guard let path = path(for: name) else {
-            return "'\(name)' 파일을 찾을 수 없습니다"
+            return L10n.string("error.file.not_found", name)
         }
         do {
             let original = try String(contentsOfFile: path, encoding: .utf8)
@@ -88,7 +88,7 @@ enum WorkspaceFiles {
             try updated.write(toFile: path, atomically: true, encoding: .utf8)
             return nil
         } catch {
-            return "단축키를 저장하지 못했습니다: \(error.localizedDescription)"
+            return L10n.string("error.file.hotkey_save_failed", error.localizedDescription)
         }
     }
 
@@ -106,13 +106,13 @@ enum WorkspaceFiles {
             try ConfigWriter.yaml(for: draft).write(
                 toFile: path, atomically: true, encoding: .utf8)
         } catch {
-            return "저장하지 못했습니다: \(error.localizedDescription)"
+            return L10n.string("error.file.save_failed", error.localizedDescription)
         }
         do {
             _ = try ConfigLoader.load(path: path)
             return nil
         } catch {
-            return "저장은 됐지만 다시 읽지 못했습니다. 파일을 확인하세요: \(path)\n\(error)"
+            return L10n.string("error.file.saved_but_unreadable", path, "\(error)")
         }
     }
 }

@@ -33,7 +33,7 @@ enum WorkspaceLauncher {
             return .failed(ScreenLock.message)
         }
         guard let displays = DisplayCatalog.current() else {
-            return .failed("디스플레이 정보를 조회할 수 없습니다")
+            return .failed(L10n.string("error.display.unavailable"))
         }
 
         do {

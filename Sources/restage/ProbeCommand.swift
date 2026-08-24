@@ -21,14 +21,15 @@ struct ProbeOptions {
             case "--slot":
                 index += 1
                 guard index < arguments.count, let slot = Slot(rawValue: arguments[index]) else {
-                    throw ProbeError.usage("--slot 값이 올바르지 않습니다. 가능한 값: "
-                        + Slot.allCases.map(\.rawValue).joined(separator: ", "))
+                    throw ProbeError.usage(L10n.string(
+                        "probe.bad_slot",
+                        Slot.allCases.map(\.rawValue).joined(separator: ", ")))
                 }
                 options.slot = slot
             case "--app":
                 index += 1
                 guard index < arguments.count else {
-                    throw ProbeError.usage("--app 뒤에 앱 이름이 필요합니다")
+                    throw ProbeError.usage(L10n.string("probe.app_needs_name"))
                 }
                 options.apps = [AppID(arguments[index])]
             case "--fullscreen":
@@ -36,14 +37,14 @@ struct ProbeOptions {
             case "--cold":
                 options.includeColdStart = true
             default:
-                throw ProbeError.usage("알 수 없는 인자: \(arguments[index])")
+                throw ProbeError.usage(L10n.string("probe.unknown_argument", arguments[index]))
             }
             index += 1
         }
 
         guard !options.includeColdStart || !options.apps.isEmpty else {
             throw ProbeError.usage(
-                "--cold는 대상 앱을 강제 종료하므로 --app으로 하나만 지정해야 합니다")
+                L10n.string("probe.cold_needs_app"))
         }
         return options
     }
@@ -71,17 +72,17 @@ enum ProbeCommand {
             return 1
         }
         guard let display = DisplayProvider.primary() else {
-            print("디스플레이 정보를 조회할 수 없습니다")
+            print(L10n.string("error.display.unavailable"))
             return 1
         }
 
         let apps = options.apps.isEmpty ? runningApps() : options.apps
         guard !apps.isEmpty else {
-            print("검증할 앱이 없습니다. 앱을 하나 이상 실행하거나 --app으로 지정하세요")
+            print(L10n.string("probe.no_apps"))
             return 1
         }
         guard confirmColdStart(options, apps: apps) else {
-            print("취소했습니다")
+            print(L10n.string("common.cancelled"))
             return 1
         }
 
@@ -112,7 +113,7 @@ enum ProbeCommand {
     private static func confirmColdStart(_ options: ProbeOptions, apps: [AppID]) -> Bool {
         guard options.includeColdStart else { return true }
         let names = apps.map(\.rawValue).joined(separator: ", ")
-        return Console.confirm("콜드 스타트를 위해 \(names)을(를) 강제 종료합니다. 계속할까요?")
+        return Console.confirm(L10n.string("probe.cold_confirm", names))
     }
 
     private static func coldStart(

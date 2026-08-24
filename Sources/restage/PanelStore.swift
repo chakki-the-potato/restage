@@ -141,7 +141,7 @@ final class PanelStore: ObservableObject {
         case .invalid(let reason):
             return reason
         case .conflicted(let spec):
-            return "단축키 \(spec.displayString)를 등록하지 못했습니다. 다른 앱이 쓰고 있거나 중복입니다"
+            return L10n.string("error.hotkey.conflict", spec.displayString)
         case .registered, nil:
             return nil
         }

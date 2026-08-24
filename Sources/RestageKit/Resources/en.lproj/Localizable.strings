@@ -155,3 +155,76 @@
 "outcome.tabs_added_with_placement" = "Added %1$d tabs. %2$@";
 "outcome.tabs_all_open" = "All %d tabs were already open";
 "outcome.tabs_added" = "Added %d tabs";
+
+/* 공통 */
+"common.ok" = "OK";
+"common.cancel" = "Cancel";
+"common.save" = "Save";
+"common.clear" = "Clear";
+"common.name" = "Name";
+"common.cancelled" = "Cancelled";
+
+/* 파일 */
+"error.file.not_found" = "Couldn't find the file for '%@'";
+"error.file.trash_failed" = "Couldn't move it to the Trash: %@";
+"error.file.name_taken" = "A workspace named '%@' already exists";
+"error.file.rename_failed" = "Couldn't rename it: %@";
+"error.file.editor_failed" = "Couldn't open an editor";
+"error.file.hotkey_save_failed" = "Couldn't save the shortcut: %@";
+"error.file.save_failed" = "Couldn't save: %@";
+"error.file.saved_but_unreadable" = "It saved but couldn't be read back. Check the file: %1$@\n%2$@";
+
+/* 로그인 항목과 단축키 */
+"error.login_item.needs_bundle" = "This only works when restage runs from its app bundle";
+"error.hotkey.unsupported_key" = "Unsupported key: %@";
+"error.hotkey.conflict" = "Couldn't register %@. Another app is using it, or it's a duplicate";
+
+/* 디스플레이 */
+"error.display.unavailable" = "Couldn't read display information";
+
+/* 업데이트 확인 */
+"error.update.bad_current" = "Couldn't read the current version: %@";
+"error.update.bad_url" = "That address isn't valid";
+"error.update.no_release" = "There are no published releases yet";
+"error.update.bad_response" = "GitHub's response wasn't valid (%d)";
+"error.update.no_version" = "Couldn't find a version in the response";
+"error.update.failed" = "Couldn't check: %@";
+
+/* 창 읽기 */
+"error.capture.window_not_in_browser" = "Couldn't find the window '%@' in the browser's own list";
+"error.capture.no_urls" = "There is no address worth saving. Only the start page or a new tab is open";
+
+/* 초안 */
+"draft.pick_windows" = "Choose the windows and where they go.";
+"draft.stale_note" = "This list is from when the windows were read. If you have moved them since, read them again.";
+"draft.reload" = "Read Again";
+"draft.nothing_selected.title" = "Nothing is selected";
+"draft.nothing_selected.body" = "Choose at least one, then save.";
+"draft.uncertainty_note" = "? means the position is ambiguous.";
+"summary.tabs" = "%d tabs";
+"summary.other_desktop" = "[another desktop]";
+
+/* 단축키 기록 */
+"hotkey.title" = "Shortcut for '%@'";
+"hotkey.instructions" = "Press the key combination you want. It has to include at least one of ⌘ ⌃ ⌥ ⇧.";
+"hotkey.press_keys" = "Press a key";
+"hotkey.needs_modifier" = "Hold a modifier key too";
+
+/* 터미널 */
+"cli.list.empty" = "No workspaces saved yet: %@";
+"cli.new.needs_name" = "new needs a workspace name after it";
+"cli.open.needs_target" = "open needs a workspace name or a config file path after it";
+"cli.unknown_command" = "Unknown command: %@";
+"cli.report.workspace" = "Workspace: %@";
+"cli.report.done" = "done";
+"cli.report.done_with_failures" = "done (%d failed)";
+"cli.report.tally" = "%1$@  %2$d total — %3$@";
+
+/* probe */
+"probe.bad_slot" = "--slot isn't a valid value. Valid values: %@";
+"probe.app_needs_name" = "--app needs an app name after it";
+"probe.unknown_argument" = "Unknown argument: %@";
+"probe.cold_needs_app" = "--cold force quits the app it targets, so name exactly one with --app";
+"probe.no_apps" = "There is nothing to check. Open at least one app, or name one with --app";
+"probe.cold_confirm" = "This force quits %@ to test a cold start. Continue?";
+"probe.fullscreen_stuck" = "Couldn't leave full screen; it stayed on its Space (leave it by hand). %@";

@@ -74,7 +74,8 @@ enum ProbeReport {
         }
         let failed = counts["FAIL"] ?? 0
         let verdict = failed == 0 ? "GATE PASSED" : "GATE FAILED"
-        return "\(parts.joined(separator: " / "))  총 \(rows.count)건 — \(verdict)"
+        return L10n.string(
+            "cli.report.tally", parts.joined(separator: " / "), rows.count, verdict)
     }
 
     /// 전체화면 해제 실패를 표시한다. 전환 자체의 판정은 유지하고 경고만 붙인다.
@@ -89,7 +90,7 @@ enum ProbeReport {
             label: row.label == "PASS" ? "WARN" : row.label,
             expected: row.expected, actual: row.actual,
             attempts: row.attempts, elapsedMS: row.elapsedMS,
-            note: "해제 불가, Space 잔류 (수동 해제 필요). \(row.note)")
+            note: L10n.string("probe.fullscreen_stuck", row.note))
     }
 
     static func hasFailure(_ rows: [ProbeRow]) -> Bool {
