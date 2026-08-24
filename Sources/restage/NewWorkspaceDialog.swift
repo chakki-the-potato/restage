@@ -26,19 +26,31 @@ enum NewWorkspaceDialog {
             return
         }
 
-        let captured = WorkspaceCapture.capture(name: name, displays: displays)
-        guard captured.draft.itemCount > 0 else {
-            Prompt.message(
-                "담을 창이 없습니다",
-                "현재 데스크탑에 열린 창이 없습니다. 앱을 배치한 뒤 다시 시도하세요.")
-            return
-        }
-        guard let draft = DraftDialog.edit(
-            captured.draft, title: "'\(name)'에 담을 내용", notes: notes(for: captured))
-        else { return }
+        // 다시 읽기를 고르면 창을 새로 읽어 목록을 다시 만든다. 그 사이 사용자가 창을
+        // 옮겼을 수 있으므로 앞서 고른 체크와 자리는 유지하지 않는다. 목록 자체가 달라진다.
+        while true {
+            let captured = WorkspaceCapture.capture(name: name, displays: displays)
+            guard captured.draft.itemCount > 0 else {
+                Prompt.message(
+                    "담을 창이 없습니다",
+                    "열린 창이 없습니다. 앱을 배치한 뒤 다시 시도하세요.")
+                return
+            }
 
-        if let reason = WorkspaceFiles.save(draft) {
-            Prompt.message("저장하지 못했습니다", reason)
+            switch DraftDialog.edit(
+                captured.draft, title: "'\(name)'에 담을 내용",
+                notes: notes(for: captured), allowsReload: true
+            ) {
+            case .reload:
+                continue
+            case .cancelled:
+                return
+            case .saved(let draft):
+                if let reason = WorkspaceFiles.save(draft) {
+                    Prompt.message("저장하지 못했습니다", reason)
+                }
+                return
+            }
         }
     }
 

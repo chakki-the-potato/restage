@@ -272,7 +272,7 @@ struct WorkspacePanel: View {
             return "'\(name)'을 읽지 못했습니다: \(error)"
         }
 
-        guard let edited = DraftDialog.edit(
+        guard case .saved(let edited) = DraftDialog.edit(
             existing, title: "'\(name)' 편집", notes: [])
         else { return nil }
         return WorkspaceFiles.save(edited)
