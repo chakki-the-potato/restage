@@ -13,6 +13,7 @@ final class PopoverController: NSObject, NSPopoverDelegate {
         withLength: NSStatusItem.variableLength)
     private let popover = NSPopover()
     private let store = PanelStore()
+    private let menu = PanelMenu()
 
     func start() {
         statusItem.button?.image = MenuBarIcon.image()
@@ -27,6 +28,14 @@ final class PopoverController: NSObject, NSPopoverDelegate {
             _ = AccessibilityPermission.requestIfNeeded()
         }
         store.installHotkeys()
+
+        // 메뉴바의 다른 항목을 누르면 우리 앱이 활성에서 물러난다. 그때 패널을 닫는다.
+        // 팝오버의 transient 동작만으로는 다른 상태 항목의 창이 뜨는 것을 잡지 못한다.
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didResignActiveNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.popover.performClose(nil) }
+        }
     }
 
     private func hostingController() -> NSHostingController<WorkspacePanel> {
@@ -34,6 +43,9 @@ final class PopoverController: NSObject, NSPopoverDelegate {
             store: store,
             dismiss: { [weak self] in self?.popover.performClose(nil) },
             reopen: { [weak self] in self?.showPanel() },
+            presentMenu: { [weak self] items, anchor in
+                self?.present(items, at: anchor)
+            },
             onQuit: { NSApplication.shared.terminate(nil) })
         let controller = NSHostingController(rootView: panel)
         // 내용 높이에 맞춰 패널이 늘어나게 한다. 고정하면 워크스페이스가 늘 때 잘린다.
@@ -41,10 +53,23 @@ final class PopoverController: NSObject, NSPopoverDelegate {
         return controller
     }
 
-    /// 팝오버가 닫히면 열려 있던 메뉴도 접는다. 그러지 않으면 다시 열었을 때 그대로 떠 있다.
-    func popoverDidClose(_ notification: Notification) {
-        store.collapseMenus()
+    /// 버튼의 창 좌표를 화면 좌표로 옮겨 메뉴를 띄운다.
+    ///
+    /// SwiftUI는 위에서 아래로 재고 AppKit 화면 좌표는 아래에서 위로 잰다. 그래서 창의
+    /// 위쪽 경계에서 빼야 한다.
+    private func present(_ items: [PanelMenu.Item], at anchor: CGRect) {
+        guard let window = popover.contentViewController?.view.window else { return }
+        let point = CGPoint(
+            x: window.frame.minX + anchor.minX,
+            y: window.frame.maxY - anchor.maxY - Self.menuGap)
+
+        menu.show(items: items, at: point) { [weak self] in
+            // 항목을 고르지 않고 닫혔다. 바깥을 눌렀다는 뜻이므로 패널도 닫는다.
+            self?.popover.performClose(nil)
+        }
     }
+
+    private static let menuGap: CGFloat = 4
 
     @objc private func togglePanel() {
         if popover.isShown {
@@ -56,7 +81,6 @@ final class PopoverController: NSObject, NSPopoverDelegate {
 
     func showPanel() {
         guard let button = statusItem.button, !popover.isShown else { return }
-        store.collapseMenus()
         store.reload()
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         // 팝오버는 앱이 활성 상태가 아니면 키 입력을 받지 못한다. 이 앱은 LSUIElement라

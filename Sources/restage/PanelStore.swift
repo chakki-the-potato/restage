@@ -45,16 +45,6 @@ final class PanelStore: ObservableObject {
     @Published private(set) var listError: String?
     @Published private(set) var loginItemEnabled = false
 
-    /// 떠 있는 메뉴를 연 카드의 이름. 뷰가 아니라 여기 두는 이유는 팝오버가 닫혀도
-    /// 뷰의 상태는 남아 다시 열었을 때 메뉴가 그대로 떠 있기 때문이다.
-    @Published var expandedCard: String?
-    @Published var showsOptions = false
-
-    func collapseMenus() {
-        expandedCard = nil
-        showsOptions = false
-    }
-
     let loginItemSupported = LoginItem.isSupported
 
     private let hotkeys = HotkeyRegistry()
