@@ -9,6 +9,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP="${1:-$ROOT/build/restage.app}"
 BUNDLE_ID="com.chakki.restage"
+# 릴리스는 태그에서 받은 버전을 박는다. 로컬 빌드는 기본값을 쓴다.
+VERSION="${RESTAGE_VERSION:-0.1.0}"
 
 cd "$ROOT"
 swift build -c release --product restage
@@ -42,9 +44,9 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
-  <string>0.1.0</string>
+  <string>$VERSION</string>
   <key>CFBundleVersion</key>
-  <string>1</string>
+  <string>$VERSION</string>
   <key>LSMinimumSystemVersion</key>
   <string>13.0</string>
   <key>LSUIElement</key>
