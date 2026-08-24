@@ -8,8 +8,8 @@
 class Restage < Formula
   desc "미리 선언한 앱과 창 배치를 한 번에 복원하는 macOS 도구"
   homepage "https://github.com/chakki-the-potato/restage"
-  url "https://github.com/chakki-the-potato/restage/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "f713b84b49d12129c40e32c0b03179c4b9f1daeaa9c8dca8840841f9e1fe9236"
+  url "https://github.com/chakki-the-potato/restage/archive/refs/tags/v0.2.0.tar.gz"
+  sha256 "a535f052c4acb8f9d98bd4208096b2256dbabaac6b018747140267c991c2fbb3"
   license "MIT"
   head "https://github.com/chakki-the-potato/restage.git", branch: "main"
 
