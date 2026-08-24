@@ -14,6 +14,8 @@ final class PopoverController: NSObject, NSPopoverDelegate {
     private let popover = NSPopover()
     private let store = PanelStore()
     private let menu = PanelMenu()
+    /// 패널이 떠 있는 동안 바깥 클릭을 지켜보는 감시자.
+    private var outsideClickMonitor: Any?
 
     func start() {
         statusItem.button?.image = MenuBarIcon.image()
@@ -22,6 +24,9 @@ final class PopoverController: NSObject, NSPopoverDelegate {
 
         popover.behavior = .transient
         popover.delegate = self
+        // 여는 것도 닫는 것도 즉시. 메뉴는 애니메이션 없이 사라지므로, 패널만 서서히
+        // 사라지면 둘이 따로 노는 것처럼 보인다.
+        popover.animates = false
         popover.contentViewController = hostingController()
 
         if !AccessibilityPermission.isTrusted() {
@@ -68,14 +73,45 @@ final class PopoverController: NSObject, NSPopoverDelegate {
         }
     }
 
-    /// 메뉴가 항목 선택 없이 닫혔을 때, 어디를 눌렀는지 보고 패널을 닫을지 정한다.
+    /// 어디를 눌렀는지 보고 패널을 닫을지 정한다.
     ///
-    /// 패널 안을 눌렀으면 메뉴만 닫는다. 메뉴를 잘못 열었을 때 패널까지 사라지면
-    /// 다시 열어야 한다. 패널 바깥을 눌렀으면 볼 일이 끝난 것이므로 패널도 닫는다.
+    /// 패널 안을 눌렀으면 그대로 둔다. 메뉴를 잘못 열었을 때 패널까지 사라지면 다시
+    /// 열어야 한다. 패널 바깥을 눌렀으면 볼 일이 끝난 것이므로 닫는다.
+    ///
+    /// 상태 항목 자기 자신은 뺀다. 그것까지 닫으면 토글이 닫고 다시 여는 꼴이 된다.
     private func closePanelIfClickedOutside() {
-        guard let window = popover.contentViewController?.view.window else { return }
-        guard !window.frame.contains(NSEvent.mouseLocation) else { return }
-        popover.performClose(nil)
+        guard popover.isShown else { return }
+        let point = NSEvent.mouseLocation
+
+        if let window = popover.contentViewController?.view.window,
+           window.frame.contains(point) { return }
+        if let button = statusItem.button, let window = button.window,
+           window.convertToScreen(button.convert(button.bounds, to: nil)).contains(point) {
+            return
+        }
+        popover.close()
+    }
+
+    /// 팝오버의 transient 동작은 다른 메뉴바 항목을 누르는 것을 잡지 못한다. 그 앱들도
+    /// 대개 배경 앱이라 우리 앱이 활성에서 물러나지 않기 때문이다. 그래서 직접 지켜본다.
+    ///
+    /// 키보드가 아니라 마우스 이벤트만 보므로 추가 권한이 필요하지 않다.
+    private func startWatchingOutsideClicks() {
+        guard outsideClickMonitor == nil else { return }
+        outsideClickMonitor = NSEvent.addGlobalMonitorForEvents(
+            matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.closePanelIfClickedOutside() }
+        }
+    }
+
+    private func stopWatchingOutsideClicks() {
+        if let outsideClickMonitor { NSEvent.removeMonitor(outsideClickMonitor) }
+        outsideClickMonitor = nil
+    }
+
+    func popoverDidClose(_ notification: Notification) {
+        stopWatchingOutsideClicks()
     }
 
     /// 버튼과 메뉴 사이 간격.
@@ -93,6 +129,7 @@ final class PopoverController: NSObject, NSPopoverDelegate {
         guard let button = statusItem.button, !popover.isShown else { return }
         store.reload()
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        startWatchingOutsideClicks()
         // 팝오버는 앱이 활성 상태가 아니면 키 입력을 받지 못한다. 이 앱은 LSUIElement라
         // 스스로 활성화해야 텍스트 필드나 메뉴가 정상 동작한다.
         NSApplication.shared.activate(ignoringOtherApps: true)
