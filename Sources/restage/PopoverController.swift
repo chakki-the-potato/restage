@@ -22,7 +22,10 @@ final class PopoverController: NSObject, NSPopoverDelegate {
         statusItem.button?.target = self
         statusItem.button?.action = #selector(togglePanel)
 
-        popover.behavior = .transient
+        // 닫는 판단을 전부 직접 한다. `.transient`는 메뉴바가 자동으로 숨었다 나타나는
+        // 것까지 "바깥 상호작용"으로 보고 패널을 닫는다. 커서를 화면 위쪽에 올렸을 뿐인데
+        // 사라지는 이유가 그것이다. 바깥 클릭은 이미 직접 지켜보고 있으므로 필요 없다.
+        popover.behavior = .applicationDefined
         popover.delegate = self
         // 여는 것도 닫는 것도 즉시. 메뉴는 애니메이션 없이 사라지므로, 패널만 서서히
         // 사라지면 둘이 따로 노는 것처럼 보인다.
