@@ -13,8 +13,15 @@ BUNDLE_ID="com.chakki.restage"
 VERSION="${RESTAGE_VERSION:-0.1.0}"
 
 cd "$ROOT"
-swift build -c release --product restage
-BINARY="$(swift build -c release --product restage --show-bin-path)/restage"
+
+# Homebrew처럼 이미 샌드박스 안에서 도는 환경에서는 SwiftPM이 자기 샌드박스를 또 걸다가
+# "sandbox_apply: Operation not permitted"로 실패한다. 그런 곳에서
+# RESTAGE_SWIFT_FLAGS=--disable-sandbox 를 넘긴다.
+SWIFT_FLAGS="${RESTAGE_SWIFT_FLAGS:-}"
+
+# shellcheck disable=SC2086
+swift build -c release --product restage $SWIFT_FLAGS
+BINARY="$(swift build -c release --product restage --show-bin-path $SWIFT_FLAGS)/restage"
 
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
@@ -24,7 +31,7 @@ cp "$BINARY" "$APP/Contents/MacOS/restage"
 # 그림 자체가 코드라 별도 바이너리 에셋을 저장소에 두지 않는다.
 ICONSET="$ROOT/build/restage.iconset"
 rm -rf "$ICONSET"
-swift run -c release restage-icon "$ICONSET" >/dev/null
+swift run -c release $SWIFT_FLAGS restage-icon "$ICONSET" >/dev/null
 iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/restage.icns"
 rm -rf "$ICONSET"
 
