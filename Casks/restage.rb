@@ -7,7 +7,7 @@
 # 있어야 한다. 공증에는 유료 Apple Developer Program이 필요하다. 그 전까지 이 cask로
 # 설치하면 첫 실행에 우클릭 열기가 필요하므로, README는 수식 쪽을 안내한다.
 cask "restage" do
-  version "0.2.0"
+  version ""
   sha256 :no_check
 
   url "https://github.com/chakki-the-potato/restage/releases/download/v#{version}/restage-#{version}.dmg",
