@@ -25,6 +25,9 @@ final class PanelMenu: NSObject, NSMenuDelegate {
     private var onDismissWithoutSelection: (() -> Void)?
     private var didSelect = false
     private var menu: NSMenu?
+    /// 메뉴가 떠 있는 동안 true. 우리 메뉴가 키를 가져가는 것을 바깥 전환으로 오해하면
+    /// 메뉴를 여는 순간 패널이 닫힌다.
+    private(set) var isShowing = false
 
     /// 화면 좌표 한 점에서 메뉴를 연다. 그 점이 메뉴의 왼쪽 위가 된다.
     func show(
@@ -40,6 +43,7 @@ final class PanelMenu: NSObject, NSMenuDelegate {
             menu.addItem(menuItem(for: item))
         }
         self.menu = menu
+        isShowing = true
         menu.popUp(positioning: nil, at: screenPoint, in: nil)
     }
 
@@ -81,6 +85,7 @@ final class PanelMenu: NSObject, NSMenuDelegate {
     }
 
     func menuDidClose(_ menu: NSMenu) {
+        isShowing = false
         guard !didSelect else { return }
         // 항목을 고르지 않고 닫혔다. 어디를 눌렀는지는 호출자가 판단한다.
         // 지연 없이 부른다. 한 박자 뒤에 패널이 닫히면 메뉴와 따로 노는 것처럼 보인다.
