@@ -30,18 +30,25 @@ struct WorkspaceCard: View {
             .buttonStyle(.plain)
             .disabled(!isEnabled)
 
+            if let warning = item.hotkeyWarning {
+                noteRow(warning, symbol: "exclamationmark.triangle.fill", tint: .orange)
+            }
             if let message {
-                messageRow(message)
+                noteRow(message, symbol: "exclamationmark.circle.fill", tint: .orange,
+                        onDismiss: onDismissMessage)
             }
         }
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color.primary.opacity(isHovering && isEnabled ? 0.09 : 0.05)))
+                .fill(Color(nsColor: .controlBackgroundColor)))
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.accentColor.opacity(isHovering && isEnabled ? 0.10 : 0)))
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.07), lineWidth: 1))
+                .strokeBorder(Color.primary.opacity(0.10), lineWidth: 1))
         .onHover { isHovering = $0 }
-        .help(item.hotkeyWarning ?? item.error ?? "")
+        .help(item.error ?? "")
     }
 
     private var header: some View {
@@ -123,23 +130,27 @@ struct WorkspaceCard: View {
 
     /// 실패 사유는 알림 창 대신 카드 안에 붙인다. 모달은 흐름을 끊고, 어느 워크스페이스의
     /// 문제인지도 제목으로만 알 수 있다.
-    private func messageRow(_ text: String) -> some View {
+    private func noteRow(
+        _ text: String, symbol: String, tint: Color, onDismiss: (() -> Void)? = nil
+    ) -> some View {
         HStack(alignment: .top, spacing: 6) {
-            Image(systemName: "exclamationmark.circle.fill")
+            Image(systemName: symbol)
                 .font(.system(size: 11))
-                .foregroundStyle(.orange)
+                .foregroundStyle(tint)
             Text(text)
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
-            Button(action: onDismissMessage) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 9))
-                    .foregroundStyle(.secondary)
+            if let onDismiss {
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("닫기")
             }
-            .buttonStyle(.plain)
-            .help("닫기")
         }
         .padding(.horizontal, 12)
         .padding(.bottom, 10)

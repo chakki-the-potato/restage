@@ -41,12 +41,18 @@ public struct ItemDraft: Sendable, Equatable {
     public var kind: Kind
     /// 현재 창 배치에서 분류한 확신도. 낮으면 사용자에게 되묻는다. 저장되지는 않는다.
     public var overlap: Double?
+    /// 담을 당시 현재 데스크탑에 있었는지. 저장되지는 않고 확인 목록에만 쓴다.
+    public var wasOnCurrentSpace = true
 
-    public init(app: String, slot: Slot?, kind: Kind, overlap: Double? = nil) {
+    public init(
+        app: String, slot: Slot?, kind: Kind, overlap: Double? = nil,
+        wasOnCurrentSpace: Bool = true
+    ) {
         self.app = app
         self.slot = slot
         self.kind = kind
         self.overlap = overlap
+        self.wasOnCurrentSpace = wasOnCurrentSpace
     }
 
     public var isConfident: Bool {
@@ -54,13 +60,27 @@ public struct ItemDraft: Sendable, Equatable {
         return overlap >= SlotClassifier.confidenceThreshold
     }
 
-    public static func app(_ name: String, slot: Slot, title: String? = nil,
-                           overlap: Double? = nil) -> ItemDraft {
-        ItemDraft(app: name, slot: slot, kind: .app(title: title), overlap: overlap)
+    public static func app(
+        _ name: String, slot: Slot, title: String? = nil, overlap: Double? = nil,
+        wasOnCurrentSpace: Bool = true
+    ) -> ItemDraft {
+        ItemDraft(
+            app: name, slot: slot, kind: .app(title: title), overlap: overlap,
+            wasOnCurrentSpace: wasOnCurrentSpace)
     }
 
-    public static func browser(_ name: String, slot: Slot?, tabs: [String],
-                               overlap: Double? = nil) -> ItemDraft {
-        ItemDraft(app: name, slot: slot, kind: .browser(tabs: tabs), overlap: overlap)
+    public static func browser(
+        _ name: String, slot: Slot?, tabs: [String], overlap: Double? = nil,
+        wasOnCurrentSpace: Bool = true
+    ) -> ItemDraft {
+        ItemDraft(
+            app: name, slot: slot, kind: .browser(tabs: tabs), overlap: overlap,
+            wasOnCurrentSpace: wasOnCurrentSpace)
+    }
+
+    /// 목록에서 같은 앱의 창을 구분하는 데 쓰는 꼬리표.
+    public var titleHint: String? {
+        if case .app(let title) = kind { return title }
+        return nil
     }
 }

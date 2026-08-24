@@ -31,14 +31,7 @@ enum NewCommand {
             return 1
         }
 
-        let captured: WorkspaceCapture.Result
-        do {
-            captured = try WorkspaceCapture.capture(name: name, displays: displays)
-        } catch {
-            print("창 목록을 읽지 못했습니다: \(error)")
-            return 1
-        }
-
+        let captured = WorkspaceCapture.capture(name: name, displays: displays)
         var draft = captured.draft
         printIntro(captured)
         return edit(&draft)
@@ -46,7 +39,10 @@ enum NewCommand {
 
     private static func printIntro(_ captured: WorkspaceCapture.Result) {
         print("현재 창 배치를 읽었습니다.")
-        print("다른 Space에 있거나 전체화면인 창은 보이지 않습니다.")
+        if captured.onOtherSpaceCount > 0 {
+            print("이 중 \(captured.onOtherSpaceCount)개는 다른 데스크탑에 있습니다. "
+                + "앱이 꺼진 상태에서 실행하면 정상 배치되고, 이미 떠 있으면 실패합니다.")
+        }
         for skipped in captured.browsersWithoutTabs {
             print("\(skipped.app)의 탭을 읽지 못해 창 위치만 담았습니다: \(skipped.reason)")
         }
