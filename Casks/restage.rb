@@ -13,7 +13,7 @@ cask "restage" do
   url "https://github.com/chakki-the-potato/restage/releases/download/v#{version}/restage-#{version}.dmg",
       verified: "github.com/chakki-the-potato/restage/"
   name "restage"
-  desc "미리 선언한 앱과 창 배치를 한 번에 복원하는 macOS 도구"
+  desc "Restore a declared layout of apps and windows in one step"
   homepage "https://github.com/chakki-the-potato/restage"
 
   depends_on macos: ">= :ventura"

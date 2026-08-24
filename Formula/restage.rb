@@ -6,7 +6,7 @@
 #
 # Homebrew를 쓰는 사람은 이미 Xcode 명령줄 도구를 갖고 있으므로 Swift 컴파일러가 있다.
 class Restage < Formula
-  desc "미리 선언한 앱과 창 배치를 한 번에 복원하는 macOS 도구"
+  desc "Restore a declared layout of apps and windows in one step"
   homepage "https://github.com/chakki-the-potato/restage"
   url "https://github.com/chakki-the-potato/restage/archive/refs/tags/v0.3.0.tar.gz"
   sha256 "d37aaf8b32269f47b172f93f106d08e87561c1e384dc9d90c7a65773097c70d3"
