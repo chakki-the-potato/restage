@@ -1,0 +1,55 @@
+/* 패널 */
+"panel.new_from_current" = "현재 창 배치로 새로 만들기";
+"panel.hotkey.placeholder" = "단축키";
+"panel.language.auto" = "자동";
+"panel.retry" = "다시 시도";
+
+/* 패널 · 빈 상태 */
+"panel.empty.title" = "아직 저장한 배치가 없습니다";
+"panel.empty.body" = "창을 원하는 자리에 놓고 아래를 누르면\n그 배치를 그대로 저장합니다";
+"panel.empty.button" = "현재 창 배치로 만들기";
+
+/* 패널 · 접근성 권한 */
+"panel.permission.title" = "접근성 권한이 필요합니다";
+"panel.permission.body" = "창을 옮기려면 restage에 권한을 줘야 합니다";
+"panel.permission.button" = "열기";
+
+/* 패널 · 실행 */
+"panel.progress.opening" = "%1$@ 여는 중 · %3$d개 중 %2$d개";
+"panel.app_not_installed" = "%@가 설치되어 있지 않습니다";
+
+/* 카드 메뉴 */
+"card.menu.rename" = "이름 변경";
+"card.menu.change_shortcut" = "단축키 변경";
+"card.menu.reveal" = "파일로 열기";
+"card.menu.delete" = "삭제";
+
+/* 설정 메뉴 */
+"options.open_at_login" = "로그인 시 자동 실행";
+"options.check_updates" = "업데이트 확인";
+"options.open_config_folder" = "config 폴더 열기";
+"options.quit" = "종료";
+
+/* 배치 요약 */
+"layout.full_screen" = "전체 화면";
+"layout.left_right" = "좌우 분할";
+"layout.top_bottom" = "상하 분할";
+"layout.quarters" = "4분할";
+"layout.panes" = "%d분할";
+"layout.mixed" = "혼합";
+"layout.displays" = "화면 %d";
+"layout.summary" = "%1$@ · %2$@";
+
+/* 자리 이름 */
+"slot.full" = "전체";
+"slot.left_half" = "왼쪽 절반";
+"slot.right_half" = "오른쪽 절반";
+"slot.top_half" = "위쪽 절반";
+"slot.bottom_half" = "아래쪽 절반";
+"slot.q1" = "좌상";
+"slot.q2" = "우상";
+"slot.q3" = "좌하";
+"slot.q4" = "우하";
+"slot.centered" = "가운데";
+"placement.fullscreen" = "전체 화면";
+"placement.keep_size" = "크기 유지";

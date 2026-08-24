@@ -1,0 +1,55 @@
+/* 패널 */
+"panel.new_from_current" = "New from Current Layout";
+"panel.hotkey.placeholder" = "Shortcut";
+"panel.language.auto" = "Auto";
+"panel.retry" = "Retry";
+
+/* 패널 · 빈 상태 */
+"panel.empty.title" = "No layouts saved yet";
+"panel.empty.body" = "Arrange your windows, then save\nthe layout exactly as it is";
+"panel.empty.button" = "Save Current Layout";
+
+/* 패널 · 접근성 권한 */
+"panel.permission.title" = "Accessibility permission needed";
+"panel.permission.body" = "restage moves windows on your behalf";
+"panel.permission.button" = "Open";
+
+/* 패널 · 실행 */
+"panel.progress.opening" = "Opening %1$@ · %2$d of %3$d";
+"panel.app_not_installed" = "%@ is not installed";
+
+/* 카드 메뉴 */
+"card.menu.rename" = "Rename";
+"card.menu.change_shortcut" = "Change Shortcut";
+"card.menu.reveal" = "Reveal in Finder";
+"card.menu.delete" = "Delete";
+
+/* 설정 메뉴 */
+"options.open_at_login" = "Open at Login";
+"options.check_updates" = "Check for Updates";
+"options.open_config_folder" = "Open Config Folder";
+"options.quit" = "Quit";
+
+/* 배치 요약 */
+"layout.full_screen" = "Full screen";
+"layout.left_right" = "Left & right";
+"layout.top_bottom" = "Top & bottom";
+"layout.quarters" = "Quarters";
+"layout.panes" = "%d panes";
+"layout.mixed" = "Mixed";
+"layout.displays" = "%d displays";
+"layout.summary" = "%1$@ · %2$@";
+
+/* 자리 이름 */
+"slot.full" = "Full";
+"slot.left_half" = "Left half";
+"slot.right_half" = "Right half";
+"slot.top_half" = "Top half";
+"slot.bottom_half" = "Bottom half";
+"slot.q1" = "Top left";
+"slot.q2" = "Top right";
+"slot.q3" = "Bottom left";
+"slot.q4" = "Bottom right";
+"slot.centered" = "Centered";
+"placement.fullscreen" = "Full screen";
+"placement.keep_size" = "Keep size";
