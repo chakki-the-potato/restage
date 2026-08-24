@@ -91,7 +91,7 @@ enum NewWorkspaceDialog {
             confirmTitle: "저장")
         guard accepted else { return nil }
 
-        let draft = CaptureSelectionView.apply(selection.excluded, to: captured.draft)
+        let draft = DraftSelection.apply(excluding: selection.excluded, to: captured.draft)
         guard draft.itemCount > 0 else {
             Prompt.message("담을 항목이 없습니다", "하나 이상 고른 뒤 저장하세요.")
             return nil
