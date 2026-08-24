@@ -11,19 +11,13 @@ struct WorkspacePanel: View {
     let dismiss: () -> Void
     /// 창을 닫은 뒤 패널을 다시 여는 길.
     let reopen: () -> Void
+    /// 시스템 메뉴를 띄우는 길. 두 번째 인자는 버튼의 창 좌표다.
+    let presentMenu: ([PanelMenu.Item], CGRect) -> Void
     let onQuit: () -> Void
 
     /// 각 카드의 더보기 버튼 위치. 그 자리에 메뉴를 띄운다.
     @State private var anchors: [String: CGRect] = [:]
-    /// 메뉴가 넘칠 때 패널을 늘리기 위해 내용 높이를 잰다.
-    /// 늘어난 여백을 뺀 값이라야 한다. 포함하면 잴 때마다 커져 멈추지 않는다.
-    @State private var contentHeight: CGFloat = 0
-
-    static let coordinateSpace = "panel"
-
     private var isBusy: Bool { store.runningName != nil }
-
-    private func collapseAll() { store.collapseMenus() }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -34,106 +28,56 @@ struct WorkspacePanel: View {
             footer
         }
         .frame(width: 320)
-        .background(
-            GeometryReader { proxy in
-                Color.clear.onAppear { contentHeight = proxy.size.height }
-                    .onChange(of: proxy.size.height) { contentHeight = $0 }
-            })
-        // 메뉴가 아래로 넘치면 그만큼 패널을 늘린다. 위로 뒤집지 않는 이유는 메뉴가 버튼
-        // 위아래로 오락가락하면 어디에 뜰지 예측할 수 없기 때문이다. 항상 아래에 뜬다.
-        .padding(.bottom, menuOverflow)
         // 팝오버 기본 재질을 그대로 두면 앱이 비활성일 때 어두워진다. 다른 창을 클릭했을
         // 뿐인데 패널 색이 바뀌면 무언가 꺼진 것처럼 보인다. 불투명 배경으로 덮는다.
         .background(Color(nsColor: .windowBackgroundColor))
-        .coordinateSpace(name: Self.coordinateSpace)
         .onPreferenceChange(MenuAnchorKey.self) { anchors = $0 }
-        .overlay(alignment: .topLeading) { floatingMenus }
-        .onExitCommand { collapseAll() }
-    }
-
-    /// 떠 있는 메뉴는 패널 위에 덮어 그린다. 카드 안에 그리면 다음 카드에 가려지고
-    /// 카드 높이도 늘어나 목록이 밀린다.
-    @ViewBuilder
-    private var floatingMenus: some View {
-        if let name = store.expandedCard, let anchor = anchors[name],
-           let item = store.items.first(where: { $0.name == name }) {
-            cardMenu(item)
-                .offset(x: menuX(near: anchor), y: anchor.maxY + Self.menuGap)
-        }
-        if store.showsOptions, let anchor = anchors[Self.optionsAnchor] {
-            optionsMenu
-                .offset(x: menuX(near: anchor), y: anchor.maxY + Self.menuGap)
-        }
-    }
-
-    /// 열린 메뉴가 패널 아래로 넘치는 만큼. 없으면 0이다.
-    private var menuOverflow: CGFloat {
-        guard contentHeight > 0 else { return 0 }
-        let bottom: CGFloat
-        if let name = store.expandedCard, let anchor = anchors[name] {
-            bottom = anchor.maxY + Self.menuGap + Self.cardMenuHeight
-        } else if store.showsOptions, let anchor = anchors[Self.optionsAnchor] {
-            bottom = anchor.maxY + Self.menuGap + optionsMenuHeight
-        } else {
-            return 0
-        }
-        return max(0, bottom + Self.edgeInset - contentHeight)
+        .onExitCommand { dismiss() }
     }
 
     private static let optionsAnchor = "__options"
-    private static let menuWidth: CGFloat = 180
-    private static let panelWidth: CGFloat = 320
-    private static let cardMenuHeight: CGFloat = 136
-    private static let edgeInset: CGFloat = 8
-    private static let menuGap: CGFloat = 4
-    private var optionsMenuHeight: CGFloat { store.loginItemSupported ? 138 : 108 }
 
-    /// 메뉴 오른쪽 끝을 버튼에 맞추되 패널 밖으로 나가지 않게 당긴다.
-    private func menuX(near anchor: CGRect) -> CGFloat {
-        let preferred = anchor.maxX - Self.menuWidth
-        return min(
-            max(preferred, Self.edgeInset),
-            Self.panelWidth - Self.menuWidth - Self.edgeInset)
-    }
-
-    private func cardMenu(_ item: PanelStore.Item) -> some View {
-        FloatingMenu {
-            FloatingMenuItem(title: "이름 변경", symbol: "pencil.line") {
+    /// 카드의 더보기 메뉴 항목.
+    private func cardMenuItems(_ item: PanelStore.Item) -> [PanelMenu.Item] {
+        [
+            PanelMenu.Item(title: "이름 변경", symbol: "pencil.line") {
                 act { rename(item.name) }
-            }
-            FloatingMenuItem(title: "단축키 변경", symbol: "keyboard") {
+            },
+            PanelMenu.Item(title: "단축키 변경", symbol: "keyboard") {
                 act { setHotkey(for: item) }
-            }
-            FloatingMenuItem(title: "파일로 열기", symbol: "doc.text") {
+            },
+            PanelMenu.Item(title: "파일로 열기", symbol: "doc.text") {
                 act { WorkspaceFiles.revealInFinder(item.name) }
-            }
-            FloatingMenu<EmptyView>.separator
-            FloatingMenuItem(title: "삭제", symbol: "trash", tint: .red) {
+            },
+            PanelMenu.separator(),
+            PanelMenu.Item(title: "삭제", symbol: "trash", isDestructive: true) {
                 act { delete(item.name) }
-            }
-        }
+            },
+        ]
     }
 
-    private var optionsMenu: some View {
-        FloatingMenu {
-            if store.loginItemSupported {
-                FloatingMenuItem(
-                    title: "로그인 시 자동 실행",
-                    symbol: store.loginItemEnabled ? "checkmark.square.fill" : "square"
+    private var optionsMenuItems: [PanelMenu.Item] {
+        var items: [PanelMenu.Item] = []
+        if store.loginItemSupported {
+            items.append(
+                PanelMenu.Item(
+                    title: "로그인 시 자동 실행", symbol: "arrow.up.forward.app",
+                    isChecked: store.loginItemEnabled, keepsPanelOpen: true
                 ) {
                     store.toggleLoginItem()
-                }
-            }
-            FloatingMenuItem(title: "업데이트 확인", symbol: "arrow.down.circle") {
-                store.collapseMenus()
-                checkForUpdate()
-            }
-            FloatingMenuItem(title: "config 폴더 열기", symbol: "folder") {
-                act { WorkspaceFiles.revealConfigFolder(); return nil }
-            }
-            FloatingMenu<EmptyView>.separator
-            FloatingMenuItem(title: "종료", symbol: "power") { onQuit() }
+                })
         }
+        items.append(
+            PanelMenu.Item(title: "업데이트 확인", symbol: "arrow.down.circle") {
+                checkForUpdate()
+            })
+        items.append(
+            PanelMenu.Item(title: "config 폴더 열기", symbol: "folder") {
+                act { WorkspaceFiles.revealConfigFolder(); return nil }
+            })
+        items.append(PanelMenu.separator())
+        items.append(PanelMenu.Item(title: "종료", symbol: "power") { onQuit() })
+        return items
     }
 
     // MARK: - 머리말
@@ -179,12 +123,11 @@ struct WorkspacePanel: View {
             isRunning: store.runningName == item.name,
             isBusy: isBusy,
             message: store.messages[item.name],
-            isExpanded: store.expandedCard == item.name,
             onRun: { store.run(item.name) },
             onEdit: { act { editWorkspace(item.name) } },
             onToggleActions: {
-                store.showsOptions = false
-                store.expandedCard = store.expandedCard == item.name ? nil : item.name
+                guard let anchor = anchors[item.name] else { return }
+                presentMenu(cardMenuItems(item), anchor)
             },
             onDismissMessage: { store.dismissMessage(for: item.name) })
     }
@@ -275,20 +218,20 @@ struct WorkspacePanel: View {
         HStack {
             Spacer()
             Button {
-                store.expandedCard = nil
-                store.showsOptions.toggle()
+                guard let anchor = anchors[Self.optionsAnchor] else { return }
+                presentMenu(optionsMenuItems, anchor)
             } label: {
                 HStack(spacing: 3) {
                     Text("Options")
                         .font(.system(size: 11))
-                    Image(systemName: store.showsOptions ? "chevron.down" : "chevron.up")
+                    Image(systemName: "chevron.down")
                         .font(.system(size: 8, weight: .semibold))
                 }
                 .foregroundStyle(.secondary)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .menuAnchor(Self.optionsAnchor, in: Self.coordinateSpace)
+            .menuAnchor(Self.optionsAnchor)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 9)
@@ -296,7 +239,6 @@ struct WorkspacePanel: View {
 
     /// 패널을 닫고 동작을 실행한다. 실패하면 사유를 알린다.
     private func act(_ operation: @escaping () -> String?) {
-        collapseAll()
         dismiss()
         DispatchQueue.main.async {
             if let failure = operation() {

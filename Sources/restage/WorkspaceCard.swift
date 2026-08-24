@@ -12,7 +12,6 @@ struct WorkspaceCard: View {
     let isRunning: Bool
     let isBusy: Bool
     let message: String?
-    let isExpanded: Bool
 
     let onRun: () -> Void
     let onEdit: () -> Void
@@ -82,11 +81,11 @@ struct WorkspaceCard: View {
         if isRunning {
             ProgressView()
                 .controlSize(.small)
-        } else if isHovering || isExpanded {
+        } else if isHovering {
             HStack(spacing: 2) {
                 iconButton("pencil", "편집", onEdit)
                 iconButton("ellipsis", "더보기", onToggleActions)
-                    .menuAnchor(item.name, in: WorkspacePanel.coordinateSpace)
+                    .menuAnchor(item.name)
             }
             .foregroundStyle(.secondary)
         } else if let hotkey = item.hotkey {
