@@ -43,6 +43,10 @@ enum NewCommand {
             print("이 중 \(captured.onOtherSpaceCount)개는 다른 데스크탑에 있습니다. "
                 + "앱이 꺼진 상태에서 실행하면 정상 배치되고, 이미 떠 있으면 실패합니다.")
         }
+        for (app, count) in captured.indistinguishable.sorted(by: { $0.key < $1.key }) {
+            print("\(app) 창 \(count)개는 담지 않았습니다. 제목이 같거나 비어 있어 "
+                + "실행할 때 어느 창인지 정할 수 없습니다.")
+        }
         for skipped in captured.browsersWithoutTabs {
             print("\(skipped.app)의 탭을 읽지 못해 창 위치만 담았습니다: \(skipped.reason)")
         }

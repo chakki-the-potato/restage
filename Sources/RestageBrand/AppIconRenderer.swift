@@ -12,19 +12,13 @@ public enum AppIconRenderer {
     private static let plateInsetRatio: CGFloat = 100.0 / 1024.0
     private static let plateCornerRatio: CGFloat = 0.2247
 
-    public struct Palette: Sendable {
-        public let top: CGColor
-        public let bottom: CGColor
-        public let mark: CGColor
+    /// 흰 판에 먹색 마크. 흰 배경에서는 판 자체가 묻히지만 아래로 갈수록 어두워지는
+    /// 그라디언트와 그림자가 경계를 만든다. 테두리를 덧대지 않는 이유다.
+    private static let topColor = CGColor(srgbRed: 0.99, green: 0.99, blue: 1.00, alpha: 1)
+    private static let bottomColor = CGColor(srgbRed: 0.87, green: 0.88, blue: 0.91, alpha: 1)
+    private static let markColor = CGColor(srgbRed: 0.13, green: 0.14, blue: 0.17, alpha: 1)
 
-        public init(top: CGColor, bottom: CGColor, mark: CGColor) {
-            self.top = top
-            self.bottom = bottom
-            self.mark = mark
-        }
-    }
-
-    public static func render(pixels: Int, palette: Palette = .standard) -> CGImage? {
+    public static func render(pixels: Int) -> CGImage? {
         let side = CGFloat(pixels)
         guard let context = CGContext(
             data: nil, width: pixels, height: pixels, bitsPerComponent: 8, bytesPerRow: 0,
@@ -36,17 +30,13 @@ public enum AppIconRenderer {
         context.setShouldAntialias(true)
         context.interpolationQuality = .high
 
-        let plate = drawPlate(in: context, side: side, palette: palette)
-        drawMark(
-            in: context, plate: plate, color: palette.mark,
-            simplified: pixels <= simplifiedThreshold)
+        let plate = drawPlate(in: context, side: side)
+        drawMark(in: context, plate: plate, simplified: pixels <= simplifiedThreshold)
 
         return context.makeImage()
     }
 
-    private static func drawPlate(
-        in context: CGContext, side: CGFloat, palette: Palette
-    ) -> CGRect {
+    private static func drawPlate(in context: CGContext, side: CGFloat) -> CGRect {
         let inset = side * plateInsetRatio
         let plate = CGRect(x: inset, y: inset, width: side - inset * 2, height: side - inset * 2)
         let radius = plate.width * plateCornerRatio
@@ -57,7 +47,7 @@ public enum AppIconRenderer {
         context.setShadow(
             offset: CGSize(width: 0, height: -side * 0.012), blur: side * 0.024,
             color: CGColor(srgbRed: 0, green: 0, blue: 0, alpha: 0.28))
-        context.setFillColor(palette.bottom)
+        context.setFillColor(bottomColor)
         context.addPath(path)
         context.fillPath()
         context.restoreGState()
@@ -67,7 +57,7 @@ public enum AppIconRenderer {
         context.clip()
         if let gradient = CGGradient(
             colorsSpace: CGColorSpace(name: CGColorSpace.sRGB),
-            colors: [palette.top, palette.bottom] as CFArray, locations: [0, 1]
+            colors: [topColor, bottomColor] as CFArray, locations: [0, 1]
         ) {
             context.drawLinearGradient(
                 gradient, start: CGPoint(x: plate.midX, y: plate.maxY),
@@ -78,14 +68,12 @@ public enum AppIconRenderer {
         return plate
     }
 
-    private static func drawMark(
-        in context: CGContext, plate: CGRect, color: CGColor, simplified: Bool
-    ) {
+    private static func drawMark(in context: CGContext, plate: CGRect, simplified: Bool) {
         let insetRatio: CGFloat = simplified ? 0.19 : 0.24
         let mark = plate.insetBy(dx: plate.width * insetRatio, dy: plate.height * insetRatio)
         let slots = BrandMark.slots(in: mark, cornerRatio: simplified ? 0.05 : 0.085)
 
-        context.setFillColor(color)
+        context.setFillColor(markColor)
         if simplified {
             context.addPath(
                 BrandMark.path([slots.primary] + slots.secondary, cornerRadius: slots.cornerRadius))
@@ -97,7 +85,7 @@ public enum AppIconRenderer {
         context.fillPath()
 
         let lineWidth = mark.width * 0.065
-        context.setStrokeColor(color)
+        context.setStrokeColor(markColor)
         context.setLineWidth(lineWidth)
         context.addPath(
             BrandMark.path(
@@ -106,14 +94,3 @@ public enum AppIconRenderer {
     }
 }
 
-extension AppIconRenderer.Palette {
-    private static func color(_ r: Double, _ g: Double, _ b: Double) -> CGColor {
-        CGColor(srgbRed: r, green: g, blue: b, alpha: 1)
-    }
-
-    /// 흰 판에 먹색 마크. 흰 배경에서는 판 자체가 묻히지만 아래로 갈수록 어두워지는
-    /// 그라디언트와 그림자가 경계를 만든다. 테두리를 덧대지 않는 이유다.
-    public static let standard = Self(
-        top: color(0.99, 0.99, 1.00), bottom: color(0.87, 0.88, 0.91),
-        mark: color(0.13, 0.14, 0.17))
-}
