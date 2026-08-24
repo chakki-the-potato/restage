@@ -1,3 +1,4 @@
+import RestageKit
 import RestageKitDarwin
 import SwiftUI
 
@@ -66,7 +67,7 @@ struct WorkspacePanel: View {
             isBusy: isBusy,
             message: store.messages[item.name],
             onRun: { store.run(item.name) },
-            onEdit: { act { WorkspaceFiles.openInEditor(item.name) } },
+            onEdit: { act { editWorkspace(item.name) } },
             onRename: { act { rename(item.name) } },
             onSetHotkey: { act { setHotkey(for: item) } },
             onReveal: { act { WorkspaceFiles.revealInFinder(item.name) } },
@@ -191,6 +192,25 @@ struct WorkspacePanel: View {
             }
             store.reload()
         }
+    }
+
+    /// 저장된 config를 설정 창으로 불러와 고친다.
+    ///
+    /// 파일을 편집기로 여는 방식이었을 때는 자리 이름을 외워야 했고, 자리가 애매하다는
+    /// 표시를 봐도 그 자리에서 고칠 수 없었다.
+    private func editWorkspace(_ name: String) -> String? {
+        let existing: WorkspaceDraft
+        do {
+            let path = try WorkspaceRegistry().resolve(name)
+            existing = DraftFromConfig.draft(from: try ConfigLoader.load(path: path))
+        } catch {
+            return "'\(name)'을 읽지 못했습니다: \(error)"
+        }
+
+        guard let edited = DraftDialog.edit(
+            existing, title: "'\(name)' 편집", notes: [])
+        else { return nil }
+        return WorkspaceFiles.save(edited)
     }
 
     private func rename(_ name: String) -> String? {
