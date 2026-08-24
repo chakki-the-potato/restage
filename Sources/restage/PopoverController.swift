@@ -25,7 +25,7 @@ final class PopoverController: NSObject, NSWindowDelegate {
     /// 메뉴바와 패널 사이 간격.
     private static let topGap: CGFloat = 1
     /// 버튼과 메뉴 사이 간격.
-    private static let menuGap: CGFloat = 9
+    private static let menuGap: CGFloat = 3
     private static let screenInset: CGFloat = 8
 
     /// 그림자 여백을 뺀, 실제로 보이는 패널의 폭.
@@ -122,10 +122,11 @@ final class PopoverController: NSObject, NSWindowDelegate {
     /// 위쪽 경계에서 빼야 한다.
     private func present(_ items: [PanelMenu.Item], at anchor: CGRect) {
         guard let window else { return }
-        let visible = visibleFrame(of: window)
+        // 앵커는 창 좌표다. 보이는 사각형을 기준으로 재면 그림자 여백만큼 더 내려간다.
+        // 클릭 판정만 보이는 사각형을 쓰고, 위치는 창을 그대로 쓴다.
         let point = CGPoint(
-            x: visible.minX + anchor.minX,
-            y: visible.maxY - anchor.maxY - Self.menuGap)
+            x: window.frame.minX + anchor.minX,
+            y: window.frame.maxY - anchor.maxY - Self.menuGap)
 
         menu.show(items: items, at: point) { [weak self] in
             self?.closePanelIfClickedOutside()
