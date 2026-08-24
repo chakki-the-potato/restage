@@ -41,6 +41,11 @@ final class PopoverController: NSObject, NSPopoverDelegate {
         return controller
     }
 
+    /// 팝오버가 닫히면 열려 있던 메뉴도 접는다. 그러지 않으면 다시 열었을 때 그대로 떠 있다.
+    func popoverDidClose(_ notification: Notification) {
+        store.collapseMenus()
+    }
+
     @objc private func togglePanel() {
         if popover.isShown {
             popover.performClose(nil)
@@ -51,6 +56,7 @@ final class PopoverController: NSObject, NSPopoverDelegate {
 
     func showPanel() {
         guard let button = statusItem.button, !popover.isShown else { return }
+        store.collapseMenus()
         store.reload()
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         // 팝오버는 앱이 활성 상태가 아니면 키 입력을 받지 못한다. 이 앱은 LSUIElement라
