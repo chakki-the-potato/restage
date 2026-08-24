@@ -35,6 +35,9 @@ public struct ItemDraft: Sendable, Equatable {
         case browser(tabs: [String])
     }
 
+    /// 전용 데스크탑으로 보낼지. slot 대신 쓴다.
+    public var fullscreen = false
+
     /// 설치된 앱의 표시 이름. bundle ID가 아니다.
     public var app: String
     public var slot: Slot?
@@ -46,13 +49,14 @@ public struct ItemDraft: Sendable, Equatable {
 
     public init(
         app: String, slot: Slot?, kind: Kind, overlap: Double? = nil,
-        wasOnCurrentSpace: Bool = true
+        wasOnCurrentSpace: Bool = true, fullscreen: Bool = false
     ) {
         self.app = app
         self.slot = slot
         self.kind = kind
         self.overlap = overlap
         self.wasOnCurrentSpace = wasOnCurrentSpace
+        self.fullscreen = fullscreen
     }
 
     public var isConfident: Bool {
@@ -62,11 +66,11 @@ public struct ItemDraft: Sendable, Equatable {
 
     public static func app(
         _ name: String, slot: Slot, title: String? = nil, overlap: Double? = nil,
-        wasOnCurrentSpace: Bool = true
+        wasOnCurrentSpace: Bool = true, fullscreen: Bool = false
     ) -> ItemDraft {
         ItemDraft(
             app: name, slot: slot, kind: .app(title: title), overlap: overlap,
-            wasOnCurrentSpace: wasOnCurrentSpace)
+            wasOnCurrentSpace: wasOnCurrentSpace, fullscreen: fullscreen)
     }
 
     public static func browser(

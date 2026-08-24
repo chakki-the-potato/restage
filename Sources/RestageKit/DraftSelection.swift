@@ -34,7 +34,8 @@ public enum DraftSelection {
     /// 자리를 직접 고른 항목은 확신도를 지운다. 사용자가 정한 값에 물음표가 붙으면
     /// 도구가 그 선택을 의심하는 것처럼 보인다.
     public static func apply(
-        excluding excluded: Set<Int>, slots: [Int: Slot] = [:], to draft: WorkspaceDraft
+        excluding excluded: Set<Int>, slots: [Int: Slot] = [:],
+        fullscreen: [Int: Bool] = [:], added: [ItemDraft] = [], to draft: WorkspaceDraft
     ) -> WorkspaceDraft {
         var index = 0
         var screens: [ScreenDraft] = []
@@ -44,13 +45,15 @@ public enum DraftSelection {
             for item in screen.items {
                 defer { index += 1 }
                 guard !excluded.contains(index) else { continue }
-                guard let slot = slots[index] else {
-                    kept.append(item)
-                    continue
-                }
                 var updated = item
-                updated.slot = slot
-                updated.overlap = nil
+                if let slot = slots[index] {
+                    updated.slot = slot
+                    updated.overlap = nil
+                }
+                if let wantsFullScreen = fullscreen[index] {
+                    updated.fullscreen = wantsFullScreen
+                    updated.overlap = nil
+                }
                 kept.append(updated)
             }
             guard !kept.isEmpty else { continue }
@@ -59,6 +62,14 @@ public enum DraftSelection {
 
         var result = draft
         result.screens = screens
+        guard !added.isEmpty else { return result }
+
+        // 새로 넣은 항목은 첫 화면에 붙인다. 화면이 하나도 없으면 주 디스플레이로 만든다.
+        if result.screens.isEmpty {
+            result.screens = [ScreenDraft(id: "main", display: .builtin, items: added)]
+        } else {
+            result.screens[0].items.append(contentsOf: added)
+        }
         return result
     }
 }
