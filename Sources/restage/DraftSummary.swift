@@ -30,10 +30,26 @@ enum DraftSummary {
     private static func describe(_ item: ItemDraft) -> String {
         let slot = item.slot.map(SlotLabel.text) ?? "크기 유지"
         let marker = item.isConfident ? " " : "?"
-        var text = item.app.padded(to: 22) + slot + marker
+        var text = label(for: item).padded(to: 30) + slot + marker
         if case .browser(let urls) = item.kind, !urls.isEmpty {
             text += "  탭 \(urls.count)개"
         }
+        if !item.wasOnCurrentSpace {
+            text += "  [다른 데스크탑]"
+        }
         return text
+    }
+
+    /// 같은 앱의 창이 여럿이면 제목을 붙여 구분한다.
+    private static func label(for item: ItemDraft) -> String {
+        guard let title = item.titleHint, !title.isEmpty else { return item.app }
+        return "\(item.app) · \(trimmed(title))"
+    }
+
+    private static let titleLimit = 18
+
+    private static func trimmed(_ title: String) -> String {
+        guard title.count > titleLimit else { return title }
+        return String(title.prefix(titleLimit)) + "…"
     }
 }

@@ -1,5 +1,7 @@
+import AppKit
 import RestageKit
 import RestageKitDarwin
+import SwiftUI
 
 /// 메뉴에서 새 워크스페이스를 만드는 흐름.
 ///
@@ -24,23 +26,16 @@ enum NewWorkspaceDialog {
             return
         }
 
-        let captured: WorkspaceCapture.Result
-        do {
-            captured = try WorkspaceCapture.capture(name: name, displays: displays)
-        } catch {
-            Prompt.message("창 목록을 읽지 못했습니다", "\(error)")
-            return
-        }
-
+        let captured = WorkspaceCapture.capture(name: name, displays: displays)
         guard captured.draft.itemCount > 0 else {
             Prompt.message(
                 "담을 창이 없습니다",
                 "현재 데스크탑에 열린 창이 없습니다. 앱을 배치한 뒤 다시 시도하세요.")
             return
         }
-        guard confirm(captured, name: name) else { return }
+        guard let draft = confirm(captured, name: name) else { return }
 
-        if let reason = WorkspaceFiles.save(captured.draft) {
+        if let reason = WorkspaceFiles.save(draft) {
             Prompt.message("저장하지 못했습니다", reason)
         }
     }
@@ -69,21 +64,38 @@ enum NewWorkspaceDialog {
         }
     }
 
-    private static func confirm(_ captured: WorkspaceCapture.Result, name: String) -> Bool {
-        var footer: [String] = []
-        if DraftSummary.hasUncertainItem(captured.draft) {
-            footer.append(DraftSummary.uncertaintyNote + " 저장한 뒤 편집에서 고치세요.")
-        }
-        for skipped in captured.browsersWithoutTabs {
-            footer.append("\(skipped.app)의 탭을 읽지 못해 창 위치만 담았습니다.")
-        }
-        footer.append("다른 데스크탑에 있거나 전체화면인 창은 담기지 않습니다.")
+    /// 담을 항목을 고르게 하고, 고른 것만 남긴 초안을 돌려준다. 취소하면 nil이다.
+    private static func confirm(
+        _ captured: WorkspaceCapture.Result, name: String
+    ) -> WorkspaceDraft? {
+        let selection = CaptureSelection(total: captured.draft.itemCount)
+        let view = CaptureSelectionView(
+            rows: CaptureSelectionView.rows(for: captured.draft), selection: selection)
+        let hosting = NSHostingView(rootView: view)
+        hosting.frame = NSRect(x: 0, y: 0, width: 380, height: 260)
 
-        return Prompt.confirmList(
+        var notes: [String] = []
+        for skipped in captured.browsersWithoutTabs {
+            notes.append("\(skipped.app)의 탭을 읽지 못해 창 위치만 담았습니다.")
+        }
+        if captured.onOtherSpaceCount > 0 {
+            notes.append(
+                "다른 데스크탑에 있는 창은 앱이 꺼진 상태에서 실행하면 정상 배치되고, "
+                + "이미 떠 있으면 그 항목만 실패합니다.")
+        }
+
+        let accepted = Prompt.confirm(
             title: "'\(name)'에 담을 내용",
-            body: "창 \(captured.draft.itemCount)개를 찾았습니다.",
-            lines: DraftSummary.lines(captured.draft, numbered: false),
-            footer: footer.joined(separator: "\n"),
+            body: (["담을 창을 고르세요."] + notes).joined(separator: "\n"),
+            accessory: hosting,
             confirmTitle: "저장")
+        guard accepted else { return nil }
+
+        let draft = CaptureSelectionView.apply(selection.excluded, to: captured.draft)
+        guard draft.itemCount > 0 else {
+            Prompt.message("담을 항목이 없습니다", "하나 이상 고른 뒤 저장하세요.")
+            return nil
+        }
+        return draft
     }
 }

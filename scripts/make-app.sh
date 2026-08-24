@@ -55,10 +55,36 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 </plist>
 PLIST
 
-# 식별자를 고정하면 재빌드해도 같은 이름으로 서명된다.
-# 다만 adhoc 서명은 designated requirement가 코드 해시에 묶이므로
-# 접근성 승인이 재빌드 후에도 유지되는지는 별도로 확인해야 한다.
-codesign --force --sign - --identifier "$BUNDLE_ID" "$APP"
+# 서명 신원을 고르는 순서: 환경변수 -> 이 컴퓨터의 인증서 -> adhoc.
+#
+# 인증서로 서명해야 하는 이유는 접근성 승인이 유지되기 때문이다. macOS는 승인을
+# designated requirement에 묶는데, 둘의 형태가 다르다.
+#
+#   adhoc      designated => cdhash H"f3b2..."
+#   인증서      designated => identifier "com.chakki.restage" and anchor apple generic
+#                            and certificate leaf[subject.CN] = "Apple Development: ..."
+#
+# adhoc은 코드 해시에 묶이므로 소스가 같아도 다시 컴파일하면 신원이 바뀌고 승인이 풀린다.
+# 인증서는 식별자와 인증서에 묶이므로 몇 번을 다시 빌드해도 같은 신원이다.
+#
+# Xcode에 Apple 계정을 로그인하면 무료로 Apple Development 인증서가 생긴다. 결제가
+# 필요한 것은 Developer ID이며, 그것은 남에게 배포할 때(공증) 필요하다. 내 컴퓨터에서
+# 쓰는 데는 Apple Development로 충분하다.
+if [ -n "${RESTAGE_SIGN_IDENTITY:-}" ]; then
+  IDENTITY="$RESTAGE_SIGN_IDENTITY"
+else
+  IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null \
+    | sed -n 's/.*"\(.*\)".*/\1/p' | head -1)"
+fi
+
+if [ -n "$IDENTITY" ]; then
+  codesign --force --sign "$IDENTITY" --identifier "$BUNDLE_ID" "$APP"
+else
+  echo "경고: 코드 서명 인증서가 없어 adhoc으로 서명합니다."
+  echo "      재빌드할 때마다 접근성 승인이 풀립니다."
+  echo "      Xcode에 Apple 계정을 로그인하면 무료 인증서가 생깁니다."
+  codesign --force --sign - --identifier "$BUNDLE_ID" "$APP"
+fi
 
 echo "만들어짐: $APP"
-codesign -dv "$APP" 2>&1 | grep -E "Identifier|Signature"
+codesign -dv "$APP" 2>&1 | grep -E "Identifier|Signature|Authority" | head -3
