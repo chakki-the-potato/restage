@@ -12,8 +12,7 @@ final class PanelStore: ObservableObject {
     struct Item: Identifiable, Equatable {
         var id: String { name }
         let name: String
-        let screenCount: Int?
-        let itemCount: Int?
+        let summary: WorkspaceSummary?
         /// config를 읽지 못한 사유. 있으면 실행할 수 없다.
         let error: String?
         /// 등록된 단축키 표시 문자열.
@@ -27,9 +26,8 @@ final class PanelStore: ObservableObject {
 
         var subtitle: String {
             if let error { return firstLine(of: error) }
-            let screens = screenCount.map { "화면 \($0)" }
-            let items = itemCount.map { "항목 \($0)" }
-            return [screens, items].compactMap { $0 }.joined(separator: " · ")
+            guard let summary else { return "" }
+            return LayoutSummaryLabel.text(summary)
         }
 
         private func firstLine(of text: String) -> String {
@@ -82,8 +80,7 @@ final class PanelStore: ObservableObject {
         items = entries.map { entry in
             Item(
                 name: entry.name,
-                screenCount: entry.screenCount,
-                itemCount: entry.itemCount,
+                summary: entry.summary,
                 error: entry.error,
                 hotkey: hotkeyLabel(for: entry.name),
                 hotkeySpec: specs[entry.name],

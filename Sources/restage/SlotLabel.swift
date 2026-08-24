@@ -6,17 +6,21 @@ import RestageKit
 /// 쓰이기 때문이다. 스키마에 표시용 문구가 붙으면 둘이 함께 바뀌어야 하는 것처럼 보인다.
 enum SlotLabel {
     static func text(_ slot: Slot) -> String {
+        L10n.string(key(slot))
+    }
+
+    private static func key(_ slot: Slot) -> String {
         switch slot {
-        case .full: return "전체"
-        case .leftHalf: return "왼쪽 절반"
-        case .rightHalf: return "오른쪽 절반"
-        case .topHalf: return "위쪽 절반"
-        case .bottomHalf: return "아래쪽 절반"
-        case .q1: return "좌상"
-        case .q2: return "우상"
-        case .q3: return "좌하"
-        case .q4: return "우하"
-        case .centered: return "가운데"
+        case .full: return "slot.full"
+        case .leftHalf: return "slot.left_half"
+        case .rightHalf: return "slot.right_half"
+        case .topHalf: return "slot.top_half"
+        case .bottomHalf: return "slot.bottom_half"
+        case .q1: return "slot.q1"
+        case .q2: return "slot.q2"
+        case .q3: return "slot.q3"
+        case .q4: return "slot.q4"
+        case .centered: return "slot.centered"
         }
     }
 

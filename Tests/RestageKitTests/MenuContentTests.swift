@@ -4,8 +4,10 @@ import Testing
 private func entry(_ name: String, error: String? = nil) -> WorkspaceEntry {
     WorkspaceEntry(
         name: name, path: "/tmp/\(name).yaml",
-        screenCount: error == nil ? 1 : nil,
-        itemCount: error == nil ? 2 : nil,
+        summary: error == nil
+            ? WorkspaceSummary(
+                apps: [AppID("safari")], shape: .leftRight, screenCount: 1, itemCount: 2)
+            : nil,
         error: error)
 }
 
