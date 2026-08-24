@@ -15,8 +15,9 @@ struct WorkspacePanel: View {
 
     /// 각 카드의 더보기 버튼 위치. 그 자리에 메뉴를 띄운다.
     @State private var anchors: [String: CGRect] = [:]
-    /// 메뉴가 아래로 넘칠 때 위로 뒤집기 위해 패널 높이를 잰다.
-    @State private var panelHeight: CGFloat = 0
+    /// 메뉴가 넘칠 때 패널을 늘리기 위해 내용 높이를 잰다.
+    /// 늘어난 여백을 뺀 값이라야 한다. 포함하면 잴 때마다 커져 멈추지 않는다.
+    @State private var contentHeight: CGFloat = 0
 
     static let coordinateSpace = "panel"
 
@@ -33,15 +34,18 @@ struct WorkspacePanel: View {
             footer
         }
         .frame(width: 320)
+        .background(
+            GeometryReader { proxy in
+                Color.clear.onAppear { contentHeight = proxy.size.height }
+                    .onChange(of: proxy.size.height) { contentHeight = $0 }
+            })
+        // 메뉴가 아래로 넘치면 그만큼 패널을 늘린다. 위로 뒤집지 않는 이유는 메뉴가 버튼
+        // 위아래로 오락가락하면 어디에 뜰지 예측할 수 없기 때문이다. 항상 아래에 뜬다.
+        .padding(.bottom, menuOverflow)
         // 팝오버 기본 재질을 그대로 두면 앱이 비활성일 때 어두워진다. 다른 창을 클릭했을
         // 뿐인데 패널 색이 바뀌면 무언가 꺼진 것처럼 보인다. 불투명 배경으로 덮는다.
         .background(Color(nsColor: .windowBackgroundColor))
         .coordinateSpace(name: Self.coordinateSpace)
-        .background(
-            GeometryReader { proxy in
-                Color.clear.onAppear { panelHeight = proxy.size.height }
-                    .onChange(of: proxy.size.height) { panelHeight = $0 }
-            })
         .onPreferenceChange(MenuAnchorKey.self) { anchors = $0 }
         .overlay(alignment: .topLeading) { floatingMenus }
         .onExitCommand { collapseAll() }
@@ -54,16 +58,26 @@ struct WorkspacePanel: View {
         if let name = store.expandedCard, let anchor = anchors[name],
            let item = store.items.first(where: { $0.name == name }) {
             cardMenu(item)
-                .offset(
-                    x: menuX(near: anchor),
-                    y: menuY(near: anchor, height: Self.cardMenuHeight))
+                .offset(x: menuX(near: anchor), y: anchor.maxY + Self.menuGap)
         }
         if store.showsOptions, let anchor = anchors[Self.optionsAnchor] {
             optionsMenu
-                .offset(
-                    x: menuX(near: anchor),
-                    y: menuY(near: anchor, height: optionsMenuHeight))
+                .offset(x: menuX(near: anchor), y: anchor.maxY + Self.menuGap)
         }
+    }
+
+    /// 열린 메뉴가 패널 아래로 넘치는 만큼. 없으면 0이다.
+    private var menuOverflow: CGFloat {
+        guard contentHeight > 0 else { return 0 }
+        let bottom: CGFloat
+        if let name = store.expandedCard, let anchor = anchors[name] {
+            bottom = anchor.maxY + Self.menuGap + Self.cardMenuHeight
+        } else if store.showsOptions, let anchor = anchors[Self.optionsAnchor] {
+            bottom = anchor.maxY + Self.menuGap + optionsMenuHeight
+        } else {
+            return 0
+        }
+        return max(0, bottom + Self.edgeInset - contentHeight)
     }
 
     private static let optionsAnchor = "__options"
@@ -71,6 +85,7 @@ struct WorkspacePanel: View {
     private static let panelWidth: CGFloat = 320
     private static let cardMenuHeight: CGFloat = 136
     private static let edgeInset: CGFloat = 8
+    private static let menuGap: CGFloat = 4
     private var optionsMenuHeight: CGFloat { store.loginItemSupported ? 138 : 108 }
 
     /// 메뉴 오른쪽 끝을 버튼에 맞추되 패널 밖으로 나가지 않게 당긴다.
@@ -79,13 +94,6 @@ struct WorkspacePanel: View {
         return min(
             max(preferred, Self.edgeInset),
             Self.panelWidth - Self.menuWidth - Self.edgeInset)
-    }
-
-    /// 버튼 아래에 두되 넘치면 위로 뒤집는다. 잘려 보이면 무엇을 고를 수 있는지 알 수 없다.
-    private func menuY(near anchor: CGRect, height: CGFloat) -> CGFloat {
-        let below = anchor.maxY + 4
-        guard panelHeight > 0, below + height > panelHeight - Self.edgeInset else { return below }
-        return max(anchor.minY - height - 4, Self.edgeInset)
     }
 
     private func cardMenu(_ item: PanelStore.Item) -> some View {
