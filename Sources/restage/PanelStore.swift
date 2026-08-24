@@ -12,8 +12,7 @@ final class PanelStore: ObservableObject {
     struct Item: Identifiable, Equatable {
         var id: String { name }
         let name: String
-        let screenCount: Int?
-        let itemCount: Int?
+        let summary: WorkspaceSummary?
         /// config를 읽지 못한 사유. 있으면 실행할 수 없다.
         let error: String?
         /// 등록된 단축키 표시 문자열.
@@ -27,9 +26,8 @@ final class PanelStore: ObservableObject {
 
         var subtitle: String {
             if let error { return firstLine(of: error) }
-            let screens = screenCount.map { "화면 \($0)" }
-            let items = itemCount.map { "항목 \($0)" }
-            return [screens, items].compactMap { $0 }.joined(separator: " · ")
+            guard let summary else { return "" }
+            return LayoutSummaryLabel.text(summary)
         }
 
         private func firstLine(of text: String) -> String {
@@ -39,6 +37,8 @@ final class PanelStore: ObservableObject {
 
     @Published private(set) var items: [Item] = []
     @Published private(set) var runningName: String?
+    /// 실행 중인 워크스페이스가 어디까지 갔는지.
+    @Published private(set) var progress: RunProgress?
     /// 워크스페이스별 마지막 실패 사유. 성공하면 지운다.
     @Published private(set) var messages: [String: String] = [:]
     @Published private(set) var accessibilityGranted = true
@@ -82,8 +82,7 @@ final class PanelStore: ObservableObject {
         items = entries.map { entry in
             Item(
                 name: entry.name,
-                screenCount: entry.screenCount,
-                itemCount: entry.itemCount,
+                summary: entry.summary,
                 error: entry.error,
                 hotkey: hotkeyLabel(for: entry.name),
                 hotkeySpec: specs[entry.name],
@@ -98,8 +97,11 @@ final class PanelStore: ObservableObject {
         messages[name] = nil
 
         Task { @MainActor in
-            let outcome = await WorkspaceLauncher.run(name)
+            let outcome = await WorkspaceLauncher.run(name) { [weak self] step in
+                self?.progress = step
+            }
             runningName = nil
+            progress = nil
             messages[name] = outcome.message
             reload()
         }
@@ -111,7 +113,7 @@ final class PanelStore: ObservableObject {
 
     func toggleLoginItem() {
         if let reason = LoginItem.toggle() {
-            Prompt.message("로그인 항목 등록에 실패했습니다", reason)
+            Prompt.message(L10n.string("error.login_item"), reason)
         }
         loginItemEnabled = LoginItem.isEnabled
     }
@@ -139,7 +141,7 @@ final class PanelStore: ObservableObject {
         case .invalid(let reason):
             return reason
         case .conflicted(let spec):
-            return "단축키 \(spec.displayString)를 등록하지 못했습니다. 다른 앱이 쓰고 있거나 중복입니다"
+            return L10n.string("error.hotkey.conflict", spec.displayString)
         case .registered, nil:
             return nil
         }

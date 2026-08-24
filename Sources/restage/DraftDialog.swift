@@ -27,17 +27,17 @@ enum DraftDialog {
         let hosting = NSHostingView(rootView: view)
         hosting.frame = NSRect(x: 0, y: 0, width: 460, height: 340)
 
-        var lines = ["담을 창과 자리를 고르세요."]
+        var lines = [L10n.string("draft.pick_windows")]
         if allowsReload {
-            lines.append("이 목록은 창을 읽은 시점의 것입니다. 그 뒤에 창을 옮겼다면 다시 읽으세요.")
+            lines.append(L10n.string("draft.stale_note"))
         }
 
         switch Prompt.confirm(
             title: title,
             body: (lines + notes).joined(separator: "\n"),
             accessory: hosting,
-            confirmTitle: "저장",
-            alternateTitle: allowsReload ? "다시 읽기" : nil
+            confirmTitle: L10n.string("common.save"),
+            alternateTitle: allowsReload ? L10n.string("draft.reload") : nil
         ) {
         case .alternate:
             return .reload
@@ -46,7 +46,9 @@ enum DraftDialog {
         case .confirmed:
             let result = editor.result
             guard result.itemCount > 0 else {
-                Prompt.message("담을 항목이 없습니다", "하나 이상 고른 뒤 저장하세요.")
+                Prompt.message(
+                    L10n.string("draft.nothing_selected.title"),
+                    L10n.string("draft.nothing_selected.body"))
                 return .cancelled
             }
             return .saved(result)

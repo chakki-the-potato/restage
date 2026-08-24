@@ -11,11 +11,18 @@ public struct WorkspaceRunner {
         self.engine = engine
     }
 
-    public func run(_ resolved: ResolvedWorkspace) async -> [ItemOutcome] {
+    /// - Parameter onProgress: 항목 하나를 시작할 때마다 부른다. 실행 화면이 어디까지
+    ///   갔는지 보여주는 데 쓴다. 없으면 아무것도 보고하지 않는다.
+    public func run(
+        _ resolved: ResolvedWorkspace,
+        onProgress: ((RunProgress) -> Void)? = nil
+    ) async -> [ItemOutcome] {
         var outcomes: [ItemOutcome] = []
+        let total = resolved.screens.reduce(0) { $0 + $1.items.count } + resolved.skipped.count
 
         for screen in resolved.screens {
-            outcomes.append(contentsOf: await runScreen(screen))
+            outcomes.append(contentsOf: await runScreen(
+                screen, completed: outcomes.count, total: total, onProgress: onProgress))
         }
 
         for skipped in resolved.skipped {
@@ -27,7 +34,10 @@ public struct WorkspaceRunner {
         return outcomes
     }
 
-    private func runScreen(_ screen: ScreenPlan) async -> [ItemOutcome] {
+    private func runScreen(
+        _ screen: ScreenPlan, completed: Int, total: Int,
+        onProgress: ((RunProgress) -> Void)?
+    ) async -> [ItemOutcome] {
         var handles: [AppID: ProcessHandle] = [:]
         var launchFailures: [AppID: String] = [:]
         var outcomes: [ItemOutcome] = []
@@ -36,6 +46,9 @@ public struct WorkspaceRunner {
         // 보고는 선언 순서대로 낸다.
         for item in screen.items {
             guard handles[item.app] == nil, launchFailures[item.app] == nil else { continue }
+            onProgress?(RunProgress(
+                phase: .launching, app: item.app,
+                completed: completed + outcomes.count, total: total))
             do {
                 handles[item.app] = try await engine.launch(item.app)
             } catch {
@@ -50,6 +63,9 @@ public struct WorkspaceRunner {
                 continue
             }
             guard let handle = handles[item.app] else { continue }
+            onProgress?(RunProgress(
+                phase: .placing, app: item.app,
+                completed: completed + outcomes.count, total: total))
 
             switch item {
             case .place(let placement):
@@ -73,7 +89,7 @@ public struct WorkspaceRunner {
            isSatisfied(placement, handle: handle, screen: screen) {
             return ItemOutcome(
                 screenID: screen.id, app: placement.app, status: .alreadySatisfied,
-                expected: placement.target, detail: "이미 목표 상태")
+                expected: placement.target, detail: L10n.string("outcome.already_satisfied"))
         }
 
         let window: WindowHandle
@@ -91,7 +107,7 @@ public struct WorkspaceRunner {
            let frame = window.currentFrame, CurrentState.matches(frame, placement.target) {
             return ItemOutcome(
                 screenID: screen.id, app: placement.app, status: .alreadySatisfied,
-                expected: placement.target, actual: frame, detail: "이미 목표 상태")
+                expected: placement.target, actual: frame, detail: L10n.string("outcome.already_satisfied"))
         }
 
         let result = await engine.place(window, slot: placement.slot, display: screen.display)
@@ -155,7 +171,7 @@ public struct WorkspaceRunner {
         if tabs.openedCount == 0, CurrentState.isPlaced(pid: handle.pid, target: target) {
             return ItemOutcome(
                 screenID: screen.id, app: plan.app, status: .alreadySatisfied,
-                expected: target, detail: "탭 \(plan.tabs.count)개와 창 위치 모두 이미 목표 상태")
+                expected: target, detail: L10n.string("outcome.tabs_and_placement_satisfied", plan.tabs.count))
         }
 
         AXWindow.setApplicationFrontmost(pid: handle.pid)
@@ -173,7 +189,7 @@ public struct WorkspaceRunner {
         return ItemOutcome(
             screenID: placed.screenID, app: placed.app, status: placed.status,
             expected: placed.expected, actual: placed.actual,
-            detail: "탭 \(tabs.openedCount)개 추가. \(placed.detail)")
+            detail: L10n.string("outcome.tabs_added_with_placement", tabs.openedCount, placed.detail))
     }
 
     private func tabOutcome(
@@ -182,11 +198,11 @@ public struct WorkspaceRunner {
         guard result.openedCount > 0 else {
             return ItemOutcome(
                 screenID: screen.id, app: plan.app, status: .alreadySatisfied,
-                detail: "탭 \(plan.tabs.count)개 모두 이미 열려 있음")
+                detail: L10n.string("outcome.tabs_all_open", plan.tabs.count))
         }
         return ItemOutcome(
             screenID: screen.id, app: plan.app, status: .placed,
-            detail: "탭 \(result.openedCount)개 추가")
+            detail: L10n.string("outcome.tabs_added", result.openedCount))
     }
 
     /// 제목이 안 맞는 것은 config를 고쳐야 하는 문제이므로 `unreachable`이 아니라 `failed`다.

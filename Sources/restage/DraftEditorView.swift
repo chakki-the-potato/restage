@@ -13,8 +13,8 @@ enum Placement: Hashable {
     var label: String {
         switch self {
         case .slot(let slot): return SlotLabel.text(slot)
-        case .fullscreen: return "전체 화면"
-        case .keepSize: return "크기 유지"
+        case .fullscreen: return L10n.string("placement.fullscreen")
+        case .keepSize: return L10n.string("placement.keep_size")
         }
     }
 }
@@ -109,12 +109,9 @@ struct DraftEditorView: View {
         /// 보여줘야 그대로 둘지 다른 자리를 고를지 판단할 수 있다.
         var uncertaintyDetail: String {
             let percent = overlap.map { Int(($0 * 100).rounded()) }
-            let match = percent.map { "\($0)%만 겹칩니다" } ?? "잘 맞지 않습니다"
-            return """
-                창 크기가 '\(placement.label)'과 \(match).
-                가장 가까운 자리로 골라둔 것이며 그대로 저장해도 됩니다.
-                직접 고르면 이 표시가 사라집니다.
-                """
+            let match = percent.map { L10n.string("draft.overlap_percent", $0) }
+                ?? L10n.string("draft.overlap_poor")
+            return L10n.string("draft.uncertainty_detail", placement.label, match)
         }
     }
 
@@ -129,7 +126,7 @@ struct DraftEditorView: View {
                         line(row)
                     }
                     if !editor.added.isEmpty {
-                        screenLabel("직접 추가")
+                        screenLabel(L10n.string("draft.added_by_hand"))
                         ForEach(Array(editor.added.enumerated()), id: \.offset) { offset, item in
                             addedLine(offset, item)
                         }
@@ -145,14 +142,14 @@ struct DraftEditorView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            Text("\(editor.keptCount)개 담기")
+            Text(L10n.string("draft.keep_count", editor.keptCount))
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.secondary)
             Spacer()
-            Button("전체 선택") { editor.setAll(kept: true) }
+            Button(L10n.string("draft.select_all")) { editor.setAll(kept: true) }
                 .buttonStyle(.link)
                 .font(.system(size: 11))
-            Button("전체 해제") { editor.setAll(kept: false) }
+            Button(L10n.string("draft.select_none")) { editor.setAll(kept: false) }
                 .buttonStyle(.link)
                 .font(.system(size: 11))
         }
@@ -185,12 +182,12 @@ struct DraftEditorView: View {
                 if row.tabCount > 0 || row.isOnOtherSpace {
                     HStack(spacing: 5) {
                         if row.tabCount > 0 {
-                            Text("탭 \(row.tabCount)개")
+                            Text(L10n.string("summary.tabs", row.tabCount))
                                 .font(.system(size: 10))
                                 .foregroundStyle(.secondary)
                         }
                         if row.isOnOtherSpace {
-                            Text("다른 데스크탑")
+                            Text(L10n.string("draft.other_desktop"))
                                 .font(.system(size: 10))
                                 .foregroundStyle(.secondary)
                         }
@@ -223,14 +220,14 @@ struct DraftEditorView: View {
                 Text(SlotLabel.text(slot)).tag(Placement.slot(slot))
             }
             Divider()
-            Text("전체 화면").tag(Placement.fullscreen)
+            Text(L10n.string("placement.fullscreen")).tag(Placement.fullscreen)
             if row.allowsKeepSize {
-                Text("크기 유지").tag(Placement.keepSize)
+                Text(L10n.string("placement.keep_size")).tag(Placement.keepSize)
             }
         }
         .labelsHidden()
         .frame(width: 120)
-        .help("실행할 때 이 창을 놓을 자리입니다. 고른 대로 정확히 배치됩니다.")
+        .help(L10n.string("draft.placement_help"))
     }
 
     private func addedLine(_ offset: Int, _ item: ItemDraft) -> some View {
@@ -242,7 +239,9 @@ struct DraftEditorView: View {
             Text(item.app)
                 .font(.system(size: 12))
             Spacer(minLength: 0)
-            Text(item.fullscreen ? "전체 화면" : (item.slot.map(SlotLabel.text) ?? "크기 유지"))
+            Text(item.fullscreen
+                ? L10n.string("placement.fullscreen")
+                : (item.slot.map(SlotLabel.text) ?? L10n.string("placement.keep_size")))
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
             Button {
@@ -262,7 +261,7 @@ struct DraftEditorView: View {
     private var addSection: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
-                TextField("앱 이름 (예: Figma)", text: $newAppName)
+                TextField(L10n.string("draft.app_name_placeholder"), text: $newAppName)
                     .textFieldStyle(.roundedBorder)
                     .font(.system(size: 12))
                     .onSubmit { addApp() }
@@ -271,11 +270,11 @@ struct DraftEditorView: View {
                         Text(SlotLabel.text(slot)).tag(Placement.slot(slot))
                     }
                     Divider()
-                    Text("전체 화면").tag(Placement.fullscreen)
+                    Text(L10n.string("placement.fullscreen")).tag(Placement.fullscreen)
                 }
                 .labelsHidden()
                 .frame(width: 120)
-                Button("추가", action: addApp)
+                Button(L10n.string("common.add"), action: addApp)
                     .disabled(newAppName.trimmingCharacters(in: .whitespaces).isEmpty)
             }
             if let addError {

@@ -1,3 +1,4 @@
+import RestageKit
 import SwiftUI
 
 /// 워크스페이스 하나를 나타내는 카드.
@@ -11,16 +12,23 @@ struct WorkspaceCard: View {
     let item: PanelStore.Item
     let isRunning: Bool
     let isBusy: Bool
+    let progress: RunProgress?
     let message: String?
 
     let onRun: () -> Void
     let onEdit: () -> Void
+    let onSetHotkey: () -> Void
     let onToggleActions: () -> Void
     let onDismissMessage: () -> Void
 
     @State private var isHovering = false
 
     private var isEnabled: Bool { item.isRunnable && !isBusy }
+    private var isHighlighted: Bool { isHovering && isEnabled }
+
+    private var missing: [AppID] {
+        item.summary.map { WorkspaceIcons.missingApps(among: $0.apps) } ?? []
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -30,77 +38,155 @@ struct WorkspaceCard: View {
             .buttonStyle(.plain)
             .disabled(!isEnabled)
 
+            ForEach(missing, id: \.rawValue) { app in
+                noteRow(L10n.string("panel.app_not_installed", app.rawValue))
+            }
             if let warning = item.hotkeyWarning {
-                noteRow(warning, symbol: "exclamationmark.triangle.fill", tint: .orange)
+                noteRow(warning)
             }
             if let message {
-                noteRow(message, symbol: "exclamationmark.circle.fill", tint: .orange,
-                        onDismiss: onDismissMessage)
+                noteRow(message, onRetry: onRun, onDismiss: onDismissMessage)
             }
         }
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color(nsColor: .controlBackgroundColor)))
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color.accentColor.opacity(isHovering && isEnabled ? 0.10 : 0)))
+                .fill(isHighlighted ? PanelPalette.hoverTint : PanelPalette.cardBackground))
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.10), lineWidth: 1))
+                .strokeBorder(
+                    isHighlighted ? PanelPalette.hoverBorder : PanelPalette.cardBorder,
+                    lineWidth: 1))
         .onHover { isHovering = $0 }
         .help(item.error ?? "")
     }
 
     private var header: some View {
-        HStack(spacing: 10) {
-            Image(systemName: item.isRunnable ? "square.split.2x1" : "exclamationmark.triangle")
-                .font(.system(size: 14))
-                .foregroundStyle(item.isRunnable ? Color.accentColor : Color.orange)
-                .frame(width: 18)
+        HStack(spacing: 11) {
+            AppIconStack(apps: item.summary?.apps ?? [], isDimmed: !item.isRunnable)
+                .frame(height: 21)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(item.name)
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.primary)
-                Text(item.subtitle)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                    .foregroundStyle(item.isRunnable ? .primary : .secondary)
+                if isRunning {
+                    running
+                } else {
+                    subtitle
+                }
             }
 
             Spacer(minLength: 4)
-            trailing
+            if !isRunning { trailing }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 11)
+        .padding(.vertical, 9)
         .contentShape(Rectangle())
     }
 
     @ViewBuilder
+    private var subtitle: some View {
+        HStack(spacing: 5) {
+            if let summary = item.summary {
+                LayoutGlyph(shape: summary.shape)
+            }
+            Text(item.subtitle)
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+        }
+    }
+
+    /// 실행 중에는 부제 자리에 어디까지 갔는지를 적는다. 도는 표시만으로는 멈춘 것인지
+    /// 알 수 없고, 앱을 여는 데 몇 초가 걸린다.
+    private var running: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(progressText)
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+            progressBar
+        }
+    }
+
+    /// 막대를 직접 그린다. `ProgressView`는 AppKit 컨트롤이라 3pt 높이도, 카드 안의
+    /// 색도 우리가 정한 대로 나오지 않는다.
+    private var progressBar: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.primary.opacity(0.10))
+                Capsule()
+                    .fill(Color.accentColor)
+                    .frame(width: proxy.size.width * fraction)
+            }
+        }
+        .frame(height: 3)
+    }
+
+    private var progressText: String {
+        guard let progress, let app = progress.app else { return "" }
+        let key = progress.phase == .launching
+            ? "panel.progress.launching" : "panel.progress.placing"
+        return L10n.string(key, app.rawValue, progress.completed + 1, progress.total)
+    }
+
+    private var fraction: Double {
+        guard let progress, progress.total > 0 else { return 0 }
+        return Double(progress.completed) / Double(progress.total)
+    }
+
+    @ViewBuilder
     private var trailing: some View {
-        if isRunning {
-            ProgressView()
-                .controlSize(.small)
-        } else if isHovering {
-            HStack(spacing: 2) {
-                iconButton("pencil", "편집", onEdit)
-                iconButton("ellipsis", "더보기", onToggleActions)
+        if isHovering {
+            HStack(spacing: 3) {
+                hotkeyChip
+                iconButton("pencil", L10n.string("card.menu.edit"), onEdit)
+                iconButton("ellipsis", L10n.string("card.menu.more"), onToggleActions)
                     .menuAnchor(item.name)
             }
             .foregroundStyle(.secondary)
         } else if let hotkey = item.hotkey {
-            Text(hotkey)
-                .font(.system(size: 11, weight: .medium, design: .rounded))
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 7)
-                .padding(.vertical, 3)
-                .background(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(Color.primary.opacity(0.08)))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .strokeBorder(Color.primary.opacity(0.12), lineWidth: 1))
+            chip(hotkey)
         }
+    }
+
+    /// 마우스를 올렸을 때만 점선 자리를 보여준다. 늘 보이면 미지정 카드가 많은 목록에서
+    /// 점선만 반복된다. 이미 지정된 칩은 올려도 그대로 둔다. 확인하려고 올렸는데 사라지면
+    /// 곤란하다.
+    @ViewBuilder
+    private var hotkeyChip: some View {
+        if let hotkey = item.hotkey {
+            chip(hotkey)
+        } else {
+            Button(action: onSetHotkey) {
+                Text(L10n.string("panel.hotkey.placeholder"))
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .foregroundStyle(.tertiary)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .strokeBorder(
+                                Color.primary.opacity(0.20),
+                                style: StrokeStyle(lineWidth: 1, dash: [3, 2])))
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func chip(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 11, weight: .medium, design: .rounded))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Color.primary.opacity(0.08)))
+            .overlay(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(0.12), lineWidth: 1))
     }
 
     private func iconButton(
@@ -119,17 +205,27 @@ struct WorkspaceCard: View {
     /// 실패 사유는 알림 창 대신 카드 안에 붙인다. 모달은 흐름을 끊고, 어느 워크스페이스의
     /// 문제인지도 제목으로만 알 수 있다.
     private func noteRow(
-        _ text: String, symbol: String, tint: Color, onDismiss: (() -> Void)? = nil
+        _ text: String, onRetry: (() -> Void)? = nil, onDismiss: (() -> Void)? = nil
     ) -> some View {
         HStack(alignment: .top, spacing: 6) {
-            Image(systemName: symbol)
+            Image(systemName: "exclamationmark.circle.fill")
                 .font(.system(size: 11))
-                .foregroundStyle(tint)
+                .foregroundStyle(PanelPalette.warning)
             Text(text)
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
+            if let onRetry {
+                Button(action: onRetry) {
+                    Text(L10n.string("panel.retry"))
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color.accentColor)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(isBusy)
+            }
             if let onDismiss {
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
@@ -137,10 +233,10 @@ struct WorkspaceCard: View {
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
-                .help("닫기")
+                .help(L10n.string("panel.dismiss"))
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.bottom, 10)
+        .padding(.horizontal, 11)
+        .padding(.bottom, 9)
     }
 }

@@ -55,21 +55,21 @@ public struct HotkeySpec: Equatable, Sendable {
 
         guard let key = parts.last, parts.count >= 2 else {
             throw ConfigError.invalidHotkey(
-                raw, reason: "수식키와 키를 + 로 이어 적으세요. 예: ctrl+alt+cmd+1")
+                raw, reason: L10n.string("error.hotkey.format"))
         }
 
         var modifiers = Set<HotkeyModifier>()
         for part in parts.dropLast() {
             guard let modifier = HotkeyModifier.named(part) else {
                 throw ConfigError.invalidHotkey(
-                    raw, reason: "알 수 없는 수식키입니다: \(part). 가능한 값: cmd, ctrl, alt, shift")
+                    raw, reason: L10n.string("error.hotkey.unknown_modifier", part))
             }
             modifiers.insert(modifier)
         }
 
         guard isValidKey(key) else {
             throw ConfigError.invalidHotkey(
-                raw, reason: "알 수 없는 키입니다: \(key). 가능한 값: 0-9, a-z, f1-f12, space, return, tab, escape")
+                raw, reason: L10n.string("error.hotkey.unknown_key", key))
         }
 
         return HotkeySpec(modifiers: modifiers, key: key)

@@ -1,4 +1,5 @@
 import AppKit
+import RestageKit
 
 /// 메뉴에서 띄우는 알림 창. AppKit 호출을 한곳에 모아 화면을 부르는 쪽이 흩어지지 않게 한다.
 @MainActor
@@ -20,7 +21,7 @@ enum Prompt {
         alert.informativeText = body
         alert.alertStyle = .warning
         let confirm = alert.addButton(withTitle: confirmTitle)
-        alert.addButton(withTitle: "취소")
+        alert.addButton(withTitle: L10n.string("common.cancel"))
         if destructive {
             confirm.hasDestructiveAction = true
             alert.window.defaultButtonCell = nil
@@ -30,17 +31,17 @@ enum Prompt {
 
     /// 한 줄을 입력받는다. 취소하면 nil이다.
     static func text(
-        title: String, body: String, initial: String = "", confirmTitle: String = "확인"
+        title: String, body: String, initial: String = "", confirmTitle: String = L10n.string("common.ok")
     ) -> String? {
         let alert = NSAlert()
         alert.messageText = title
         alert.informativeText = body
         alert.addButton(withTitle: confirmTitle)
-        alert.addButton(withTitle: "취소")
+        alert.addButton(withTitle: L10n.string("common.cancel"))
 
         let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
         field.stringValue = initial
-        field.placeholderString = "이름"
+        field.placeholderString = L10n.string("common.name")
         alert.accessoryView = field
         alert.window.initialFirstResponder = field
 
@@ -66,7 +67,7 @@ enum Prompt {
         alert.informativeText = body
         alert.addButton(withTitle: confirmTitle)
         if let alternateTitle { alert.addButton(withTitle: alternateTitle) }
-        alert.addButton(withTitle: "취소")
+        alert.addButton(withTitle: L10n.string("common.cancel"))
         alert.accessoryView = accessory
 
         switch alert.runModal() {

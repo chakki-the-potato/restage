@@ -5,7 +5,7 @@ import RestageKit
 /// 터미널의 `restage new`와 메뉴바의 새로 만들기 창이 같은 내용을 보여줘야 하므로 한곳에 둔다.
 /// 번호는 터미널에서만 쓴다. 창에서는 고를 수 없으니 붙이면 눌러도 되는 것처럼 보인다.
 enum DraftSummary {
-    static let uncertaintyNote = "? 는 자리가 애매하다는 뜻입니다."
+    static var uncertaintyNote: String { L10n.string("draft.uncertainty_note") }
 
     /// 화면 이름과 그 아래 항목들. 빈 초안이면 빈 배열이다.
     static func lines(_ draft: WorkspaceDraft, numbered: Bool) -> [String] {
@@ -28,14 +28,14 @@ enum DraftSummary {
     }
 
     private static func describe(_ item: ItemDraft) -> String {
-        let slot = item.slot.map(SlotLabel.text) ?? "크기 유지"
+        let slot = item.slot.map(SlotLabel.text) ?? L10n.string("placement.keep_size")
         let marker = item.isConfident ? " " : "?"
         var text = label(for: item).padded(to: 30) + slot + marker
         if case .browser(let urls) = item.kind, !urls.isEmpty {
-            text += "  탭 \(urls.count)개"
+            text += "  " + L10n.string("summary.tabs", urls.count)
         }
         if !item.wasOnCurrentSpace {
-            text += "  [다른 데스크탑]"
+            text += "  " + L10n.string("summary.other_desktop")
         }
         return text
     }

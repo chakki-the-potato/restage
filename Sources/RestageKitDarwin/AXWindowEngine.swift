@@ -26,7 +26,7 @@ public struct AXWindowEngine: WindowEngine {
         _ window: WindowHandle, slot: Slot, display: DisplayInfo
     ) async -> PlacementResult {
         guard let axWindow = window as? AXWindow else {
-            return .failed(expected: .zero, actual: nil, reason: "지원하지 않는 WindowHandle 구현")
+            return .failed(expected: .zero, actual: nil, reason: L10n.string("error.window.unsupported_handle"))
         }
         let target = SlotGeometry.frame(
             for: slot, in: display.visibleFrame, primaryMaxY: display.primaryMaxY)
@@ -45,7 +45,7 @@ public struct AXWindowEngine: WindowEngine {
 
     public func fullscreen(_ window: WindowHandle) async -> PlacementResult {
         guard let axWindow = window as? AXWindow else {
-            return .failed(expected: .zero, actual: nil, reason: "지원하지 않는 WindowHandle 구현")
+            return .failed(expected: .zero, actual: nil, reason: L10n.string("error.window.unsupported_handle"))
         }
         return await FullScreenController.enter(axWindow)
     }

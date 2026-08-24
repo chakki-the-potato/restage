@@ -4,8 +4,10 @@ import Testing
 private func entry(_ name: String, error: String? = nil) -> WorkspaceEntry {
     WorkspaceEntry(
         name: name, path: "/tmp/\(name).yaml",
-        screenCount: error == nil ? 1 : nil,
-        itemCount: error == nil ? 2 : nil,
+        summary: error == nil
+            ? WorkspaceSummary(
+                apps: [AppID("safari")], shape: .leftRight, screenCount: 1, itemCount: 2)
+            : nil,
         error: error)
 }
 
@@ -26,7 +28,7 @@ private func entry(_ name: String, error: String? = nil) -> WorkspaceEntry {
 
 @Test func emptyDirectoryShowsNotice() {
     let entries = MenuContent.entries(for: .success([]))
-    #expect(entries == [.notice("등록된 워크스페이스가 없습니다")])
+    #expect(entries == [.notice(L10n.string("error.config.no_workspaces"))])
     #expect(!entries[0].isEnabled)
 }
 

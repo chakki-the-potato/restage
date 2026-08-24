@@ -4,9 +4,17 @@ public struct WorkspaceEntry: Sendable {
     public let name: String
     public let path: String
     /// 파싱에 실패하면 nil이다.
-    public let screenCount: Int?
-    public let itemCount: Int?
+    public let summary: WorkspaceSummary?
     public let error: String?
+
+    public init(
+        name: String, path: String, summary: WorkspaceSummary?, error: String?
+    ) {
+        self.name = name
+        self.path = path
+        self.summary = summary
+        self.error = error
+    }
 }
 
 /// 이름으로 워크스페이스 config를 찾는다.
@@ -68,12 +76,10 @@ public struct WorkspaceRegistry {
                     let config = try ConfigLoader.load(path: path)
                     return WorkspaceEntry(
                         name: name, path: path,
-                        screenCount: config.screens.count,
-                        itemCount: config.screens.reduce(0) { $0 + $1.items.count },
-                        error: nil)
+                        summary: WorkspaceSummary(config: config), error: nil)
                 } catch {
                     return WorkspaceEntry(
-                        name: name, path: path, screenCount: nil, itemCount: nil,
+                        name: name, path: path, summary: nil,
                         error: String(describing: error))
                 }
             }

@@ -23,7 +23,9 @@ enum WorkspaceLauncher {
         }
     }
 
-    static func run(_ name: String) async -> Outcome {
+    static func run(
+        _ name: String, onProgress: ((RunProgress) -> Void)? = nil
+    ) async -> Outcome {
         guard AccessibilityPermission.isTrusted() else {
             return .failed(AccessibilityPermission.onboardingMessage)
         }
@@ -31,14 +33,14 @@ enum WorkspaceLauncher {
             return .failed(ScreenLock.message)
         }
         guard let displays = DisplayCatalog.current() else {
-            return .failed("디스플레이 정보를 조회할 수 없습니다")
+            return .failed(L10n.string("error.display.unavailable"))
         }
 
         do {
             let path = try WorkspaceRegistry().resolve(name)
             let config = try ConfigLoader.load(path: path)
             let resolved = WorkspaceResolver.resolve(config, displays: displays)
-            let outcomes = await WorkspaceRunner().run(resolved)
+            let outcomes = await WorkspaceRunner().run(resolved, onProgress: onProgress)
             guard let summary = MenuContent.failureSummary(outcomes) else { return .succeeded }
             return .partial(summary)
         } catch {

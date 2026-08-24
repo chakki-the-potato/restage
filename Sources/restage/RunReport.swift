@@ -9,7 +9,7 @@ enum RunReport {
         let screenWidth = width(of: screens)
         let appWidth = width(of: apps)
 
-        var lines: [String] = ["워크스페이스: \(workspace)", ""]
+        var lines: [String] = [L10n.string("cli.report.workspace", workspace), ""]
         lines.append(
             pad("SCREEN", screenWidth) + pad("APP", appWidth) + pad("RESULT", 18)
             + pad("EXPECTED", 23) + pad("ACTUAL", 23) + "NOTE")
@@ -37,8 +37,11 @@ enum RunReport {
             return "\(key) \(count)"
         }
         let failures = outcomes.filter { !$0.status.isSuccess }
-        let verdict = failures.isEmpty ? "완료" : "완료 (실패 \(failures.count)건)"
-        return "\(parts.joined(separator: " / "))  총 \(outcomes.count)건 — \(verdict)"
+        let verdict = failures.isEmpty
+            ? L10n.string("cli.report.done")
+            : L10n.string("cli.report.done_with_failures", failures.count)
+        return L10n.string(
+            "cli.report.tally", parts.joined(separator: " / "), outcomes.count, verdict)
     }
 
     static func hasFailure(_ outcomes: [ItemOutcome]) -> Bool {

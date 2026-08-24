@@ -25,30 +25,30 @@ func fail(_ message: String) -> Never {
 }
 
 guard CommandLine.arguments.count == 2 else {
-    fail("사용법: restage-icon <출력할 .iconset 경로>")
+    fail("usage: restage-icon <path to the .iconset to write>")
 }
 
 let output = URL(fileURLWithPath: CommandLine.arguments[1])
 do {
     try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
 } catch {
-    fail("iconset 디렉터리를 만들지 못함: \(output.path): \(error)")
+    fail("couldn't create the iconset directory: \(output.path): \(error)")
 }
 
 for variant in variants {
     guard let image = AppIconRenderer.render(pixels: variant.pixels) else {
-        fail("아이콘 렌더 실패: \(variant.name)")
+        fail("couldn't render the icon: \(variant.name)")
     }
     let file = output.appendingPathComponent(variant.name)
     guard let destination = CGImageDestinationCreateWithURL(
         file as CFURL, UTType.png.identifier as CFString, 1, nil
     ) else {
-        fail("PNG 출력 대상을 열지 못함: \(file.path)")
+        fail("couldn't open the PNG for writing: \(file.path)")
     }
     CGImageDestinationAddImage(destination, image, nil)
     guard CGImageDestinationFinalize(destination) else {
-        fail("PNG 저장 실패: \(file.path)")
+        fail("couldn't write the PNG: \(file.path)")
     }
 }
 
-print("아이콘 \(variants.count)개 생성: \(output.path)")
+print("wrote \(variants.count) icons: \(output.path)")

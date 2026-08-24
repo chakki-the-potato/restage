@@ -108,10 +108,10 @@ screens:
     try write(twoScreenConfig, to: directory, as: "split.yaml")
 
     let entries = try WorkspaceRegistry(directory: directory).list()
-    #expect(entries[0].screenCount == 1)
-    #expect(entries[0].itemCount == 2)
-    #expect(entries[1].screenCount == 2)
-    #expect(entries[1].itemCount == 2)
+    #expect(entries[0].summary?.screenCount == 1)
+    #expect(entries[0].summary?.itemCount == 2)
+    #expect(entries[1].summary?.screenCount == 2)
+    #expect(entries[1].summary?.itemCount == 2)
     #expect(entries.allSatisfy { $0.error == nil })
 }
 
@@ -129,8 +129,7 @@ screens:
     let entries = try WorkspaceRegistry(directory: directory).list()
     #expect(entries.map(\.name) == ["broken", "dev"])
     #expect(entries[0].error != nil)
-    #expect(entries[0].screenCount == nil)
-    #expect(entries[0].itemCount == nil)
+    #expect(entries[0].summary == nil)
     #expect(entries[1].error == nil)
 }
 

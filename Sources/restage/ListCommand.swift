@@ -13,7 +13,7 @@ enum ListCommand {
         }
 
         guard !entries.isEmpty else {
-            print("등록된 워크스페이스가 없습니다: \(WorkspaceRegistry.defaultDirectory)")
+            print(L10n.string("cli.list.empty", WorkspaceRegistry.defaultDirectory))
             return 0
         }
 
@@ -22,8 +22,8 @@ enum ListCommand {
         for entry in entries {
             print(
                 pad(entry.name, 16)
-                + padLeft(entry.screenCount.map(String.init) ?? "-", 8)
-                + padLeft(entry.itemCount.map(String.init) ?? "-", 7)
+                + padLeft(entry.summary.map { String($0.screenCount) } ?? "-", 8)
+                + padLeft(entry.summary.map { String($0.itemCount) } ?? "-", 7)
                 + "  " + (entry.error ?? "ok"))
         }
         return entries.contains { $0.error != nil } ? 1 : 0

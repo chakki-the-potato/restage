@@ -1,0 +1,302 @@
+/* 패널 */
+"panel.new_from_current" = "현재 창 배치로 새로 만들기";
+"panel.hotkey.placeholder" = "단축키";
+"panel.language.auto" = "자동";
+"panel.retry" = "다시 시도";
+"panel.dismiss" = "닫기";
+"panel.settings" = "설정";
+
+/* 패널 · 빈 상태 */
+"panel.empty.title" = "아직 저장한 배치가 없습니다";
+"panel.empty.body" = "창을 원하는 자리에 놓고 아래를 누르면\n그 배치를 그대로 저장합니다";
+"panel.empty.button" = "현재 창 배치로 만들기";
+
+/* 패널 · 접근성 권한 */
+"panel.permission.title" = "접근성 권한이 필요합니다";
+"panel.permission.body" = "창을 옮기려면 restage에 권한을 줘야 합니다";
+"panel.permission.button" = "열기";
+
+/* 패널 · 실행 */
+"panel.progress.launching" = "%1$@ 여는 중 · %3$d개 중 %2$d개";
+"panel.progress.placing" = "%1$@ 배치하는 중 · %3$d개 중 %2$d개";
+"panel.app_not_installed" = "%@가 설치되어 있지 않습니다";
+
+/* 카드 메뉴 */
+"card.menu.edit" = "편집";
+"card.menu.more" = "더보기";
+"card.menu.rename" = "이름 변경";
+"card.menu.change_shortcut" = "단축키 변경";
+"card.menu.reveal" = "파일로 열기";
+"card.menu.delete" = "삭제";
+
+/* 설정 메뉴 */
+"options.open_at_login" = "로그인 시 자동 실행";
+"options.check_updates" = "업데이트 확인";
+"options.open_config_folder" = "config 폴더 열기";
+"options.quit" = "종료";
+
+/* 알림 창 */
+"dialog.failed.title" = "처리하지 못했습니다";
+"dialog.rename.title" = "이름 바꾸기";
+"dialog.rename.body" = "'%@'의 새 이름을 정하세요.";
+"dialog.delete.title" = "'%@'을 삭제할까요?";
+"dialog.delete.body" = "휴지통으로 보냅니다. 필요하면 거기서 되돌릴 수 있습니다.";
+"dialog.edit.title" = "'%@' 편집";
+
+/* 업데이트 */
+"update.current.title" = "최신 버전입니다";
+"update.current.body" = "v%@을 쓰고 있습니다.";
+"update.available.title" = "새 버전 v%@이 있습니다";
+"update.available.body" = "지금 쓰는 것은 v%@입니다.\n받는 방법은 릴리스 페이지에 있습니다.";
+"update.available.confirm" = "릴리스 페이지 열기";
+"update.failed.title" = "업데이트를 확인하지 못했습니다";
+
+/* 오류 */
+"error.read_failed" = "'%1$@'을 읽지 못했습니다: %2$@";
+"error.login_item" = "로그인 항목 등록에 실패했습니다";
+
+/* 배치 요약 */
+"layout.full_screen" = "전체 화면";
+"layout.left_right" = "좌우 분할";
+"layout.top_bottom" = "상하 분할";
+"layout.quarters" = "4분할";
+"layout.panes" = "%d분할";
+"layout.mixed" = "혼합";
+"layout.displays" = "화면 %d";
+"layout.summary" = "%1$@ · %2$@";
+
+/* 자리 이름 */
+"slot.full" = "전체";
+"slot.left_half" = "왼쪽 절반";
+"slot.right_half" = "오른쪽 절반";
+"slot.top_half" = "위쪽 절반";
+"slot.bottom_half" = "아래쪽 절반";
+"slot.q1" = "좌상";
+"slot.q2" = "우상";
+"slot.q3" = "좌하";
+"slot.q4" = "우하";
+"slot.centered" = "가운데";
+"placement.fullscreen" = "전체 화면";
+"placement.keep_size" = "크기 유지";
+
+/* 오류 · 엔진 */
+"error.engine.accessibility_not_trusted" = "접근성 권한이 없습니다. 시스템 설정에서 이 앱을 승인하세요.";
+"error.engine.app_not_found" = "'%@'이라는 이름의 앱이 설치되어 있지 않습니다.";
+"error.engine.app_not_found.suggestion" = " 혹시 이건가요: %@";
+"error.engine.ambiguous_app" = "'%1$@'에 해당하는 앱이 여럿입니다: %2$@";
+"error.engine.application_not_found" = "설치되지 않은 앱입니다: %@";
+"error.engine.launch_failed" = "실행 실패: %1$@ — %2$@";
+"error.engine.window_timeout" = "%1$g초 안에 창이 뜨지 않았습니다 (pid %2$d)";
+"error.engine.no_window_matching_title" = "제목에 '%1$@'를 포함한 창을 찾지 못했습니다. %2$@";
+"error.engine.windows_open" = "열린 창: %@";
+"error.engine.no_windows_open" = "열린 창이 없습니다";
+"error.engine.window_on_other_space" = "창 %1$d개가 다른 Space에 있어 접근할 수 없습니다 (pid %2$d)";
+"error.engine.ax_disabled" = "AX API가 비활성 상태입니다 (kAXErrorAPIDisabled). 접근성 권한을 확인하세요.";
+"error.engine.browser_without_tab_control" = "%@은 탭 제어를 지원하지 않습니다. 창 배치는 되지만 tabs는 열 수 없습니다.";
+"error.engine.not_a_browser" = "%@은 브라우저가 아닙니다. type을 app으로 바꾸세요.";
+
+/* 오류 · config */
+"error.config.file_not_found" = "config 파일을 찾을 수 없습니다: %@";
+"error.config.unreadable" = "config 파일을 읽을 수 없습니다: %1$@ — %2$@";
+"error.config.malformed" = "config 형식이 올바르지 않습니다. %@";
+"error.config.unknown_item_type" = "알 수 없는 항목 type입니다: %@. 가능한 값: app, browser";
+"error.config.invalid_display" = "알 수 없는 display입니다: %@. 가능한 값: builtin, any, external-1 이상";
+"error.config.empty_screens" = "screens가 비어 있습니다. 화면을 하나 이상 선언하세요";
+"error.config.empty_items" = "화면 '%@'의 items가 비어 있습니다";
+"error.config.duplicate_screen_id" = "화면 id가 중복됩니다: %@";
+"error.config.anchor_not_in_items" = "화면 '%1$@'의 anchor '%2$@'가 그 화면의 items에 없습니다";
+"error.config.directory_not_found" = "워크스페이스 디렉토리가 없습니다: %1$@\nmkdir -p %1$@ 로 만들고 <이름>.yaml 파일을 두세요";
+"error.config.invalid_hotkey" = "hotkey 형식이 올바르지 않습니다: '%1$@'. %2$@";
+"error.config.workspace_not_found" = "'%1$@' 워크스페이스를 찾을 수 없습니다: %2$@\n%3$@";
+"error.config.known_workspaces" = "등록된 워크스페이스: %@";
+"error.config.no_workspaces" = "등록된 워크스페이스가 없습니다";
+
+/* 오류 · 이름과 단축키 */
+"error.name.empty" = "이름을 입력하세요";
+"error.name.too_long" = "이름이 너무 깁니다. %d자 이하로 적으세요";
+"error.name.slash" = "이름에 / 는 쓸 수 없습니다";
+"error.name.dot" = "이름에 . 은 쓸 수 없습니다. 확장자는 자동으로 붙습니다";
+"error.name.newline" = "이름에 줄바꿈은 쓸 수 없습니다";
+"error.name.invalid" = "이름에 쓸 수 없는 문자가 있습니다";
+"error.hotkey.format" = "수식키와 키를 + 로 이어 적으세요. 예: ctrl+alt+cmd+1";
+"error.hotkey.unknown_modifier" = "알 수 없는 수식키입니다: %@. 가능한 값: cmd, ctrl, alt, shift";
+"error.hotkey.unknown_key" = "알 수 없는 키입니다: %@. 가능한 값: 0-9, a-z, f1-f12, space, return, tab, escape";
+
+/* 오류 · 디스플레이 */
+"error.display.no_primary" = "주 디스플레이를 찾을 수 없습니다";
+"error.display.external_missing" = "외장 디스플레이 %d번이 연결되어 있지 않습니다";
+
+/* 메뉴 */
+"menu.permission_needed" = "접근성 권한을 허용하세요";
+
+/* 창 조작 */
+"error.window.unsupported_handle" = "지원하지 않는 WindowHandle 구현";
+"error.applescript.compile_failed" = "AppleScript 컴파일 실패: %@";
+"error.applescript.execute_failed" = "AppleScript 실행 실패(%1$d): %2$@";
+"error.applescript.unknown" = "알 수 없는 오류";
+"error.tabs.empty" = "탭이 비어 있습니다";
+"error.tabs.no_new_window" = "새 창이 나타나지 않았습니다";
+"error.tabs.window_not_found" = "창을 찾을 수 없습니다";
+"error.fullscreen.unsupported" = "전체화면을 지원하지 않는 창입니다";
+"error.fullscreen.not_completed" = "전체화면 전환이 완료되지 않았습니다";
+"error.place.no_frame" = "창 좌표를 조회할 수 없습니다";
+"error.place.fullscreen_blocked" = "전체화면 상태라 배치할 수 없습니다 (AX로 해제 불가, ctrl+cmd+F로 직접 해제)";
+"error.place.not_resizable" = "크기를 바꿀 수 없는 창입니다";
+"error.place.retries_exhausted" = "%d회 시도 후에도 목표 좌표에 도달하지 못했습니다";
+"warn.other_space" = "다른 Space에 있어 화면에 보이지 않습니다";
+"constraint.min_size" = "최소 크기 %1$dx%2$d";
+"constraint.min_width_unexposed" = "최소 너비 %d (앱이 AXMinSize를 노출하지 않음)";
+"constraint.min_height_unexposed" = "최소 높이 %d (앱이 AXMinSize를 노출하지 않음)";
+"constraint.min_size_unexposed" = "최소 크기 %1$dx%2$d (앱이 AXMinSize를 노출하지 않음)";
+
+/* 실행 결과 */
+"outcome.already_satisfied" = "이미 목표 상태";
+"outcome.tabs_and_placement_satisfied" = "탭 %d개와 창 위치 모두 이미 목표 상태";
+"outcome.tabs_added_with_placement" = "탭 %1$d개 추가. %2$@";
+"outcome.tabs_all_open" = "탭 %d개 모두 이미 열려 있음";
+"outcome.tabs_added" = "탭 %d개 추가";
+
+/* 공통 */
+"common.ok" = "확인";
+"common.cancel" = "취소";
+"common.save" = "저장";
+"common.clear" = "지우기";
+"common.name" = "이름";
+"common.cancelled" = "취소했습니다";
+
+/* 파일 */
+"error.file.not_found" = "'%@' 파일을 찾을 수 없습니다";
+"error.file.trash_failed" = "휴지통으로 보내지 못했습니다: %@";
+"error.file.name_taken" = "'%@'이라는 워크스페이스가 이미 있습니다";
+"error.file.rename_failed" = "이름을 바꾸지 못했습니다: %@";
+"error.file.editor_failed" = "편집기를 열지 못했습니다";
+"error.file.hotkey_save_failed" = "단축키를 저장하지 못했습니다: %@";
+"error.file.save_failed" = "저장하지 못했습니다: %@";
+"error.file.saved_but_unreadable" = "저장은 됐지만 다시 읽지 못했습니다. 파일을 확인하세요: %1$@\n%2$@";
+
+/* 로그인 항목과 단축키 */
+"error.login_item.needs_bundle" = "앱 번들에서 실행할 때만 등록할 수 있습니다";
+"error.hotkey.unsupported_key" = "지원하지 않는 키입니다: %@";
+"error.hotkey.conflict" = "단축키 %@를 등록하지 못했습니다. 다른 앱이 쓰고 있거나 중복입니다";
+
+/* 디스플레이 */
+"error.display.unavailable" = "디스플레이 정보를 조회할 수 없습니다";
+
+/* 업데이트 확인 */
+"error.update.bad_current" = "현재 버전을 읽지 못했습니다: %@";
+"error.update.bad_url" = "주소가 올바르지 않습니다";
+"error.update.no_release" = "아직 공개된 릴리스가 없습니다";
+"error.update.bad_response" = "GitHub 응답이 올바르지 않습니다 (%d)";
+"error.update.no_version" = "응답에서 버전을 찾지 못했습니다";
+"error.update.failed" = "확인하지 못했습니다: %@";
+
+/* 창 읽기 */
+"error.capture.window_not_in_browser" = "'%@' 창을 브라우저 쪽 목록에서 찾지 못했습니다";
+"error.capture.no_urls" = "담을 만한 주소가 없습니다. 시작 페이지나 새 탭만 열려 있습니다";
+
+/* 초안 */
+"draft.pick_windows" = "담을 창과 자리를 고르세요.";
+"draft.stale_note" = "이 목록은 창을 읽은 시점의 것입니다. 그 뒤에 창을 옮겼다면 다시 읽으세요.";
+"draft.reload" = "다시 읽기";
+"draft.nothing_selected.title" = "담을 항목이 없습니다";
+"draft.nothing_selected.body" = "하나 이상 고른 뒤 저장하세요.";
+"draft.uncertainty_note" = "? 는 자리가 애매하다는 뜻입니다.";
+"summary.tabs" = "탭 %d개";
+"summary.other_desktop" = "[다른 데스크탑]";
+
+/* 단축키 기록 */
+"hotkey.title" = "'%@' 단축키";
+"hotkey.instructions" = "원하는 키 조합을 누르세요. ⌘ ⌃ ⌥ ⇧ 중 하나 이상을 함께 눌러야 합니다.";
+"hotkey.press_keys" = "키를 누르세요";
+"hotkey.needs_modifier" = "수식키를 함께 누르세요";
+
+/* 터미널 */
+"cli.list.empty" = "등록된 워크스페이스가 없습니다: %@";
+"cli.new.needs_name" = "new 뒤에 워크스페이스 이름이 필요합니다";
+"cli.open.needs_target" = "open 뒤에 워크스페이스 이름 또는 config 파일 경로가 필요합니다";
+"cli.unknown_command" = "알 수 없는 명령: %@";
+"cli.report.workspace" = "워크스페이스: %@";
+"cli.report.done" = "완료";
+"cli.report.done_with_failures" = "완료 (실패 %d건)";
+"cli.report.tally" = "%1$@  총 %2$d건 — %3$@";
+
+/* probe */
+"probe.bad_slot" = "--slot 값이 올바르지 않습니다. 가능한 값: %@";
+"probe.app_needs_name" = "--app 뒤에 앱 이름이 필요합니다";
+"probe.unknown_argument" = "알 수 없는 인자: %@";
+"probe.cold_needs_app" = "--cold는 대상 앱을 강제 종료하므로 --app으로 하나만 지정해야 합니다";
+"probe.no_apps" = "검증할 앱이 없습니다. 앱을 하나 이상 실행하거나 --app으로 지정하세요";
+"probe.cold_confirm" = "콜드 스타트를 위해 %@을(를) 강제 종료합니다. 계속할까요?";
+"probe.fullscreen_stuck" = "해제 불가, Space 잔류 (수동 해제 필요). %@";
+
+/* 공통 */
+"common.next" = "다음";
+"common.add" = "추가";
+
+/* 새로 만들기 */
+"new.title" = "새 워크스페이스";
+"new.body" = "지금 열린 창 배치를 담습니다. 이름을 정하세요.";
+"new.bad_name" = "쓸 수 없는 이름입니다";
+"new.screen_locked" = "화면이 잠겨 있습니다";
+"new.display_failed" = "디스플레이 조회 실패";
+"new.no_windows.title" = "담을 창이 없습니다";
+"new.no_windows.body" = "열린 창이 없습니다. 앱을 배치한 뒤 다시 시도하세요.";
+"new.contents_title" = "'%@'에 담을 내용";
+"new.save_failed" = "저장하지 못했습니다";
+"new.exists.title" = "'%@'이 이미 있습니다";
+"new.exists.body" = "덮어쓰면 기존 내용은 사라집니다.";
+"new.exists.confirm" = "덮어쓰기";
+"new.note.ambiguous_windows" = "창 %1$d개는 제목으로 구분할 수 없어 담지 않았습니다 (%2$@).";
+"new.note.tabs_unreadable" = "%@의 탭은 읽지 못해 창 위치만 담았습니다.";
+"new.read_layout" = "현재 창 배치를 읽었습니다.";
+"new.on_other_space" = "이 중 %d개는 다른 데스크탑에 있습니다. 앱이 꺼진 상태에서 실행하면 정상 배치되고, 이미 떠 있으면 실패합니다.";
+"new.ambiguous_windows" = "%1$@ 창 %2$d개는 담지 않았습니다. 제목이 같거나 비어 있어 실행할 때 어느 창인지 정할 수 없습니다.";
+"new.tabs_unreadable" = "%1$@의 탭을 읽지 못해 창 위치만 담았습니다: %2$@";
+"new.commands" = "[Enter] 저장   [숫자] 자리 바꾸기   [-숫자] 제외   [+] 앱 추가   [w] 웹 추가   [q] 취소";
+"new.input_closed" = "입력이 끝나 취소했습니다. 저장하려면 빈 줄을 입력하세요";
+"new.removed" = "제외했습니다: %@";
+"new.unknown_input" = "모르는 입력입니다: %@";
+"new.pick_slot" = "%@의 자리를 고르세요.";
+"new.pick_slot_optional" = "%@의 자리를 고르세요. 그냥 Enter를 누르면 창 크기를 건드리지 않습니다.";
+"new.slot_unchanged" = "자리를 바꾸지 않았습니다";
+"new.prompt.app_name" = "앱 이름> ";
+"new.prompt.browser_name" = "브라우저 이름> ";
+"new.prompt.slot_number" = "자리 번호> ";
+"new.prompt.screen_number" = "화면 번호> ";
+"new.added_app" = "추가했습니다: %1$@ %2$@";
+"new.added_browser" = "추가했습니다: %1$@ 탭 %2$d개";
+"new.enter_urls" = "URL을 한 줄에 하나씩 입력하세요. 빈 줄이면 끝냅니다.";
+"new.no_urls" = "URL이 없어 추가하지 않았습니다";
+"new.no_slot" = "자리를 고르지 않아 추가하지 않았습니다";
+"new.which_screen" = "어느 화면인가요?";
+"new.no_screen" = "화면을 고르지 않아 추가하지 않았습니다";
+"new.empty_draft" = "담긴 항목이 없습니다. [+]로 앱을, [w]로 웹을 추가하세요.";
+"new.uncertainty_hint" = "%@ 번호를 눌러 직접 고르세요.";
+"new.no_such_item" = "%d번 항목이 없습니다";
+"new.nothing_to_save" = "담긴 항목이 없어 저장하지 않았습니다";
+"new.overwrite_confirm" = "%@가 이미 있습니다. 덮어쓸까요?";
+"new.not_saved" = "저장하지 않았습니다";
+"new.saved" = "저장했습니다: %@";
+"new.run_hint" = "실행하려면: restage open %@";
+
+/* 초안 편집 */
+"draft.added_by_hand" = "직접 추가";
+"draft.keep_count" = "%d개 담기";
+"draft.select_all" = "전체 선택";
+"draft.select_none" = "전체 해제";
+"draft.other_desktop" = "다른 데스크탑";
+"draft.overlap_percent" = "%d%%만 겹칩니다";
+"draft.overlap_poor" = "잘 맞지 않습니다";
+"draft.placement_help" = "실행할 때 이 창을 놓을 자리입니다. 고른 대로 정확히 배치됩니다.";
+"draft.app_name_placeholder" = "앱 이름 (예: Figma)";
+
+/* 권한과 잠금 */
+"permission.onboarding" = "접근성 권한이 필요합니다.\n\n시스템 설정 > 개인정보 보호 및 보안 > 손쉬운 사용에서 이 명령을 실행한 앱(터미널, iTerm, restage)을 추가하고 켜 주세요.\n\n%@";
+"screen_lock.message" = "화면이 잠겨 있습니다.\n\n잠긴 상태에서는 접근성 API가 창 목록을 조회하지 못해 모든 항목이 실패로 기록됩니다. 잠금을 해제한 뒤 다시 실행하세요.";
+"error.applescript.permission_denied" = "%1$@ 자동화 권한이 없습니다. 시스템 설정 > 개인정보 보호 및 보안 > 자동화에서 restage가 %1$@을(를) 제어하도록 허용하세요";
+
+/* 초안 편집 */
+"draft.uncertainty_detail" = "창 크기가 '%1$@'과 %2$@.\n가장 가까운 자리로 골라둔 것이며 그대로 저장해도 됩니다.\n직접 고르면 이 표시가 사라집니다.";
+
+/* 사용법 */
+"cli.usage" = "restage — 워크스페이스 복원 도구\n\n사용법:\n  restage new <name>\n  restage open <name|path>\n  restage list\n  restage menubar\n  restage probe [--slot <slot>] [--app <name>] [--fullscreen] [--cold]\n\nnew:\n  지금 열린 창 배치를 읽어 워크스페이스를 만듭니다\n  보여주는 목록을 고친 뒤 Enter를 누르면 저장됩니다\n\nopen 옵션:\n  <name|path>     워크스페이스 이름 또는 config 파일 경로\n                  이름은 ~/.config/restage/<이름>.yaml 에서 찾습니다\n\nmenubar:\n  메뉴바에 아이콘을 띄우고 워크스페이스를 클릭해 실행합니다\n  종료하려면 메뉴에서 종료를 누르세요\n\nprobe 옵션:\n  --slot <slot>   배치할 위치. 기본값 left-half\n  --app <name>    단일 앱만 검증. 기본값은 실행 중인 앱 전부\n  --fullscreen    배치 후 전체화면 전환까지 검증\n  --cold          콜드 스타트까지 검증. 대상 앱을 강제 종료하므로 --app이 필요하고\n                  실행 전에 확인을 받는다";

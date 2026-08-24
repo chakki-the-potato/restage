@@ -93,14 +93,14 @@ enum WorkspaceCapture {
                 matching: window.frame, in: tabsByApp[window.appName] ?? []),
               let entry = tabsByApp[window.appName]?.remove(at: index) else {
             withoutTabs[window.appName] = withoutTabs[window.appName]
-                ?? "'\(window.title)' 창을 브라우저 쪽 목록에서 찾지 못했습니다"
+                ?? L10n.string("error.capture.window_not_in_browser", window.title)
             return asApp
         }
 
         let tabs = entry.tabs.filter(URLNormalizer.isSavable)
         guard !tabs.isEmpty else {
             withoutTabs[window.appName] = withoutTabs[window.appName]
-                ?? "담을 만한 주소가 없습니다. 시작 페이지나 새 탭만 열려 있습니다"
+                ?? L10n.string("error.capture.no_urls")
             return asApp
         }
         return .browser(

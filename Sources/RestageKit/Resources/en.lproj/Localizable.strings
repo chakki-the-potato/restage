@@ -1,0 +1,302 @@
+/* 패널 */
+"panel.new_from_current" = "New from Current Layout";
+"panel.hotkey.placeholder" = "Shortcut";
+"panel.language.auto" = "Auto";
+"panel.retry" = "Retry";
+"panel.dismiss" = "Dismiss";
+"panel.settings" = "Settings";
+
+/* 패널 · 빈 상태 */
+"panel.empty.title" = "No layouts saved yet";
+"panel.empty.body" = "Arrange your windows, then save\nthe layout exactly as it is";
+"panel.empty.button" = "Save Current Layout";
+
+/* 패널 · 접근성 권한 */
+"panel.permission.title" = "Accessibility permission needed";
+"panel.permission.body" = "restage moves windows on your behalf";
+"panel.permission.button" = "Open";
+
+/* 패널 · 실행 */
+"panel.progress.launching" = "Opening %1$@ · %2$d of %3$d";
+"panel.progress.placing" = "Placing %1$@ · %2$d of %3$d";
+"panel.app_not_installed" = "%@ is not installed";
+
+/* 카드 메뉴 */
+"card.menu.edit" = "Edit";
+"card.menu.more" = "More";
+"card.menu.rename" = "Rename";
+"card.menu.change_shortcut" = "Change Shortcut";
+"card.menu.reveal" = "Reveal in Finder";
+"card.menu.delete" = "Delete";
+
+/* 설정 메뉴 */
+"options.open_at_login" = "Open at Login";
+"options.check_updates" = "Check for Updates";
+"options.open_config_folder" = "Open Config Folder";
+"options.quit" = "Quit";
+
+/* 알림 창 */
+"dialog.failed.title" = "Couldn't complete that";
+"dialog.rename.title" = "Rename";
+"dialog.rename.body" = "Choose a new name for '%@'.";
+"dialog.delete.title" = "Delete '%@'?";
+"dialog.delete.body" = "It goes to the Trash. You can put it back from there.";
+"dialog.edit.title" = "Edit '%@'";
+
+/* 업데이트 */
+"update.current.title" = "You're up to date";
+"update.current.body" = "You're running v%@.";
+"update.available.title" = "Version %@ is available";
+"update.available.body" = "You're running v%@.\nThe release page explains how to update.";
+"update.available.confirm" = "Open Release Page";
+"update.failed.title" = "Couldn't check for updates";
+
+/* 오류 */
+"error.read_failed" = "Couldn't read '%1$@': %2$@";
+"error.login_item" = "Couldn't register the login item";
+
+/* 배치 요약 */
+"layout.full_screen" = "Full screen";
+"layout.left_right" = "Left & right";
+"layout.top_bottom" = "Top & bottom";
+"layout.quarters" = "Quarters";
+"layout.panes" = "%d panes";
+"layout.mixed" = "Mixed";
+"layout.displays" = "%d displays";
+"layout.summary" = "%1$@ · %2$@";
+
+/* 자리 이름 */
+"slot.full" = "Full";
+"slot.left_half" = "Left half";
+"slot.right_half" = "Right half";
+"slot.top_half" = "Top half";
+"slot.bottom_half" = "Bottom half";
+"slot.q1" = "Top left";
+"slot.q2" = "Top right";
+"slot.q3" = "Bottom left";
+"slot.q4" = "Bottom right";
+"slot.centered" = "Centered";
+"placement.fullscreen" = "Full screen";
+"placement.keep_size" = "Keep size";
+
+/* 오류 · 엔진 */
+"error.engine.accessibility_not_trusted" = "restage doesn't have Accessibility permission. Approve this app in System Settings.";
+"error.engine.app_not_found" = "There is no app installed named '%@'.";
+"error.engine.app_not_found.suggestion" = " Did you mean: %@";
+"error.engine.ambiguous_app" = "More than one app matches '%1$@': %2$@";
+"error.engine.application_not_found" = "That app is not installed: %@";
+"error.engine.launch_failed" = "Couldn't launch %1$@ — %2$@";
+"error.engine.window_timeout" = "No window appeared within %1$g seconds (pid %2$d)";
+"error.engine.no_window_matching_title" = "Couldn't find a window with '%1$@' in its title. %2$@";
+"error.engine.windows_open" = "Open windows: %@";
+"error.engine.no_windows_open" = "No windows are open";
+"error.engine.window_on_other_space" = "%1$d windows are on another Space and can't be reached (pid %2$d)";
+"error.engine.ax_disabled" = "The accessibility API is disabled (kAXErrorAPIDisabled). Check Accessibility permission.";
+"error.engine.browser_without_tab_control" = "%@ doesn't support tab control. Windows are still placed, but tabs can't be opened.";
+"error.engine.not_a_browser" = "%@ is not a browser. Change its type to app.";
+
+/* 오류 · config */
+"error.config.file_not_found" = "Couldn't find the config file: %@";
+"error.config.unreadable" = "Couldn't read the config file: %1$@ — %2$@";
+"error.config.malformed" = "The config isn't valid. %@";
+"error.config.unknown_item_type" = "Unknown item type: %@. Valid values: app, browser";
+"error.config.invalid_display" = "Unknown display: %@. Valid values: builtin, any, external-1 and up";
+"error.config.empty_screens" = "screens is empty. Declare at least one screen";
+"error.config.empty_items" = "items is empty on screen '%@'";
+"error.config.duplicate_screen_id" = "Duplicate screen id: %@";
+"error.config.anchor_not_in_items" = "anchor '%2$@' is not among the items of screen '%1$@'";
+"error.config.directory_not_found" = "There is no workspace directory: %1$@\nCreate it with mkdir -p %1$@ and put <name>.yaml files in it";
+"error.config.invalid_hotkey" = "The hotkey format isn't valid: '%1$@'. %2$@";
+"error.config.workspace_not_found" = "Couldn't find the workspace '%1$@': %2$@\n%3$@";
+"error.config.known_workspaces" = "Saved workspaces: %@";
+"error.config.no_workspaces" = "No workspaces saved yet";
+
+/* 오류 · 이름과 단축키 */
+"error.name.empty" = "Enter a name";
+"error.name.too_long" = "That name is too long. Keep it under %d characters";
+"error.name.slash" = "A name can't contain /";
+"error.name.dot" = "A name can't contain a dot. The extension is added for you";
+"error.name.newline" = "A name can't contain a line break";
+"error.name.invalid" = "That name contains a character it can't use";
+"error.hotkey.format" = "Join modifiers and a key with +. For example: ctrl+alt+cmd+1";
+"error.hotkey.unknown_modifier" = "Unknown modifier: %@. Valid values: cmd, ctrl, alt, shift";
+"error.hotkey.unknown_key" = "Unknown key: %@. Valid values: 0-9, a-z, f1-f12, space, return, tab, escape";
+
+/* 오류 · 디스플레이 */
+"error.display.no_primary" = "Couldn't find the primary display";
+"error.display.external_missing" = "External display %d isn't connected";
+
+/* 메뉴 */
+"menu.permission_needed" = "Grant Accessibility permission";
+
+/* 창 조작 */
+"error.window.unsupported_handle" = "Unsupported window handle";
+"error.applescript.compile_failed" = "AppleScript failed to compile: %@";
+"error.applescript.execute_failed" = "AppleScript failed to run (%1$d): %2$@";
+"error.applescript.unknown" = "Unknown error";
+"error.tabs.empty" = "No tabs were given";
+"error.tabs.no_new_window" = "The new window never appeared";
+"error.tabs.window_not_found" = "Couldn't find the window";
+"error.fullscreen.unsupported" = "This window doesn't support full screen";
+"error.fullscreen.not_completed" = "The switch to full screen didn't finish";
+"error.place.no_frame" = "Couldn't read the window's position";
+"error.place.fullscreen_blocked" = "The window is full screen and can't be placed (accessibility can't leave full screen; press ctrl+cmd+F)";
+"error.place.not_resizable" = "This window can't be resized";
+"error.place.retries_exhausted" = "The window never reached its target position after %d attempts";
+"warn.other_space" = "It is on another Space, so it isn't visible";
+"constraint.min_size" = "Minimum size %1$dx%2$d";
+"constraint.min_width_unexposed" = "Minimum width %d (the app doesn't expose AXMinSize)";
+"constraint.min_height_unexposed" = "Minimum height %d (the app doesn't expose AXMinSize)";
+"constraint.min_size_unexposed" = "Minimum size %1$dx%2$d (the app doesn't expose AXMinSize)";
+
+/* 실행 결과 */
+"outcome.already_satisfied" = "Already where it should be";
+"outcome.tabs_and_placement_satisfied" = "All %d tabs and the window position were already right";
+"outcome.tabs_added_with_placement" = "Added %1$d tabs. %2$@";
+"outcome.tabs_all_open" = "All %d tabs were already open";
+"outcome.tabs_added" = "Added %d tabs";
+
+/* 공통 */
+"common.ok" = "OK";
+"common.cancel" = "Cancel";
+"common.save" = "Save";
+"common.clear" = "Clear";
+"common.name" = "Name";
+"common.cancelled" = "Cancelled";
+
+/* 파일 */
+"error.file.not_found" = "Couldn't find the file for '%@'";
+"error.file.trash_failed" = "Couldn't move it to the Trash: %@";
+"error.file.name_taken" = "A workspace named '%@' already exists";
+"error.file.rename_failed" = "Couldn't rename it: %@";
+"error.file.editor_failed" = "Couldn't open an editor";
+"error.file.hotkey_save_failed" = "Couldn't save the shortcut: %@";
+"error.file.save_failed" = "Couldn't save: %@";
+"error.file.saved_but_unreadable" = "It saved but couldn't be read back. Check the file: %1$@\n%2$@";
+
+/* 로그인 항목과 단축키 */
+"error.login_item.needs_bundle" = "This only works when restage runs from its app bundle";
+"error.hotkey.unsupported_key" = "Unsupported key: %@";
+"error.hotkey.conflict" = "Couldn't register %@. Another app is using it, or it's a duplicate";
+
+/* 디스플레이 */
+"error.display.unavailable" = "Couldn't read display information";
+
+/* 업데이트 확인 */
+"error.update.bad_current" = "Couldn't read the current version: %@";
+"error.update.bad_url" = "That address isn't valid";
+"error.update.no_release" = "There are no published releases yet";
+"error.update.bad_response" = "GitHub's response wasn't valid (%d)";
+"error.update.no_version" = "Couldn't find a version in the response";
+"error.update.failed" = "Couldn't check: %@";
+
+/* 창 읽기 */
+"error.capture.window_not_in_browser" = "Couldn't find the window '%@' in the browser's own list";
+"error.capture.no_urls" = "There is no address worth saving. Only the start page or a new tab is open";
+
+/* 초안 */
+"draft.pick_windows" = "Choose the windows and where they go.";
+"draft.stale_note" = "This list is from when the windows were read. If you have moved them since, read them again.";
+"draft.reload" = "Read Again";
+"draft.nothing_selected.title" = "Nothing is selected";
+"draft.nothing_selected.body" = "Choose at least one, then save.";
+"draft.uncertainty_note" = "? means the position is ambiguous.";
+"summary.tabs" = "%d tabs";
+"summary.other_desktop" = "[another desktop]";
+
+/* 단축키 기록 */
+"hotkey.title" = "Shortcut for '%@'";
+"hotkey.instructions" = "Press the key combination you want. It has to include at least one of ⌘ ⌃ ⌥ ⇧.";
+"hotkey.press_keys" = "Press a key";
+"hotkey.needs_modifier" = "Hold a modifier key too";
+
+/* 터미널 */
+"cli.list.empty" = "No workspaces saved yet: %@";
+"cli.new.needs_name" = "new needs a workspace name after it";
+"cli.open.needs_target" = "open needs a workspace name or a config file path after it";
+"cli.unknown_command" = "Unknown command: %@";
+"cli.report.workspace" = "Workspace: %@";
+"cli.report.done" = "done";
+"cli.report.done_with_failures" = "done (%d failed)";
+"cli.report.tally" = "%1$@  %2$d total — %3$@";
+
+/* probe */
+"probe.bad_slot" = "--slot isn't a valid value. Valid values: %@";
+"probe.app_needs_name" = "--app needs an app name after it";
+"probe.unknown_argument" = "Unknown argument: %@";
+"probe.cold_needs_app" = "--cold force quits the app it targets, so name exactly one with --app";
+"probe.no_apps" = "There is nothing to check. Open at least one app, or name one with --app";
+"probe.cold_confirm" = "This force quits %@ to test a cold start. Continue?";
+"probe.fullscreen_stuck" = "Couldn't leave full screen; it stayed on its Space (leave it by hand). %@";
+
+/* 공통 */
+"common.next" = "Next";
+"common.add" = "Add";
+
+/* 새로 만들기 */
+"new.title" = "New Workspace";
+"new.body" = "This saves the windows you have open right now. Choose a name.";
+"new.bad_name" = "That name can't be used";
+"new.screen_locked" = "The screen is locked";
+"new.display_failed" = "Couldn't read the displays";
+"new.no_windows.title" = "There are no windows to save";
+"new.no_windows.body" = "No windows are open. Arrange some apps and try again.";
+"new.contents_title" = "What '%@' will hold";
+"new.save_failed" = "Couldn't save";
+"new.exists.title" = "'%@' already exists";
+"new.exists.body" = "Overwriting removes what is in it now.";
+"new.exists.confirm" = "Overwrite";
+"new.note.ambiguous_windows" = "%1$d windows weren't saved because their titles can't tell them apart (%2$@).";
+"new.note.tabs_unreadable" = "%@'s tabs couldn't be read, so only the window position was saved.";
+"new.read_layout" = "Read the current window layout.";
+"new.on_other_space" = "%d of these are on another desktop. They are placed correctly if the app starts fresh, and fail if it's already running.";
+"new.ambiguous_windows" = "%2$d %1$@ windows weren't saved. Their titles are identical or empty, so there is no way to tell which window to use.";
+"new.tabs_unreadable" = "%1$@'s tabs couldn't be read, so only the window position was saved: %2$@";
+"new.commands" = "[Enter] save   [number] change position   [-number] remove   [+] add an app   [w] add a browser   [q] cancel";
+"new.input_closed" = "Input ended, so nothing was saved. Press Enter on an empty line to save";
+"new.removed" = "Removed: %@";
+"new.unknown_input" = "That input isn't known: %@";
+"new.pick_slot" = "Choose where %@ goes.";
+"new.pick_slot_optional" = "Choose where %@ goes. Press Enter to leave its size alone.";
+"new.slot_unchanged" = "The position was left as it was";
+"new.prompt.app_name" = "app name> ";
+"new.prompt.browser_name" = "browser name> ";
+"new.prompt.slot_number" = "position number> ";
+"new.prompt.screen_number" = "screen number> ";
+"new.added_app" = "Added: %1$@ %2$@";
+"new.added_browser" = "Added: %1$@ with %2$d tabs";
+"new.enter_urls" = "Enter one URL per line. An empty line ends the list.";
+"new.no_urls" = "No URL was given, so nothing was added";
+"new.no_slot" = "No position was chosen, so nothing was added";
+"new.which_screen" = "Which screen?";
+"new.no_screen" = "No screen was chosen, so nothing was added";
+"new.empty_draft" = "Nothing is in it. Add an app with [+] or a browser with [w].";
+"new.uncertainty_hint" = "%@ Press its number to choose one yourself.";
+"new.no_such_item" = "There is no item %d";
+"new.nothing_to_save" = "Nothing is in it, so nothing was saved";
+"new.overwrite_confirm" = "%@ already exists. Overwrite it?";
+"new.not_saved" = "Nothing was saved";
+"new.saved" = "Saved: %@";
+"new.run_hint" = "To run it: restage open %@";
+
+/* 초안 편집 */
+"draft.added_by_hand" = "Added by hand";
+"draft.keep_count" = "Keep %d";
+"draft.select_all" = "Select All";
+"draft.select_none" = "Deselect All";
+"draft.other_desktop" = "Another desktop";
+"draft.overlap_percent" = "only overlaps %d%%";
+"draft.overlap_poor" = "doesn't line up well";
+"draft.placement_help" = "Where this window goes when the workspace runs. It is placed exactly as chosen.";
+"draft.app_name_placeholder" = "App name (for example: Figma)";
+
+/* 권한과 잠금 */
+"permission.onboarding" = "restage needs Accessibility permission.\n\nOpen System Settings > Privacy & Security > Accessibility, add the app that runs this (Terminal, iTerm, or restage), and turn it on.\n\n%@";
+"screen_lock.message" = "The screen is locked.\n\nWhile it is locked the accessibility API can't list windows, so every item is recorded as a failure. Unlock the screen and run it again.";
+"error.applescript.permission_denied" = "restage isn't allowed to automate %1$@. Open System Settings > Privacy & Security > Automation and let restage control %1$@";
+
+/* 초안 편집 */
+"draft.uncertainty_detail" = "The window's size %2$@ '%1$@'.\nThis is the closest position, and saving it as is works fine.\nChoosing one yourself removes this mark.";
+
+/* 사용법 */
+"cli.usage" = "restage — a workspace restore tool\n\nUsage:\n  restage new <name>\n  restage open <name|path>\n  restage list\n  restage menubar\n  restage probe [--slot <slot>] [--app <name>] [--fullscreen] [--cold]\n\nnew:\n  Reads the windows you have open and saves them as a workspace\n  Edit the list it shows, then press Enter to save\n\nopen options:\n  <name|path>     A workspace name, or a path to a config file\n                  Names are looked up in ~/.config/restage/<name>.yaml\n\nmenubar:\n  Puts an icon in the menu bar; click a workspace to run it\n  Choose Quit from its menu to stop it\n\nprobe options:\n  --slot <slot>   Where to place windows. Defaults to left-half\n  --app <name>    Check one app. Defaults to every running app\n  --fullscreen    Also check the switch to full screen after placing\n  --cold          Also check a cold start. This force quits the target app,\n                  so --app is required and it asks before running";

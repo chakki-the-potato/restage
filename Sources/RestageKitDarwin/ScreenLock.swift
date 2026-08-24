@@ -1,4 +1,5 @@
 import CoreGraphics
+import RestageKit
 
 /// 화면 잠금 상태. 잠긴 동안에는 AX가 어떤 앱의 창도 열거하지 못한다.
 ///
@@ -12,10 +13,5 @@ public enum ScreenLock {
         return session[lockedKey] as? Int == 1
     }
 
-    public static let message = """
-        화면이 잠겨 있습니다.
-
-        잠긴 상태에서는 접근성 API가 창 목록을 조회하지 못해
-        모든 항목이 실패로 기록됩니다. 잠금을 해제한 뒤 다시 실행하세요.
-        """
+    public static var message: String { L10n.string("screen_lock.message") }
 }
