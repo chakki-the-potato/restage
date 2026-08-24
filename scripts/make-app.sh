@@ -87,7 +87,11 @@ else
 fi
 
 if [ -n "$IDENTITY" ]; then
-  codesign --force --sign "$IDENTITY" --identifier "$BUNDLE_ID" "$APP"
+  # 배포용 서명에는 hardened runtime과 타임스탬프가 필요하다. 공증이 그것을 요구하고,
+  # 타임스탬프가 있어야 인증서가 만료된 뒤에도 이미 받아 간 앱이 계속 열린다.
+  # shellcheck disable=SC2086
+  codesign --force --sign "$IDENTITY" --identifier "$BUNDLE_ID" \
+    ${RESTAGE_SIGN_OPTIONS:-} "$APP"
 else
   echo "경고: 코드 서명 인증서가 없어 adhoc으로 서명합니다."
   echo "      재빌드할 때마다 접근성 승인이 풀립니다."
