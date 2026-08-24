@@ -92,6 +92,12 @@ final class PopoverController: NSObject, NSWindowDelegate {
         window?.orderOut(nil)
     }
 
+    /// 창에서 그림자 여백을 뺀, 눈에 보이는 사각형.
+    private func visibleFrame(of window: NSWindow) -> CGRect {
+        window.frame.insetBy(
+            dx: PanelChromeMetrics.shadowMargin, dy: PanelChromeMetrics.shadowMargin)
+    }
+
     /// 상태 항목 버튼의 화면 좌표. 메뉴바가 숨어 있으면 nil이다.
     private func buttonScreenFrame() -> CGRect? {
         guard let button = statusItem.button, let window = button.window else { return nil }
@@ -116,9 +122,10 @@ final class PopoverController: NSObject, NSWindowDelegate {
     /// 위쪽 경계에서 빼야 한다.
     private func present(_ items: [PanelMenu.Item], at anchor: CGRect) {
         guard let window else { return }
+        let visible = visibleFrame(of: window)
         let point = CGPoint(
-            x: window.frame.minX + anchor.minX,
-            y: window.frame.maxY - anchor.maxY - Self.menuGap)
+            x: visible.minX + anchor.minX,
+            y: visible.maxY - anchor.maxY - Self.menuGap)
 
         menu.show(items: items, at: point) { [weak self] in
             self?.closePanelIfClickedOutside()
@@ -137,7 +144,10 @@ final class PopoverController: NSObject, NSWindowDelegate {
         guard let window, window.isVisible else { return }
         let point = NSEvent.mouseLocation
 
-        if window.frame.contains(point) { return }
+        // 창 사각형이 아니라 눈에 보이는 부분으로 판정한다. 창에는 그림자 여백이 붙어
+        // 있어서 위쪽 여백이 메뉴바와 겹친다. 창으로 재면 메뉴바의 다른 아이콘을 눌러도
+        // "패널 안을 눌렀다"가 되어 닫히지 않는다. 실제로 겪었다.
+        if visibleFrame(of: window).contains(point) { return }
         if let button = buttonScreenFrame(), button.contains(point) { return }
         closePanel()
     }
