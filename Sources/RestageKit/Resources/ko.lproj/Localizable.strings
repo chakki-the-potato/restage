@@ -3,6 +3,8 @@
 "panel.hotkey.placeholder" = "단축키";
 "panel.language.auto" = "자동";
 "panel.retry" = "다시 시도";
+"panel.dismiss" = "닫기";
+"panel.settings" = "설정";
 
 /* 패널 · 빈 상태 */
 "panel.empty.title" = "아직 저장한 배치가 없습니다";
@@ -15,10 +17,13 @@
 "panel.permission.button" = "열기";
 
 /* 패널 · 실행 */
-"panel.progress.opening" = "%1$@ 여는 중 · %3$d개 중 %2$d개";
+"panel.progress.launching" = "%1$@ 여는 중 · %3$d개 중 %2$d개";
+"panel.progress.placing" = "%1$@ 배치하는 중 · %3$d개 중 %2$d개";
 "panel.app_not_installed" = "%@가 설치되어 있지 않습니다";
 
 /* 카드 메뉴 */
+"card.menu.edit" = "편집";
+"card.menu.more" = "더보기";
 "card.menu.rename" = "이름 변경";
 "card.menu.change_shortcut" = "단축키 변경";
 "card.menu.reveal" = "파일로 열기";
@@ -29,6 +34,26 @@
 "options.check_updates" = "업데이트 확인";
 "options.open_config_folder" = "config 폴더 열기";
 "options.quit" = "종료";
+
+/* 알림 창 */
+"dialog.failed.title" = "처리하지 못했습니다";
+"dialog.rename.title" = "이름 바꾸기";
+"dialog.rename.body" = "'%@'의 새 이름을 정하세요.";
+"dialog.delete.title" = "'%@'을 삭제할까요?";
+"dialog.delete.body" = "휴지통으로 보냅니다. 필요하면 거기서 되돌릴 수 있습니다.";
+"dialog.edit.title" = "'%@' 편집";
+
+/* 업데이트 */
+"update.current.title" = "최신 버전입니다";
+"update.current.body" = "v%@을 쓰고 있습니다.";
+"update.available.title" = "새 버전 v%@이 있습니다";
+"update.available.body" = "지금 쓰는 것은 v%@입니다.\n받는 방법은 릴리스 페이지에 있습니다.";
+"update.available.confirm" = "릴리스 페이지 열기";
+"update.failed.title" = "업데이트를 확인하지 못했습니다";
+
+/* 오류 */
+"error.read_failed" = "'%1$@'을 읽지 못했습니다: %2$@";
+"error.login_item" = "로그인 항목 등록에 실패했습니다";
 
 /* 배치 요약 */
 "layout.full_screen" = "전체 화면";

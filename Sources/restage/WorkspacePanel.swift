@@ -6,6 +6,7 @@ import SwiftUI
 /// 메뉴바 아이콘을 누르면 뜨는 패널.
 struct WorkspacePanel: View {
     @ObservedObject var store: PanelStore
+    @StateObject private var language = LanguageSetting()
 
     /// 창을 여는 동작 전에 패널을 닫는다. 알림 창이 패널 뒤에 가리면 눌 수 없다.
     let dismiss: () -> Void
@@ -24,8 +25,6 @@ struct WorkspacePanel: View {
             header
             Divider()
             content
-            Divider()
-            footer
         }
         .frame(width: 320)
         // 팝오버 기본 재질을 그대로 두면 앱이 비활성일 때 어두워진다. 다른 창을 클릭했을
@@ -40,17 +39,19 @@ struct WorkspacePanel: View {
     /// 카드의 더보기 메뉴 항목.
     private func cardMenuItems(_ item: PanelStore.Item) -> [PanelMenu.Item] {
         [
-            PanelMenu.Item(title: "이름 변경", symbol: "pencil.line") {
+            PanelMenu.Item(title: L10n.string("card.menu.rename"), symbol: "pencil.line") {
                 act { rename(item.name) }
             },
-            PanelMenu.Item(title: "단축키 변경", symbol: "keyboard") {
+            PanelMenu.Item(title: L10n.string("card.menu.change_shortcut"), symbol: "keyboard") {
                 act { setHotkey(for: item) }
             },
-            PanelMenu.Item(title: "파일로 열기", symbol: "doc.text") {
+            PanelMenu.Item(title: L10n.string("card.menu.reveal"), symbol: "doc.text") {
                 act { WorkspaceFiles.revealInFinder(item.name) }
             },
             PanelMenu.separator(),
-            PanelMenu.Item(title: "삭제", symbol: "trash", isDestructive: true) {
+            PanelMenu.Item(
+                title: L10n.string("card.menu.delete"), symbol: "trash", isDestructive: true
+            ) {
                 act { delete(item.name) }
             },
         ]
@@ -61,27 +62,32 @@ struct WorkspacePanel: View {
         if store.loginItemSupported {
             items.append(
                 PanelMenu.Item(
-                    title: "로그인 시 자동 실행", symbol: "arrow.up.forward.app",
+                    title: L10n.string("options.open_at_login"), symbol: "arrow.up.forward.app",
                     isChecked: store.loginItemEnabled, keepsPanelOpen: true
                 ) {
                     store.toggleLoginItem()
                 })
         }
         items.append(
-            PanelMenu.Item(title: "업데이트 확인", symbol: "arrow.down.circle") {
+            PanelMenu.Item(
+                title: L10n.string("options.check_updates"), symbol: "arrow.down.circle"
+            ) {
                 checkForUpdate()
             })
         items.append(
-            PanelMenu.Item(title: "config 폴더 열기", symbol: "folder") {
+            PanelMenu.Item(title: L10n.string("options.open_config_folder"), symbol: "folder") {
                 act { WorkspaceFiles.revealConfigFolder(); return nil }
             })
         items.append(PanelMenu.separator())
-        items.append(PanelMenu.Item(title: "종료", symbol: "power") { onQuit() })
+        items.append(
+            PanelMenu.Item(title: L10n.string("options.quit"), symbol: "power") { onQuit() })
         return items
     }
 
     // MARK: - 머리말
 
+    /// 설정을 머리말 오른쪽으로 올린다. 꼬리말에 버튼 하나만 두면 구분선과 여백까지
+    /// 38pt를 그 하나에 쓴다.
     private var header: some View {
         HStack(spacing: 8) {
             Image(systemName: "square.split.2x1")
@@ -93,6 +99,19 @@ struct WorkspacePanel: View {
                 .font(.system(size: 11))
                 .foregroundStyle(.tertiary)
             Spacer()
+            Button {
+                guard let anchor = anchors[Self.optionsAnchor] else { return }
+                presentMenu(optionsMenuItems, anchor)
+            } label: {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 22, height: 22)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .menuAnchor(Self.optionsAnchor)
+            .help(L10n.string("panel.settings"))
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 11)
@@ -102,19 +121,19 @@ struct WorkspacePanel: View {
 
     @ViewBuilder
     private var content: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             if !store.accessibilityGranted { permissionBanner }
             if let listError = store.listError {
-                notice(listError, symbol: "exclamationmark.triangle")
+                notice(listError)
             } else if store.items.isEmpty {
-                notice("등록된 워크스페이스가 없습니다", symbol: "tray")
+                emptyState
             } else {
-                sectionLabel("워크스페이스")
                 ForEach(store.items) { item in card(item) }
+                createButton
             }
-            createButton
+            languageRow
         }
-        .padding(14)
+        .padding(12)
     }
 
     private func card(_ item: PanelStore.Item) -> some View {
@@ -122,9 +141,11 @@ struct WorkspacePanel: View {
             item: item,
             isRunning: store.runningName == item.name,
             isBusy: isBusy,
+            progress: store.runningName == item.name ? store.progress : nil,
             message: store.messages[item.name],
             onRun: { store.run(item.name) },
             onEdit: { act { editWorkspace(item.name) } },
+            onSetHotkey: { act { setHotkey(for: item) } },
             onToggleActions: {
                 guard let anchor = anchors[item.name] else { return }
                 presentMenu(cardMenuItems(item), anchor)
@@ -133,75 +154,100 @@ struct WorkspacePanel: View {
     }
 
     private var createButton: some View {
-        Button {
-            act {
-                NewWorkspaceDialog.run()
-                return nil
-            }
-        } label: {
-            HStack(spacing: 8) {
+        Button(action: create) {
+            HStack(spacing: 11) {
                 Image(systemName: "plus")
                     .font(.system(size: 12, weight: .medium))
-                    .frame(width: 18)
-                Text("현재 창 배치로 새로 만들기")
+                    .frame(width: 21)
+                    .foregroundStyle(.secondary)
+                Text(L10n.string("panel.new_from_current"))
                     .font(.system(size: 12))
                 Spacer(minLength: 0)
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 11)
             .padding(.vertical, 9)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .padding(.top, 2)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .strokeBorder(
-                    Color.primary.opacity(0.12), style: StrokeStyle(lineWidth: 1, dash: [4, 3])))
+                    Color.primary.opacity(0.20), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                .padding(.top, 2))
         .disabled(isBusy)
     }
 
-    private var permissionBanner: some View {
-        Button {
-            act {
-                _ = AccessibilityPermission.requestIfNeeded()
-                if let url = URL(string: AccessibilityPermission.settingsDeepLink) {
-                    NSWorkspace.shared.open(url)
-                }
-                return nil
+    /// 처음 여는 사람이 보는 화면. 무엇이 없는지만 알리면 다음에 무엇을 해야 하는지
+    /// 알 수 없다.
+    private var emptyState: some View {
+        VStack(spacing: 10) {
+            LayoutGlyph(shape: .leftRight)
+                .scaleEffect(2.6)
+                .frame(width: 46, height: 34)
+                .padding(.bottom, 4)
+            VStack(spacing: 3) {
+                Text(L10n.string("panel.empty.title"))
+                    .font(.system(size: 12, weight: .semibold))
+                Text(L10n.string("panel.empty.body"))
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
             }
-        } label: {
-            HStack(spacing: 8) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.orange)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text("접근성 권한이 필요합니다")
-                        .font(.system(size: 12, weight: .medium))
-                    Text("눌러서 시스템 설정 열기")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                }
-                Spacer(minLength: 0)
+            Button(action: create) {
+                Text(L10n.string("panel.empty.button"))
+                    .font(.system(size: 12, weight: .medium))
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 9)
-            .contentShape(Rectangle())
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
         }
-        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 18)
+    }
+
+    /// 배너 전체를 누르게 두면 눌러도 되는지 알 수 없다. 버튼을 따로 두고 왜 필요한지를
+    /// 한 줄로 적는다.
+    private var permissionBanner: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 14))
+                .foregroundStyle(PanelPalette.warning)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(L10n.string("panel.permission.title"))
+                    .font(.system(size: 12, weight: .semibold))
+                Text(L10n.string("panel.permission.body"))
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+            Button(action: openAccessibilitySettings) {
+                Text(L10n.string("panel.permission.button"))
+                    .font(.system(size: 11, weight: .medium))
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+        }
+        .padding(.horizontal, 11)
+        .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color.orange.opacity(0.12)))
+                .fill(PanelPalette.warning.opacity(0.12)))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(PanelPalette.warning.opacity(0.28), lineWidth: 1))
     }
 
-    private func sectionLabel(_ text: String) -> some View {
-        Text(text)
-            .font(.system(size: 11, weight: .semibold))
-            .foregroundStyle(.secondary)
-            .padding(.leading, 2)
+    private var languageRow: some View {
+        HStack {
+            Spacer()
+            LanguagePill(setting: language)
+        }
+        .padding(.top, 2)
     }
 
-    private func notice(_ text: String, symbol: String) -> some View {
+    private func notice(_ text: String) -> some View {
         HStack(spacing: 8) {
-            Image(systemName: symbol)
+            Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             Text(text)
@@ -212,29 +258,23 @@ struct WorkspacePanel: View {
         .padding(.vertical, 6)
     }
 
-    // MARK: - 꼬리말
+    // MARK: - 동작
 
-    private var footer: some View {
-        HStack {
-            Spacer()
-            Button {
-                guard let anchor = anchors[Self.optionsAnchor] else { return }
-                presentMenu(optionsMenuItems, anchor)
-            } label: {
-                HStack(spacing: 3) {
-                    Text("Options")
-                        .font(.system(size: 11))
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 8, weight: .semibold))
-                }
-                .foregroundStyle(.secondary)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .menuAnchor(Self.optionsAnchor)
+    private func create() {
+        act {
+            NewWorkspaceDialog.run()
+            return nil
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 9)
+    }
+
+    private func openAccessibilitySettings() {
+        act {
+            _ = AccessibilityPermission.requestIfNeeded()
+            if let url = URL(string: AccessibilityPermission.settingsDeepLink) {
+                NSWorkspace.shared.open(url)
+            }
+            return nil
+        }
     }
 
     /// 패널을 닫고 동작을 실행한다. 실패하면 사유를 알린다.
@@ -242,7 +282,7 @@ struct WorkspacePanel: View {
         dismiss()
         DispatchQueue.main.async {
             if let failure = operation() {
-                Prompt.message("처리하지 못했습니다", failure)
+                Prompt.message(L10n.string("dialog.failed.title"), failure)
             }
             store.reload()
             // 창이 끝나면 패널을 다시 연다. 이름을 바꾸고 단축키도 정하려면 매번 메뉴바를
@@ -261,11 +301,11 @@ struct WorkspacePanel: View {
             let path = try WorkspaceRegistry().resolve(name)
             existing = DraftFromConfig.draft(from: try ConfigLoader.load(path: path))
         } catch {
-            return "'\(name)'을 읽지 못했습니다: \(error)"
+            return L10n.string("error.read_failed", name, "\(error)")
         }
 
         guard case .saved(let edited) = DraftDialog.edit(
-            existing, title: "'\(name)' 편집", notes: [])
+            existing, title: L10n.string("dialog.edit.title", name), notes: [])
         else { return nil }
         return WorkspaceFiles.save(edited)
     }
@@ -276,18 +316,19 @@ struct WorkspacePanel: View {
         Task { @MainActor in
             switch await UpdateChecker.check(current: Bundle.main.shortVersion) {
             case .upToDate(let version):
-                Prompt.message("최신 버전입니다", "v\(version)을 쓰고 있습니다.")
+                Prompt.message(
+                    L10n.string("update.current.title"),
+                    L10n.string("update.current.body", "\(version)"))
             case .available(let latest, let url):
                 if Prompt.confirmDestructive(
-                    title: "새 버전 v\(latest)이 있습니다",
-                    body: "지금 쓰는 것은 v\(Bundle.main.shortVersion)입니다.\n"
-                        + "받는 방법은 릴리스 페이지에 있습니다.",
-                    confirmTitle: "릴리스 페이지 열기", destructive: false),
+                    title: L10n.string("update.available.title", "\(latest)"),
+                    body: L10n.string("update.available.body", Bundle.main.shortVersion),
+                    confirmTitle: L10n.string("update.available.confirm"), destructive: false),
                    let page = URL(string: url) {
                     NSWorkspace.shared.open(page)
                 }
             case .failed(let reason):
-                Prompt.message("업데이트를 확인하지 못했습니다", reason)
+                Prompt.message(L10n.string("update.failed.title"), reason)
             }
             reopen()
         }
@@ -295,7 +336,8 @@ struct WorkspacePanel: View {
 
     private func rename(_ name: String) -> String? {
         guard let typed = Prompt.text(
-            title: "이름 바꾸기", body: "'\(name)'의 새 이름을 정하세요.", initial: name)
+            title: L10n.string("dialog.rename.title"),
+            body: L10n.string("dialog.rename.body", name), initial: name)
         else { return nil }
         return WorkspaceFiles.rename(name, to: typed)
     }
@@ -313,9 +355,9 @@ struct WorkspacePanel: View {
 
     private func delete(_ name: String) -> String? {
         guard Prompt.confirmDestructive(
-            title: "'\(name)'을 삭제할까요?",
-            body: "휴지통으로 보냅니다. 필요하면 거기서 되돌릴 수 있습니다.",
-            confirmTitle: "삭제")
+            title: L10n.string("dialog.delete.title", name),
+            body: L10n.string("dialog.delete.body"),
+            confirmTitle: L10n.string("card.menu.delete"))
         else { return nil }
         return WorkspaceFiles.moveToTrash(name)
     }

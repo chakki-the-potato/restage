@@ -37,6 +37,8 @@ final class PanelStore: ObservableObject {
 
     @Published private(set) var items: [Item] = []
     @Published private(set) var runningName: String?
+    /// 실행 중인 워크스페이스가 어디까지 갔는지.
+    @Published private(set) var progress: RunProgress?
     /// 워크스페이스별 마지막 실패 사유. 성공하면 지운다.
     @Published private(set) var messages: [String: String] = [:]
     @Published private(set) var accessibilityGranted = true
@@ -95,8 +97,11 @@ final class PanelStore: ObservableObject {
         messages[name] = nil
 
         Task { @MainActor in
-            let outcome = await WorkspaceLauncher.run(name)
+            let outcome = await WorkspaceLauncher.run(name) { [weak self] step in
+                self?.progress = step
+            }
             runningName = nil
+            progress = nil
             messages[name] = outcome.message
             reload()
         }
@@ -108,7 +113,7 @@ final class PanelStore: ObservableObject {
 
     func toggleLoginItem() {
         if let reason = LoginItem.toggle() {
-            Prompt.message("로그인 항목 등록에 실패했습니다", reason)
+            Prompt.message(L10n.string("error.login_item"), reason)
         }
         loginItemEnabled = LoginItem.isEnabled
     }

@@ -3,6 +3,8 @@
 "panel.hotkey.placeholder" = "Shortcut";
 "panel.language.auto" = "Auto";
 "panel.retry" = "Retry";
+"panel.dismiss" = "Dismiss";
+"panel.settings" = "Settings";
 
 /* 패널 · 빈 상태 */
 "panel.empty.title" = "No layouts saved yet";
@@ -15,10 +17,13 @@
 "panel.permission.button" = "Open";
 
 /* 패널 · 실행 */
-"panel.progress.opening" = "Opening %1$@ · %2$d of %3$d";
+"panel.progress.launching" = "Opening %1$@ · %2$d of %3$d";
+"panel.progress.placing" = "Placing %1$@ · %2$d of %3$d";
 "panel.app_not_installed" = "%@ is not installed";
 
 /* 카드 메뉴 */
+"card.menu.edit" = "Edit";
+"card.menu.more" = "More";
 "card.menu.rename" = "Rename";
 "card.menu.change_shortcut" = "Change Shortcut";
 "card.menu.reveal" = "Reveal in Finder";
@@ -29,6 +34,26 @@
 "options.check_updates" = "Check for Updates";
 "options.open_config_folder" = "Open Config Folder";
 "options.quit" = "Quit";
+
+/* 알림 창 */
+"dialog.failed.title" = "Couldn't complete that";
+"dialog.rename.title" = "Rename";
+"dialog.rename.body" = "Choose a new name for '%@'.";
+"dialog.delete.title" = "Delete '%@'?";
+"dialog.delete.body" = "It goes to the Trash. You can put it back from there.";
+"dialog.edit.title" = "Edit '%@'";
+
+/* 업데이트 */
+"update.current.title" = "You're up to date";
+"update.current.body" = "You're running v%@.";
+"update.available.title" = "Version %@ is available";
+"update.available.body" = "You're running v%@.\nThe release page explains how to update.";
+"update.available.confirm" = "Open Release Page";
+"update.failed.title" = "Couldn't check for updates";
+
+/* 오류 */
+"error.read_failed" = "Couldn't read '%1$@': %2$@";
+"error.login_item" = "Couldn't register the login item";
 
 /* 배치 요약 */
 "layout.full_screen" = "Full screen";

@@ -11,11 +11,18 @@ public struct WorkspaceRunner {
         self.engine = engine
     }
 
-    public func run(_ resolved: ResolvedWorkspace) async -> [ItemOutcome] {
+    /// - Parameter onProgress: 항목 하나를 시작할 때마다 부른다. 실행 화면이 어디까지
+    ///   갔는지 보여주는 데 쓴다. 없으면 아무것도 보고하지 않는다.
+    public func run(
+        _ resolved: ResolvedWorkspace,
+        onProgress: ((RunProgress) -> Void)? = nil
+    ) async -> [ItemOutcome] {
         var outcomes: [ItemOutcome] = []
+        let total = resolved.screens.reduce(0) { $0 + $1.items.count } + resolved.skipped.count
 
         for screen in resolved.screens {
-            outcomes.append(contentsOf: await runScreen(screen))
+            outcomes.append(contentsOf: await runScreen(
+                screen, completed: outcomes.count, total: total, onProgress: onProgress))
         }
 
         for skipped in resolved.skipped {
@@ -27,7 +34,10 @@ public struct WorkspaceRunner {
         return outcomes
     }
 
-    private func runScreen(_ screen: ScreenPlan) async -> [ItemOutcome] {
+    private func runScreen(
+        _ screen: ScreenPlan, completed: Int, total: Int,
+        onProgress: ((RunProgress) -> Void)?
+    ) async -> [ItemOutcome] {
         var handles: [AppID: ProcessHandle] = [:]
         var launchFailures: [AppID: String] = [:]
         var outcomes: [ItemOutcome] = []
@@ -36,6 +46,9 @@ public struct WorkspaceRunner {
         // 보고는 선언 순서대로 낸다.
         for item in screen.items {
             guard handles[item.app] == nil, launchFailures[item.app] == nil else { continue }
+            onProgress?(RunProgress(
+                phase: .launching, app: item.app,
+                completed: completed + outcomes.count, total: total))
             do {
                 handles[item.app] = try await engine.launch(item.app)
             } catch {
@@ -50,6 +63,9 @@ public struct WorkspaceRunner {
                 continue
             }
             guard let handle = handles[item.app] else { continue }
+            onProgress?(RunProgress(
+                phase: .placing, app: item.app,
+                completed: completed + outcomes.count, total: total))
 
             switch item {
             case .place(let placement):

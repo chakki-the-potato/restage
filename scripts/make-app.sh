@@ -27,6 +27,13 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BINARY" "$APP/Contents/MacOS/restage"
 
+# SwiftPM이 만든 자원 번들을 함께 옮긴다. 번역 문구가 그 안에 있어 빠지면 화면에 키가
+# 그대로 보인다. 서명은 이 뒤에 하므로 번들도 서명에 포함된다.
+for bundle in "$(dirname "$BINARY")"/*.bundle; do
+  [ -e "$bundle" ] || continue
+  cp -R "$bundle" "$APP/Contents/Resources/"
+done
+
 # 아이콘은 restage-icon이 그린 .iconset을 iconutil이 .icns로 굽는다.
 # 그림 자체가 코드라 별도 바이너리 에셋을 저장소에 두지 않는다.
 ICONSET="$ROOT/build/restage.iconset"
