@@ -111,8 +111,9 @@ extension AppIconRenderer.Palette {
         CGColor(srgbRed: r, green: g, blue: b, alpha: 1)
     }
 
-    private static let white = color(1, 1, 1)
-
+    /// 흰 판에 먹색 마크. 흰 배경에서는 판 자체가 묻히지만 아래로 갈수록 어두워지는
+    /// 그라디언트와 그림자가 경계를 만든다. 테두리를 덧대지 않는 이유다.
     public static let standard = Self(
-        top: color(0.36, 0.61, 1.00), bottom: color(0.13, 0.29, 0.79), mark: white)
+        top: color(0.99, 0.99, 1.00), bottom: color(0.87, 0.88, 0.91),
+        mark: color(0.13, 0.14, 0.17))
 }
