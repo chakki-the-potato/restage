@@ -82,9 +82,10 @@ final class PanelMenu: NSObject, NSMenuDelegate {
 
     func menuDidClose(_ menu: NSMenu) {
         guard !didSelect else { return }
-        // 항목을 고르지 않고 닫혔다. 바깥을 눌렀다는 뜻이므로 패널도 닫는다.
+        // 항목을 고르지 않고 닫혔다. 어디를 눌렀는지는 호출자가 판단한다.
+        // 지연 없이 부른다. 한 박자 뒤에 패널이 닫히면 메뉴와 따로 노는 것처럼 보인다.
         let dismiss = onDismissWithoutSelection
         onDismissWithoutSelection = nil
-        DispatchQueue.main.async { dismiss?() }
+        dismiss?()
     }
 }
