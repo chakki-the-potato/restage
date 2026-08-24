@@ -71,3 +71,42 @@ private let draft = WorkspaceDraft(
     #expect(config.screens[0].items.count == 1)
     #expect(config.screens[1].items.count == 1)
 }
+
+// MARK: - 자리 바꾸기
+
+@Test func slotOverrideReplacesSavedSlot() {
+    let result = DraftSelection.apply(excluding: [], slots: [0: .q4], to: draft)
+    #expect(result.screens[0].items[0].slot == .q4)
+    #expect(result.screens[0].items[1].slot == .rightHalf)
+}
+
+/// 사용자가 직접 고른 자리에는 물음표가 붙지 않아야 한다.
+@Test func slotOverrideClearsUncertainty() {
+    var uncertain = draft
+    uncertain.screens[0].items[0].overlap = 0.4
+    #expect(!uncertain.screens[0].items[0].isConfident)
+
+    let result = DraftSelection.apply(excluding: [], slots: [0: .full], to: uncertain)
+    #expect(result.screens[0].items[0].isConfident)
+}
+
+@Test func slotOverrideAppliesAcrossScreens() {
+    let result = DraftSelection.apply(excluding: [], slots: [3: .bottomHalf], to: draft)
+    #expect(result.screens[1].items[1].slot == .bottomHalf)
+}
+
+/// 제외한 항목의 자리를 바꿔도 결과에 영향이 없어야 한다.
+@Test func slotOverrideOnExcludedItemIsIgnored() {
+    let result = DraftSelection.apply(excluding: [0], slots: [0: .q4], to: draft)
+    #expect(result.screens[0].items.map(\.app) == ["Notion"])
+}
+
+@Test func slotOverrideSurvivesRoundTrip() throws {
+    let result = DraftSelection.apply(excluding: [], slots: [2: .centered], to: draft)
+    let config = try WorkspaceConfig.decode(yaml: ConfigWriter.yaml(for: result))
+    guard case .app(let item) = config.screens[1].items[0] else {
+        Issue.record("app 항목이 아닙니다")
+        return
+    }
+    #expect(item.slot == .centered)
+}

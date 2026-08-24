@@ -86,8 +86,8 @@ struct WorkspaceCard: View {
                 iconButton("pencil", "편집", onEdit)
                 Menu {
                     Button("단축키 설정…", action: onSetHotkey)
+                    Button("파일로 열기", action: onReveal)
                     Button("이름 바꾸기…", action: onRename)
-                    Button("Finder에서 보기", action: onReveal)
                     Divider()
                     Button("삭제…", role: .destructive, action: onDelete)
                 } label: {
