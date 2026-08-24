@@ -25,7 +25,7 @@ final class PopoverController: NSObject, NSWindowDelegate {
     /// 메뉴바와 패널 사이 간격.
     private static let topGap: CGFloat = 1
     /// 버튼과 메뉴 사이 간격.
-    private static let menuGap: CGFloat = 3
+    private static let menuGap: CGFloat = 5
     private static let screenInset: CGFloat = 8
 
     /// 그림자 여백을 뺀, 실제로 보이는 패널의 폭.
