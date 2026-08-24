@@ -13,7 +13,7 @@ enum Prompt {
 
     /// 되돌릴 수 없는 동작 앞에서 확인을 받는다. 기본 선택은 항상 취소다.
     static func confirmDestructive(
-        title: String, body: String, confirmTitle: String
+        title: String, body: String, confirmTitle: String, destructive: Bool = true
     ) -> Bool {
         let alert = NSAlert()
         alert.messageText = title
@@ -21,8 +21,10 @@ enum Prompt {
         alert.alertStyle = .warning
         let confirm = alert.addButton(withTitle: confirmTitle)
         alert.addButton(withTitle: "취소")
-        confirm.hasDestructiveAction = true
-        alert.window.defaultButtonCell = nil
+        if destructive {
+            confirm.hasDestructiveAction = true
+            alert.window.defaultButtonCell = nil
+        }
         return alert.runModal() == .alertFirstButtonReturn
     }
 

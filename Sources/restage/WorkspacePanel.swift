@@ -1,3 +1,4 @@
+import AppKit
 import RestageKit
 import RestageKitDarwin
 import SwiftUI
@@ -12,20 +13,16 @@ struct WorkspacePanel: View {
     let reopen: () -> Void
     let onQuit: () -> Void
 
-    /// 떠 있는 메뉴를 연 카드의 이름. 한 번에 하나만 연다.
-    @State private var expandedCard: String?
-    @State private var showsOptions = false
     /// 각 카드의 더보기 버튼 위치. 그 자리에 메뉴를 띄운다.
     @State private var anchors: [String: CGRect] = [:]
+    /// 메뉴가 아래로 넘칠 때 위로 뒤집기 위해 패널 높이를 잰다.
+    @State private var panelHeight: CGFloat = 0
 
     static let coordinateSpace = "panel"
 
     private var isBusy: Bool { store.runningName != nil }
 
-    private func collapseAll() {
-        expandedCard = nil
-        showsOptions = false
-    }
+    private func collapseAll() { store.collapseMenus() }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -40,6 +37,11 @@ struct WorkspacePanel: View {
         // 뿐인데 패널 색이 바뀌면 무언가 꺼진 것처럼 보인다. 불투명 배경으로 덮는다.
         .background(Color(nsColor: .windowBackgroundColor))
         .coordinateSpace(name: Self.coordinateSpace)
+        .background(
+            GeometryReader { proxy in
+                Color.clear.onAppear { panelHeight = proxy.size.height }
+                    .onChange(of: proxy.size.height) { panelHeight = $0 }
+            })
         .onPreferenceChange(MenuAnchorKey.self) { anchors = $0 }
         .overlay(alignment: .topLeading) { floatingMenus }
         .onExitCommand { collapseAll() }
@@ -49,26 +51,41 @@ struct WorkspacePanel: View {
     /// 카드 높이도 늘어나 목록이 밀린다.
     @ViewBuilder
     private var floatingMenus: some View {
-        if let name = expandedCard, let anchor = anchors[name],
+        if let name = store.expandedCard, let anchor = anchors[name],
            let item = store.items.first(where: { $0.name == name }) {
             cardMenu(item)
-                .offset(x: menuX(near: anchor), y: anchor.maxY + 4)
+                .offset(
+                    x: menuX(near: anchor),
+                    y: menuY(near: anchor, height: Self.cardMenuHeight))
         }
-        if showsOptions, let anchor = anchors[Self.optionsAnchor] {
+        if store.showsOptions, let anchor = anchors[Self.optionsAnchor] {
             optionsMenu
-                .offset(x: menuX(near: anchor), y: anchor.minY - optionsMenuHeight - 4)
+                .offset(
+                    x: menuX(near: anchor),
+                    y: menuY(near: anchor, height: optionsMenuHeight))
         }
     }
 
     private static let optionsAnchor = "__options"
     private static let menuWidth: CGFloat = 180
     private static let panelWidth: CGFloat = 320
-    private let optionsMenuHeight: CGFloat = 104
+    private static let cardMenuHeight: CGFloat = 136
+    private static let edgeInset: CGFloat = 8
+    private var optionsMenuHeight: CGFloat { store.loginItemSupported ? 138 : 108 }
 
     /// 메뉴 오른쪽 끝을 버튼에 맞추되 패널 밖으로 나가지 않게 당긴다.
     private func menuX(near anchor: CGRect) -> CGFloat {
         let preferred = anchor.maxX - Self.menuWidth
-        return min(max(preferred, 8), Self.panelWidth - Self.menuWidth - 8)
+        return min(
+            max(preferred, Self.edgeInset),
+            Self.panelWidth - Self.menuWidth - Self.edgeInset)
+    }
+
+    /// 버튼 아래에 두되 넘치면 위로 뒤집는다. 잘려 보이면 무엇을 고를 수 있는지 알 수 없다.
+    private func menuY(near anchor: CGRect, height: CGFloat) -> CGFloat {
+        let below = anchor.maxY + 4
+        guard panelHeight > 0, below + height > panelHeight - Self.edgeInset else { return below }
+        return max(anchor.minY - height - 4, Self.edgeInset)
     }
 
     private func cardMenu(_ item: PanelStore.Item) -> some View {
@@ -99,6 +116,10 @@ struct WorkspacePanel: View {
                     store.toggleLoginItem()
                 }
             }
+            FloatingMenuItem(title: "업데이트 확인", symbol: "arrow.down.circle") {
+                store.collapseMenus()
+                checkForUpdate()
+            }
             FloatingMenuItem(title: "config 폴더 열기", symbol: "folder") {
                 act { WorkspaceFiles.revealConfigFolder(); return nil }
             }
@@ -116,6 +137,9 @@ struct WorkspacePanel: View {
                 .foregroundStyle(Color.accentColor)
             Text("restage")
                 .font(.system(size: 13, weight: .semibold))
+            Text("v\(Bundle.main.shortVersion)")
+                .font(.system(size: 11))
+                .foregroundStyle(.tertiary)
             Spacer()
         }
         .padding(.horizontal, 14)
@@ -147,12 +171,12 @@ struct WorkspacePanel: View {
             isRunning: store.runningName == item.name,
             isBusy: isBusy,
             message: store.messages[item.name],
-            isExpanded: expandedCard == item.name,
+            isExpanded: store.expandedCard == item.name,
             onRun: { store.run(item.name) },
             onEdit: { act { editWorkspace(item.name) } },
             onToggleActions: {
-                showsOptions = false
-                expandedCard = expandedCard == item.name ? nil : item.name
+                store.showsOptions = false
+                store.expandedCard = store.expandedCard == item.name ? nil : item.name
             },
             onDismissMessage: { store.dismissMessage(for: item.name) })
     }
@@ -241,18 +265,15 @@ struct WorkspacePanel: View {
 
     private var footer: some View {
         HStack {
-            Text("restage \(Bundle.main.shortVersion)")
-                .font(.system(size: 11))
-                .foregroundStyle(.tertiary)
             Spacer()
             Button {
-                expandedCard = nil
-                showsOptions.toggle()
+                store.expandedCard = nil
+                store.showsOptions.toggle()
             } label: {
                 HStack(spacing: 3) {
                     Text("Options")
                         .font(.system(size: 11))
-                    Image(systemName: showsOptions ? "chevron.down" : "chevron.up")
+                    Image(systemName: store.showsOptions ? "chevron.down" : "chevron.up")
                         .font(.system(size: 8, weight: .semibold))
                 }
                 .foregroundStyle(.secondary)
@@ -297,6 +318,29 @@ struct WorkspacePanel: View {
             existing, title: "'\(name)' 편집", notes: [])
         else { return nil }
         return WorkspaceFiles.save(edited)
+    }
+
+    /// 새 버전이 있는지 GitHub에 물어본다. 사용자가 누를 때만 부른다.
+    private func checkForUpdate() {
+        dismiss()
+        Task { @MainActor in
+            switch await UpdateChecker.check(current: Bundle.main.shortVersion) {
+            case .upToDate(let version):
+                Prompt.message("최신 버전입니다", "v\(version)을 쓰고 있습니다.")
+            case .available(let latest, let url):
+                if Prompt.confirmDestructive(
+                    title: "새 버전 v\(latest)이 있습니다",
+                    body: "지금 쓰는 것은 v\(Bundle.main.shortVersion)입니다.\n"
+                        + "받는 방법은 릴리스 페이지에 있습니다.",
+                    confirmTitle: "릴리스 페이지 열기", destructive: false),
+                   let page = URL(string: url) {
+                    NSWorkspace.shared.open(page)
+                }
+            case .failed(let reason):
+                Prompt.message("업데이트를 확인하지 못했습니다", reason)
+            }
+            reopen()
+        }
     }
 
     private func rename(_ name: String) -> String? {
