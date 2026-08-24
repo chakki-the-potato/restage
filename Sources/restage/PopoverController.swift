@@ -11,7 +11,7 @@ import SwiftUI
 /// `NSPopover`도 쓰지 않는다. 그것은 상태 항목 버튼에 묶여서, 메뉴바가 숨거나 나타나면
 /// 딸려 닫힌다. 전체화면 앱 위에서 커서를 화면 위쪽에 올리기만 해도 사라진다.
 @MainActor
-final class PopoverController: NSObject {
+final class PopoverController: NSObject, NSWindowDelegate {
     private let statusItem = NSStatusBar.system.statusItem(
         withLength: NSStatusItem.variableLength)
     private let store = PanelStore()
@@ -30,10 +30,6 @@ final class PopoverController: NSObject {
 
     /// 그림자 여백을 뺀, 실제로 보이는 패널의 폭.
     private static var visibleWidth: CGFloat { panelWidth }
-    /// 창 전체 폭. 양옆 그림자 여백을 포함한다.
-    private static var windowWidth: CGFloat {
-        panelWidth + PanelChromeMetrics.shadowMargin * 2
-    }
 
     func start() {
         statusItem.button?.image = MenuBarIcon.image()
@@ -77,6 +73,7 @@ final class PopoverController: NSObject {
         let controller = NSHostingController(
             rootView: PanelChrome(arrowOffset: arrowOffset) { panel })
         let panelWindow = PanelWindow(controller: controller)
+        panelWindow.delegate = self
         window?.orderOut(nil)
         window = panelWindow
 
@@ -142,6 +139,18 @@ final class PopoverController: NSObject {
 
         if window.frame.contains(point) { return }
         if let button = buttonScreenFrame(), button.contains(point) { return }
+        closePanel()
+    }
+
+    /// 다른 창이 키를 가져가면 물러난다.
+    ///
+    /// 바깥 클릭 감시자만으로는 부족하다. 다른 메뉴바 앱이 패널이나 메뉴를 띄우면 그쪽이
+    /// 추적 루프를 돌려 우리 감시자에 클릭이 오지 않는다. 키를 잃는 것은 그때도 온다.
+    ///
+    /// 우리 메뉴가 떠 있는 동안은 빼야 한다. 메뉴가 키를 가져가므로, 그러지 않으면
+    /// 메뉴를 여는 순간 패널이 닫힌다.
+    func windowDidResignKey(_ notification: Notification) {
+        guard !menu.isShowing else { return }
         closePanel()
     }
 
