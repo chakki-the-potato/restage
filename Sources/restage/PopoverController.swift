@@ -64,12 +64,22 @@ final class PopoverController: NSObject, NSPopoverDelegate {
             y: window.frame.maxY - anchor.maxY - Self.menuGap)
 
         menu.show(items: items, at: point) { [weak self] in
-            // 항목을 고르지 않고 닫혔다. 바깥을 눌렀다는 뜻이므로 패널도 닫는다.
-            self?.popover.performClose(nil)
+            self?.closePanelIfClickedOutside()
         }
     }
 
-    private static let menuGap: CGFloat = 4
+    /// 메뉴가 항목 선택 없이 닫혔을 때, 어디를 눌렀는지 보고 패널을 닫을지 정한다.
+    ///
+    /// 패널 안을 눌렀으면 메뉴만 닫는다. 메뉴를 잘못 열었을 때 패널까지 사라지면
+    /// 다시 열어야 한다. 패널 바깥을 눌렀으면 볼 일이 끝난 것이므로 패널도 닫는다.
+    private func closePanelIfClickedOutside() {
+        guard let window = popover.contentViewController?.view.window else { return }
+        guard !window.frame.contains(NSEvent.mouseLocation) else { return }
+        popover.performClose(nil)
+    }
+
+    /// 버튼과 메뉴 사이 간격.
+    private static let menuGap: CGFloat = 9
 
     @objc private func togglePanel() {
         if popover.isShown {
