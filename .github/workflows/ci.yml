@@ -17,6 +17,10 @@ jobs:
       - name: 테스트
         run: swift test
 
+      # 화면에 보이는 문구가 소스에 박히면 번역할 방법이 없다. 주석과 언어 이름은 제외한다.
+      - name: 하드코딩된 문구 확인
+        run: scripts/check-hardcoded-strings.sh
+
       # 번들 조립이 깨지면 릴리스 때가 아니라 여기서 걸려야 한다.
       # 서명은 러너에 인증서가 없으므로 adhoc으로 떨어진다.
       - name: 앱 번들 조립 확인
@@ -25,4 +29,6 @@ jobs:
           ditto -x -k build/release/restage-0.0.0-ci-macos.zip "$RUNNER_TEMP/unzip"
           test -x "$RUNNER_TEMP/unzip/restage.app/Contents/MacOS/restage"
           test -f "$RUNNER_TEMP/unzip/restage.app/Contents/Resources/restage.icns"
+          test -d "$RUNNER_TEMP/unzip/restage.app/Contents/Resources/restage_RestageKit.bundle/ko.lproj"
+          test -f "$RUNNER_TEMP/unzip/restage.app/Contents/Resources/ko.lproj/InfoPlist.strings"
           codesign --verify --strict "$RUNNER_TEMP/unzip/restage.app"
