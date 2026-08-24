@@ -14,6 +14,8 @@ enum PanelChromeMetrics {
     /// 화살표 꼭지의 크기.
     static let arrowSize = CGSize(width: 18, height: 9)
     static let cornerRadius: CGFloat = 12
+    /// 그림자가 잘리지 않도록 창 안쪽에 두는 여백.
+    static let shadowMargin: CGFloat = 18
 }
 
 final class PanelWindow: NSPanel {
@@ -56,14 +58,20 @@ struct PanelChrome<Content: View>: View {
 
     var body: some View {
         content
+            .padding(.top, PanelChromeMetrics.arrowSize.height)
             .background(
                 PanelShape(arrowOffset: arrowOffset)
-                    .fill(Color(nsColor: .windowBackgroundColor))
-                    .shadow(color: .black.opacity(0.28), radius: 12, y: 3))
+                    .fill(Color(nsColor: .windowBackgroundColor)))
+            .clipShape(PanelShape(arrowOffset: arrowOffset))
             .overlay(
                 PanelShape(arrowOffset: arrowOffset)
-                    .stroke(Color.primary.opacity(0.10), lineWidth: 1))
-            .padding(.top, PanelChromeMetrics.arrowSize.height)
+                    .stroke(Color.primary.opacity(0.12), lineWidth: 1))
+            .padding(PanelChromeMetrics.shadowMargin)
+            .background(
+                PanelShape(arrowOffset: arrowOffset)
+                    .fill(Color.clear)
+                    .shadow(color: .black.opacity(0.30), radius: 10, y: 3)
+                    .padding(PanelChromeMetrics.shadowMargin))
     }
 }
 
