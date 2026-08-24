@@ -2,16 +2,22 @@ import SwiftUI
 
 /// 워크스페이스 하나를 나타내는 카드.
 ///
-/// 카드 전체가 실행 버튼이다. 편집·삭제는 마우스를 올렸을 때만 나타난다. 매일 누르는 것은
-/// 실행이고 관리는 가끔이므로, 관리 버튼이 늘 보이면 실행을 누를 자리가 좁아진다.
+/// 카드 전체가 실행 버튼이다. 편집과 더보기는 마우스를 올렸을 때만 나타난다. 매일 누르는
+/// 것은 실행이고 관리는 가끔이므로, 관리 버튼이 늘 보이면 실행을 누를 자리가 좁아진다.
+///
+/// 더보기를 `Menu`로 만들지 않는다. macOS 메뉴는 열려 있는 동안 클릭을 독차지하므로,
+/// 화면 다른 곳을 눌러도 메뉴만 닫히고 패널은 남는다. 두 번 눌러야 사라지는 것이 어색하다.
+/// 카드 안에서 펼쳐지면 그 클릭이 패널까지 닿아 한 번에 전부 닫힌다.
 struct WorkspaceCard: View {
     let item: PanelStore.Item
     let isRunning: Bool
     let isBusy: Bool
     let message: String?
+    let isExpanded: Bool
 
     let onRun: () -> Void
     let onEdit: () -> Void
+    let onToggleActions: () -> Void
     let onRename: () -> Void
     let onSetHotkey: () -> Void
     let onReveal: () -> Void
@@ -37,6 +43,7 @@ struct WorkspaceCard: View {
                 noteRow(message, symbol: "exclamationmark.circle.fill", tint: .orange,
                         onDismiss: onDismissMessage)
             }
+            if isExpanded { actions }
         }
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -81,23 +88,10 @@ struct WorkspaceCard: View {
         if isRunning {
             ProgressView()
                 .controlSize(.small)
-        } else if isHovering {
+        } else if isHovering || isExpanded {
             HStack(spacing: 2) {
                 iconButton("pencil", "편집", onEdit)
-                Menu {
-                    Button("단축키 설정…", action: onSetHotkey)
-                    Button("파일로 열기", action: onReveal)
-                    Button("이름 바꾸기…", action: onRename)
-                    Divider()
-                    Button("삭제…", role: .destructive, action: onDelete)
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 12))
-                        .frame(width: 22, height: 22)
-                }
-                .menuStyle(.borderlessButton)
-                .menuIndicator(.hidden)
-                .frame(width: 22)
+                iconButton(isExpanded ? "chevron.up" : "ellipsis", "더보기", onToggleActions)
             }
             .foregroundStyle(.secondary)
         } else if let hotkey = item.hotkey {
@@ -113,6 +107,38 @@ struct WorkspaceCard: View {
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
                         .strokeBorder(Color.primary.opacity(0.12), lineWidth: 1))
         }
+    }
+
+    private var actions: some View {
+        VStack(spacing: 0) {
+            Divider()
+            actionRow("이름 변경", "pencil.line", onRename)
+            actionRow("단축키 변경", "keyboard", onSetHotkey)
+            actionRow("파일로 열기", "doc.text", onReveal)
+            Divider().padding(.horizontal, 12)
+            actionRow("삭제", "trash", onDelete, tint: .red)
+        }
+        .padding(.bottom, 4)
+    }
+
+    private func actionRow(
+        _ title: String, _ symbol: String, _ action: @escaping () -> Void, tint: Color? = nil
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: symbol)
+                    .font(.system(size: 11))
+                    .frame(width: 16)
+                Text(title)
+                    .font(.system(size: 12))
+                Spacer(minLength: 0)
+            }
+            .foregroundStyle(tint ?? .primary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(HighlightRowStyle())
     }
 
     private func iconButton(
@@ -154,5 +180,18 @@ struct WorkspaceCard: View {
         }
         .padding(.horizontal, 12)
         .padding(.bottom, 10)
+    }
+}
+
+/// 메뉴 항목처럼 눌리는 동안 강조되는 행. 기본 버튼 스타일은 배경이 없어 눌린 느낌이 없다.
+struct HighlightRowStyle: ButtonStyle {
+    @State private var isHovering = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(
+                Color.accentColor
+                    .opacity(configuration.isPressed ? 0.22 : (isHovering ? 0.12 : 0)))
+            .onHover { isHovering = $0 }
     }
 }
