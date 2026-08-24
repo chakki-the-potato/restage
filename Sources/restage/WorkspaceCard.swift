@@ -5,9 +5,8 @@ import SwiftUI
 /// 카드 전체가 실행 버튼이다. 편집과 더보기는 마우스를 올렸을 때만 나타난다. 매일 누르는
 /// 것은 실행이고 관리는 가끔이므로, 관리 버튼이 늘 보이면 실행을 누를 자리가 좁아진다.
 ///
-/// 더보기를 `Menu`로 만들지 않는다. macOS 메뉴는 열려 있는 동안 클릭을 독차지하므로,
-/// 화면 다른 곳을 눌러도 메뉴만 닫히고 패널은 남는다. 두 번 눌러야 사라지는 것이 어색하다.
-/// 카드 안에서 펼쳐지면 그 클릭이 패널까지 닿아 한 번에 전부 닫힌다.
+/// 더보기 메뉴는 카드가 아니라 패널이 그린다. 카드 안에 그리면 다음 카드에 가려지고
+/// 카드 높이도 늘어나 목록이 밀린다. 카드는 버튼 위치만 올려보낸다.
 struct WorkspaceCard: View {
     let item: PanelStore.Item
     let isRunning: Bool
@@ -18,10 +17,6 @@ struct WorkspaceCard: View {
     let onRun: () -> Void
     let onEdit: () -> Void
     let onToggleActions: () -> Void
-    let onRename: () -> Void
-    let onSetHotkey: () -> Void
-    let onReveal: () -> Void
-    let onDelete: () -> Void
     let onDismissMessage: () -> Void
 
     @State private var isHovering = false
@@ -43,7 +38,6 @@ struct WorkspaceCard: View {
                 noteRow(message, symbol: "exclamationmark.circle.fill", tint: .orange,
                         onDismiss: onDismissMessage)
             }
-            if isExpanded { actions }
         }
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -91,7 +85,8 @@ struct WorkspaceCard: View {
         } else if isHovering || isExpanded {
             HStack(spacing: 2) {
                 iconButton("pencil", "편집", onEdit)
-                iconButton(isExpanded ? "chevron.up" : "ellipsis", "더보기", onToggleActions)
+                iconButton("ellipsis", "더보기", onToggleActions)
+                    .menuAnchor(item.name, in: WorkspacePanel.coordinateSpace)
             }
             .foregroundStyle(.secondary)
         } else if let hotkey = item.hotkey {
@@ -107,38 +102,6 @@ struct WorkspaceCard: View {
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
                         .strokeBorder(Color.primary.opacity(0.12), lineWidth: 1))
         }
-    }
-
-    private var actions: some View {
-        VStack(spacing: 0) {
-            Divider()
-            actionRow("이름 변경", "pencil.line", onRename)
-            actionRow("단축키 변경", "keyboard", onSetHotkey)
-            actionRow("파일로 열기", "doc.text", onReveal)
-            Divider().padding(.horizontal, 12)
-            actionRow("삭제", "trash", onDelete, tint: .red)
-        }
-        .padding(.bottom, 4)
-    }
-
-    private func actionRow(
-        _ title: String, _ symbol: String, _ action: @escaping () -> Void, tint: Color? = nil
-    ) -> some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                Image(systemName: symbol)
-                    .font(.system(size: 11))
-                    .frame(width: 16)
-                Text(title)
-                    .font(.system(size: 12))
-                Spacer(minLength: 0)
-            }
-            .foregroundStyle(tint ?? .primary)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(HighlightRowStyle())
     }
 
     private func iconButton(
@@ -180,18 +143,5 @@ struct WorkspaceCard: View {
         }
         .padding(.horizontal, 12)
         .padding(.bottom, 10)
-    }
-}
-
-/// 메뉴 항목처럼 눌리는 동안 강조되는 행. 기본 버튼 스타일은 배경이 없어 눌린 느낌이 없다.
-struct HighlightRowStyle: ButtonStyle {
-    @State private var isHovering = false
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .background(
-                Color.accentColor
-                    .opacity(configuration.isPressed ? 0.22 : (isHovering ? 0.12 : 0)))
-            .onHover { isHovering = $0 }
     }
 }
