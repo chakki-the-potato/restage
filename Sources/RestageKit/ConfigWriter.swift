@@ -10,6 +10,9 @@ public enum ConfigWriter {
             if index > 0 { lines.append("") }
             lines.append("  - id: \(scalar(screen.id))")
             lines.append("    display: \(screen.display.yamlValue)")
+            if case .external = screen.display {
+                lines.append("    whenMissing: \(MissingDisplayPolicy.fullscreen.rawValue)")
+            }
             lines.append("    items:")
             lines.append(contentsOf: screen.items.flatMap(itemLines))
         }

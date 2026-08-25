@@ -9,8 +9,13 @@ public enum WorkspaceResolver {
 
         for screen in config.screens {
             guard let display = display(for: screen.display, in: displays) else {
-                skipped.append(SkippedScreen(
-                    id: screen.id, reason: reason(forMissing: screen.display)))
+                switch screen.whenMissing {
+                case .skip:
+                    skipped.append(SkippedScreen(
+                        id: screen.id, reason: reason(forMissing: screen.display)))
+                case .fullscreen:
+                    plans.append(plan(for: screen, on: displays.primary, mode: .fullscreen))
+                }
                 continue
             }
             plans.append(plan(for: screen, on: display))
@@ -19,7 +24,9 @@ public enum WorkspaceResolver {
         return ResolvedWorkspace(workspace: config.workspace, screens: plans, skipped: skipped)
     }
 
-    private static func plan(for screen: ScreenConfig, on display: DisplayInfo) -> ScreenPlan {
+    private static func plan(
+        for screen: ScreenConfig, on display: DisplayInfo, mode: ScreenMode? = nil
+    ) -> ScreenPlan {
         let items = screen.items.map { item -> PlannedItem in
             switch item {
             case .app(let app):
@@ -41,7 +48,7 @@ public enum WorkspaceResolver {
         }
 
         return ScreenPlan(
-            id: screen.id, display: display, mode: screen.mode,
+            id: screen.id, display: display, mode: mode ?? screen.mode,
             anchor: screen.anchor, items: items)
     }
 

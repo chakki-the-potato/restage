@@ -116,3 +116,28 @@ private func roundTrip(_ draft: WorkspaceDraft) throws -> WorkspaceConfig {
         screens: [ScreenDraft(id: "main", display: .builtin, items: [.app("Safari", slot: .full)])])
     #expect(!ConfigWriter.yaml(for: draft).contains("hotkey"))
 }
+
+/// 외장 모니터로 저장한 화면은 그 모니터가 없을 때를 대비해야 한다.
+/// 두 대에서 저장하고 한 대에서 여는 것이 흔한 일이다.
+@Test func anExternalScreenIsWrittenWithAFallback() throws {
+    let draft = WorkspaceDraft(
+        name: "w",
+        screens: [
+            ScreenDraft(
+                id: "wide", display: .external(index: 1),
+                items: [.app("Notion", slot: .leftHalf)]),
+        ])
+    let yaml = ConfigWriter.yaml(for: draft)
+    #expect(yaml.contains("whenMissing: fullscreen"))
+    #expect(try roundTrip(draft).screens[0].whenMissing == .fullscreen)
+}
+
+/// 주 모니터 화면에는 붙이지 않는다. 주 모니터가 없는 경우는 없다.
+@Test func aPrimaryScreenNeedsNoFallback() {
+    let draft = WorkspaceDraft(
+        name: "w",
+        screens: [
+            ScreenDraft(id: "main", display: .builtin, items: [.app("Safari", slot: .full)]),
+        ])
+    #expect(!ConfigWriter.yaml(for: draft).contains("whenMissing"))
+}

@@ -184,7 +184,21 @@ top right, `q3` bottom left, `q4` bottom right. Omitted on `type: app` it means
 
 **display** — `builtin` is the primary display. `external-N` sorts external
 displays by frame origin and takes the Nth, from 1. `any` behaves like `builtin`
-today. Naming a display that isn't connected skips that screen and reports why.
+today.
+
+**whenMissing** — what to do when that display isn't connected. `skip` is the
+default: the screen is dropped and the reason reported, so its apps never open.
+`fullscreen` puts the screen on the primary display instead, with every item full
+screen, so macOS gives each one its own desktop rather than piling them on top of
+the layout that is already there. Saving a workspace writes `fullscreen` for
+external screens, because arriving with fewer monitors than you left with is the
+normal case.
+
+```yaml
+- id: wide
+  display: external-1
+  whenMissing: fullscreen
+```
 
 **Full screen** — choosing it sends that app to its own desktop, the same as
 "Enter Full Screen" in the window menu.
@@ -308,7 +322,7 @@ windows then. restage detects this, says so, and stops.
 
 ```bash
 swift build
-swift test        # 211 tests
+swift test        # 222 tests
 ```
 
 Measure placement against the apps you have running:

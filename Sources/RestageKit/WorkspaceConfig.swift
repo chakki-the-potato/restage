@@ -22,10 +22,11 @@ public struct ScreenConfig: Decodable, Sendable {
     public let display: DisplaySelector
     public let mode: ScreenMode
     public let anchor: AppID?
+    public let whenMissing: MissingDisplayPolicy
     public let items: [ItemConfig]
 
     private enum Keys: String, CodingKey {
-        case id, display, mode, anchor, items
+        case id, display, mode, anchor, items, whenMissing
     }
 
     public init(from decoder: Decoder) throws {
@@ -34,6 +35,8 @@ public struct ScreenConfig: Decodable, Sendable {
         display = try container.decodeIfPresent(DisplaySelector.self, forKey: .display) ?? .any
         mode = try container.decodeIfPresent(ScreenMode.self, forKey: .mode) ?? .desktop
         anchor = try container.decodeIfPresent(AppID.self, forKey: .anchor)
+        whenMissing = try container.decodeIfPresent(
+            MissingDisplayPolicy.self, forKey: .whenMissing) ?? .skip
         items = try container.decode([ItemConfig].self, forKey: .items)
     }
 }
@@ -41,6 +44,11 @@ public struct ScreenConfig: Decodable, Sendable {
 public enum ScreenMode: String, Decodable, Sendable {
     case fullscreen
     case desktop
+}
+
+public enum MissingDisplayPolicy: String, Decodable, Sendable {
+    case skip
+    case fullscreen
 }
 
 public enum DisplaySelector: Decodable, Sendable, Equatable {
