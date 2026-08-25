@@ -19,7 +19,7 @@ public enum WindowWaiter {
         let clock = ContinuousClock()
         let activationDeadline = clock.now.advanced(by: activationGrace)
 
-        let found = await Polling.poll(timeout: timeout) { () -> AXWindow? in
+        let found = try await Polling.poll(timeout: timeout) { () -> AXWindow? in
             do {
                 let all = try AXWindow.windows(ofPID: pid)
                 let titles = all.filter(isRealWindow).compactMap { $0.title }
@@ -44,7 +44,13 @@ public enum WindowWaiter {
 
             if !activated, clock.now >= activationDeadline {
                 activated = true
-                AXWindow.setApplicationFrontmost(pid: pid)
+                let onScreen = WindowInventory.onScreenWindowCount(pid: pid)
+                let anywhere = WindowInventory.windowCount(pid: pid)
+                if shouldActivate(onScreen: onScreen, anywhere: anywhere) {
+                    AXWindow.setApplicationFrontmost(pid: pid)
+                } else {
+                    throw EngineError.windowOnOtherSpace(pid: pid, windowCount: anywhere)
+                }
             }
             return nil
         }
@@ -63,6 +69,11 @@ public enum WindowWaiter {
             throw EngineError.windowOnOtherSpace(pid: pid, windowCount: existing)
         }
         throw EngineError.windowTimeout(pid: pid, seconds: seconds(of: timeout))
+    }
+
+    public static func shouldActivate(onScreen: Int, anywhere: Int) -> Bool {
+        if onScreen > 0 { return true }
+        return anywhere == 0
     }
 
     public static func prepareForDesktopPlacement(_ window: AXWindow) async {

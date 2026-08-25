@@ -14,6 +14,7 @@ public enum WindowPlacer {
         let start = clock.now
         let deadline = start.advanced(by: totalTimeout)
         var lastObserved: CGRect?
+        var previous: CGRect?
 
         for attempt in 1...maxAttempts {
             apply(target, to: window)
@@ -37,6 +38,11 @@ public enum WindowPlacer {
                     elapsed: start.duration(to: clock.now),
                     warnings: warnings)
             }
+
+            if settled == previous {
+                return classifyFailure(window, target: target, observed: settled)
+            }
+            previous = settled
 
             if clock.now >= deadline { break }
         }

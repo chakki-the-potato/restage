@@ -5,3 +5,5 @@ DerivedData/
 build/
 preview/
 .playwright-mcp/
+화면 기록 *.mov
+*.mov

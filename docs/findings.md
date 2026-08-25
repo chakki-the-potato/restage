@@ -47,6 +47,23 @@ with open windows for the application" turned on:
 0 AX windows before activating  →  set AXFrontmost  →  2 after
 ```
 
+**Activating an app drags the view to its Space.** When an app's windows live on
+another Space, AX sees none of them, and the fallback of activating the app to
+make them appear takes the whole screen to that Space. Measured on a ten-app
+workspace: the view jumped away at 12s and came back at 24s.
+
+The two cases have to be told apart, and `CGWindowList` does it:
+
+```
+onScreen > 0, AX empty   the window is here but AX cannot see it   activate (Safari)
+onScreen = 0, total > 0  the windows are on another Space          do not activate
+onScreen = 0, total = 0  the app is still starting                 activate
+```
+
+Failing fast on the middle case, and stopping placement retries once a window
+holds the same frame twice, took the same workspace from 50.8s to 2.8s warm and
+from about 48s to 5.7s cold.
+
 **Focus needs the AX path.** `NSRunningApplication.activate()` is ignored by
 macOS when the caller is not a GUI app. Only setting `AXFrontmost` works.
 

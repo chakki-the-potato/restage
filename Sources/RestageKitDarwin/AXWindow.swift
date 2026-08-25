@@ -23,6 +23,11 @@ public struct AXWindow: WindowHandle {
     }
 
     @discardableResult
+    public func raise() -> Bool {
+        AXUIElementPerformAction(element, AXAttributes.raise as CFString) == .success
+    }
+
+    @discardableResult
     static func setApplicationFrontmost(pid: Int32) -> Bool {
         let app = AXUIElementCreateApplication(pid)
         return AXUIElementSetAttributeValue(

@@ -235,6 +235,11 @@ public struct WorkspaceRunner {
               let anchor = screen.anchor,
               let bundleID = try? InstalledApps.bundleID(for: anchor),
               let app = AppLauncher.runningApplication(bundleID: bundleID) else { return }
-        AXWindow.setApplicationFrontmost(pid: app.processIdentifier)
+
+        let pid = app.processIdentifier
+        guard WindowInventory.onScreenWindowCount(pid: pid) > 0 else { return }
+
+        AXWindow.setApplicationFrontmost(pid: pid)
+        (try? AXWindow.windows(ofPID: pid))?.first { $0.currentFrame != nil }?.raise()
     }
 }
