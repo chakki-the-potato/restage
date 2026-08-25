@@ -94,6 +94,7 @@
 "error.engine.windows_open" = "Open windows: %@";
 "error.engine.no_windows_open" = "No windows are open";
 "error.engine.window_on_other_space" = "%d windows are on another desktop. Run it from there, or move the windows to this one";
+"error.engine.window_off_display" = "%d windows sit outside every display, where a disconnected monitor used to be. Drag them back onto a screen";
 "error.engine.ax_disabled" = "The accessibility API is disabled (kAXErrorAPIDisabled). Check Accessibility permission.";
 "error.engine.browser_without_tab_control" = "%@ doesn't support tab control. Windows are still placed, but tabs can't be opened.";
 "error.engine.not_a_browser" = "%@ is not a browser. Change its type to app.";

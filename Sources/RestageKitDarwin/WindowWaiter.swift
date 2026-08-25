@@ -50,6 +50,8 @@ public enum WindowWaiter {
                 if shouldActivate(onScreen: onScreen, anywhere: anywhere)
                     || mayFollowOtherSpaces {
                     AXWindow.setApplicationFrontmost(pid: pid)
+                } else if WindowInventory.offDisplayWindowCount(pid: pid) == anywhere {
+                    throw EngineError.windowOffDisplay(pid: pid, windowCount: anywhere)
                 } else {
                     throw EngineError.windowOnOtherSpace(pid: pid, windowCount: anywhere)
                 }
@@ -67,6 +69,10 @@ public enum WindowWaiter {
         }
 
         let existing = WindowInventory.windowCount(pid: pid)
+        let offDisplay = WindowInventory.offDisplayWindowCount(pid: pid)
+        if existing > 0, offDisplay == existing {
+            throw EngineError.windowOffDisplay(pid: pid, windowCount: offDisplay)
+        }
         if existing > 0 {
             throw EngineError.windowOnOtherSpace(pid: pid, windowCount: existing)
         }

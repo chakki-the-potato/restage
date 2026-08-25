@@ -6,6 +6,7 @@ public enum EngineError: Error, CustomStringConvertible {
     case launchFailed(bundleID: String, underlying: String)
     case windowTimeout(pid: Int32, seconds: Double)
     case windowOnOtherSpace(pid: Int32, windowCount: Int)
+    case windowOffDisplay(pid: Int32, windowCount: Int)
     case noWindowMatchingTitle(pid: Int32, wanted: String, available: [String])
     case axDisabled
     case browserWithoutTabControl(name: String)
@@ -38,6 +39,8 @@ public enum EngineError: Error, CustomStringConvertible {
             return L10n.string("error.engine.no_window_matching_title", wanted, titles)
         case .windowOnOtherSpace(let pid, let count):
             return L10n.string("error.engine.window_on_other_space", count)
+        case .windowOffDisplay(_, let count):
+            return L10n.string("error.engine.window_off_display", count)
         case .axDisabled:
             return L10n.string("error.engine.ax_disabled")
         case .browserWithoutTabControl(let name):

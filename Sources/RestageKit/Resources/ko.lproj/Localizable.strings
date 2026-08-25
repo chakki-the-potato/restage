@@ -94,6 +94,7 @@
 "error.engine.windows_open" = "열린 창: %@";
 "error.engine.no_windows_open" = "열린 창이 없습니다";
 "error.engine.window_on_other_space" = "창 %d개가 다른 데스크탑에 있습니다. 그 데스크탑에서 실행하거나 창을 이 데스크탑으로 옮기세요";
+"error.engine.window_off_display" = "창 %d개가 어느 화면에도 걸치지 않는 자리에 있습니다. 연결이 끊긴 모니터 자리입니다. 창을 화면 안으로 끌어오세요";
 "error.engine.ax_disabled" = "AX API가 비활성 상태입니다 (kAXErrorAPIDisabled). 접근성 권한을 확인하세요.";
 "error.engine.browser_without_tab_control" = "%@은 탭 제어를 지원하지 않습니다. 창 배치는 되지만 tabs는 열 수 없습니다.";
 "error.engine.not_a_browser" = "%@은 브라우저가 아닙니다. type을 app으로 바꾸세요.";
