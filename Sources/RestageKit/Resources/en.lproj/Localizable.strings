@@ -89,11 +89,11 @@
 "error.engine.ambiguous_app" = "More than one app matches '%1$@': %2$@";
 "error.engine.application_not_found" = "That app is not installed: %@";
 "error.engine.launch_failed" = "Couldn't launch %1$@ — %2$@";
-"error.engine.window_timeout" = "No window appeared within %1$g seconds (pid %2$d)";
+"error.engine.window_timeout" = "No window appeared within %g seconds";
 "error.engine.no_window_matching_title" = "Couldn't find a window with '%1$@' in its title. %2$@";
 "error.engine.windows_open" = "Open windows: %@";
 "error.engine.no_windows_open" = "No windows are open";
-"error.engine.window_on_other_space" = "%1$d windows are on another Space and can't be reached (pid %2$d)";
+"error.engine.window_on_other_space" = "%d windows are on another desktop. Run it from there, or move the windows to this one";
 "error.engine.ax_disabled" = "The accessibility API is disabled (kAXErrorAPIDisabled). Check Accessibility permission.";
 "error.engine.browser_without_tab_control" = "%@ doesn't support tab control. Windows are still placed, but tabs can't be opened.";
 "error.engine.not_a_browser" = "%@ is not a browser. Change its type to app.";

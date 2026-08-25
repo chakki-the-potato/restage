@@ -30,14 +30,14 @@ public enum EngineError: Error, CustomStringConvertible {
         case .launchFailed(let bundleID, let underlying):
             return L10n.string("error.engine.launch_failed", bundleID, underlying)
         case .windowTimeout(let pid, let seconds):
-            return L10n.string("error.engine.window_timeout", seconds, Int(pid))
+            return L10n.string("error.engine.window_timeout", seconds)
         case .noWindowMatchingTitle(_, let wanted, let available):
             let titles = available.isEmpty
                 ? L10n.string("error.engine.no_windows_open")
                 : L10n.string("error.engine.windows_open", available.joined(separator: ", "))
             return L10n.string("error.engine.no_window_matching_title", wanted, titles)
         case .windowOnOtherSpace(let pid, let count):
-            return L10n.string("error.engine.window_on_other_space", count, Int(pid))
+            return L10n.string("error.engine.window_on_other_space", count)
         case .axDisabled:
             return L10n.string("error.engine.ax_disabled")
         case .browserWithoutTabControl(let name):
