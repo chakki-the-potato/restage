@@ -2,10 +2,10 @@ import AppKit
 import RestageKit
 
 public struct InstalledApp: Sendable, Equatable {
-    /// Finder에 보이는 이름. config에 쓰는 값이다.
+    /// The name Finder shows. This is what goes in the config.
     public let name: String
     public let bundleID: String
-    /// `.app` 파일 이름에서 확장자를 뺀 것. 표시 이름과 다를 수 있다.
+    /// The `.app` file name without its extension. It can differ from the display name.
     public let fileName: String
 
     public init(name: String, bundleID: String, fileName: String) {
@@ -15,18 +15,18 @@ public struct InstalledApp: Sendable, Equatable {
     }
 }
 
-/// 설치된 앱을 찾아 이름을 bundle ID로 해석한다.
+/// Finds installed apps and resolves a name to a bundle ID.
 ///
-/// bundle ID 문자열은 프로젝트 전체에서 이 파일에만 존재해야 한다. RestageKit은 `AppID`라는
-/// 논리 이름만 다루고, OS 고유 식별자는 이 경계에서만 나타난다.
+/// Bundle ID strings must exist in this file alone. RestageKit deals only in the logical `AppID`,
+/// and OS-specific identifiers appear at this boundary and nowhere else.
 ///
-/// 고정 목록을 두지 않는 이유는 이 도구를 받는 사람마다 설치된 앱이 다르기 때문이다.
-/// 목록을 코드에 박으면 목록을 만든 사람의 컴퓨터에서만 쓸모가 있다.
+/// There is no fixed list because everyone who takes this tool has different apps installed.
+/// A list baked into the code is only useful on the machine of whoever wrote it.
 @MainActor
 public enum InstalledApps {
     private static var cache: [InstalledApp]?
 
-    /// 표시 이름이 다른 이유로 찾기 실패했을 때 사용자에게 제안할 개수.
+    /// How many suggestions to offer when a lookup fails because the display name differs.
     private static let suggestionLimit = 3
 
     public static func all() -> [InstalledApp] {
@@ -34,7 +34,7 @@ public enum InstalledApps {
         return refresh()
     }
 
-    /// 목록을 다시 읽는다. 메뉴바로 오래 떠 있는 동안 설치된 앱을 놓치지 않기 위해 필요하다.
+    /// Reads the list again. Needed so apps installed while the menu bar app sits there aren't missed.
     @discardableResult
     public static func refresh() -> [InstalledApp] {
         let scanned = scan()
@@ -56,7 +56,7 @@ public enum InstalledApps {
             break
         }
 
-        // 설치 직후일 수 있으므로 캐시를 버리고 한 번 더 본다.
+        // It may have been installed a moment ago, so drop the cache and look once more.
         switch match(name, in: refresh()) {
         case .found(let app):
             return app.bundleID
@@ -67,18 +67,18 @@ public enum InstalledApps {
         }
     }
 
-    /// 이 앱이 브라우저일 수 있는지. 확정이 아니라 필요조건이다.
+    /// Whether this app could be a browser. A necessary condition, not a verdict.
     ///
-    /// 이름 목록으로 판정하지 않는 이유는 브라우저 이름을 전부 알 수 없기 때문이다.
-    /// 대신 https를 열 수 있다고 시스템에 등록되어 있는지 묻는다.
+    /// A list of names won't do the job because there is no knowing every browser name.
+    /// Instead it asks whether the system has it registered as able to open https.
     ///
-    /// 이 판정은 느슨하다. 이 컴퓨터에서 측정했더니 Chrome, Safari, Chromium과 함께
-    /// iTerm과 ChatGPT도 걸렸다. 링크를 열 수 있다고 등록만 하면 걸리기 때문이다.
-    /// `CFBundleDocumentTypes`의 html 뷰어 여부도 재봤으나 Safari가 빠지고 iTerm이 들어와
-    /// 더 나빴다. 확실한 신호는 없다.
+    /// The test is loose. Measured on this machine it caught iTerm and ChatGPT alongside Chrome,
+    /// Safari, and Chromium, because merely registering to open links is enough.
+    /// Checking `CFBundleDocumentTypes` for an html viewer was measured too, and was worse:
+    /// Safari dropped out and iTerm came in. There is no reliable signal.
     ///
-    /// 그래서 여기서는 걸러내기만 하고 최종 판정은 실제 탭 조회 성공 여부에 맡긴다.
-    /// Notion이나 카카오톡처럼 명백히 아닌 앱은 여기서 걸러진다.
+    /// So this only filters, and the verdict is left to whether reading tabs actually succeeds.
+    /// Apps that plainly aren't browsers, like Notion or KakaoTalk, are filtered out here.
     public static func isBrowser(bundleID: String) -> Bool {
         browserBundleIDs().contains(bundleID)
     }
@@ -108,7 +108,7 @@ public enum InstalledApps {
             .map(\.name)
     }
 
-    // MARK: - 이름 대응
+    // MARK: - Matching names
 
     public enum MatchResult: Sendable, Equatable {
         case found(InstalledApp)
@@ -116,14 +116,13 @@ public enum InstalledApps {
         case notFound
     }
 
-    /// 사용자가 적은 이름을 설치된 앱 하나에 대응시킨다.
+    /// Matches a name the user wrote to one installed app.
     ///
-    /// 파일 시스템을 건드리지 않는 순수 함수로 둔 이유는 이 판정이 이 파일에서 가장 틀리기 쉬운
-    /// 부분이라 고정 목록으로 검증해야 하기 때문이다.
+    /// It is kept a pure function that never touches the file system because this is the part of
+    /// the file most likely to be wrong, and it has to be verified against a fixed list.
     ///
-    /// 단계를 나눈 이유는 `chrome`이 `Google Chrome`을, `edge`가 `Microsoft Edge`를 가리키게
-    /// 하면서도 `Claude`가 `Claude Code Notifier`로 새지 않게 하기 위해서다. 정확히 일치하는
-    /// 이름이 있으면 항상 그쪽이 이긴다.
+    /// The steps exist so that `chrome` means `Google Chrome` and `edge` means `Microsoft Edge`
+    /// while `Claude` doesn't leak into `Claude Code Notifier`. An exact match always wins.
     public nonisolated static func match(_ query: String, in apps: [InstalledApp]) -> MatchResult {
         let trimmed = query.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return .notFound }
@@ -164,7 +163,7 @@ public enum InstalledApps {
         Set(text.lowercased().split { !($0.isLetter || $0.isNumber) }.map(String.init))
     }
 
-    // MARK: - 검색
+    // MARK: - Searching
 
     private static var searchPaths: [String] {
         [
@@ -177,11 +176,11 @@ public enum InstalledApps {
         ]
     }
 
-    /// 표준 위치를 훑는다. 하위 폴더는 한 단계만 들어간다.
+    /// Walks the standard locations, descending one level into subfolders.
     ///
-    /// Spotlight로 전부 훑지 않는 이유는 다른 앱 안에 들어 있는 도우미 앱까지 잡히기 때문이다.
-    /// 이 컴퓨터에서 표준 위치는 109개, Spotlight 전체는 388개였다.
-    /// 나머지는 사용자가 이름으로 부를 대상이 아니다.
+    /// Spotlight isn't used for a full sweep because it also catches helper apps living inside
+    /// other apps. On this machine the standard locations held 109 apps and Spotlight 388.
+    /// The rest are not things a user would call by name.
     private static func scan() -> [InstalledApp] {
         let fileManager = FileManager.default
         var seen = Set<String>()

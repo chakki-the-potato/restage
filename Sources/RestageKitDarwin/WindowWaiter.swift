@@ -2,26 +2,26 @@ import RestageKit
 
 @MainActor
 public enum WindowWaiter {
-    /// 활성화 폴백을 발동하기까지 기다리는 시간.
+    /// How long to wait before falling back to activating the app.
     static let activationGrace: Duration = .milliseconds(750)
 
-    /// 배치를 시작하기 전에 앱이 자체 레이아웃을 끝내기를 기다리는 시간.
-    /// 기동 직후 크기를 조정하는 중에 배치하면 앱과 서로 덮어쓰기를 반복한다.
+    /// How long to wait for an app to finish its own layout before placing anything.
+    /// Placing while it is still sizing itself right after launch makes the two overwrite each other.
     static let layoutSettleTimeout: Duration = .seconds(2)
 
-    /// 크기 고정 창만 보일 때 그것을 최종 후보로 받아들이기까지 기다리는 시간.
-    /// 스플래시가 본창으로 교체되는 시간을 벌어준다. 실측상 Discord는 3초 안에 교체된다.
+    /// How long to wait before accepting a fixed-size window as the final candidate.
+    /// It buys time for a splash to be replaced by the real window. Measured, Discord swaps within 3s.
     static let splashGrace: Duration = .seconds(4)
 
-    /// 배치 가능한 창이 나타날 때까지 폴링한다.
-    /// 조건: AXRole == AXWindow, 크기가 0보다 큼, 최소화 아님.
-    /// 반환값은 AX 창 목록의 첫 번째, 즉 가장 최근 활성 창이다.
+    /// Polls until a placeable window appears.
+    /// Conditions: AXRole == AXWindow, size greater than zero, not minimized.
+    /// Returns the first of the AX window list, that is the most recently active window.
     ///
-    /// 일부 앱은 최전면이 되기 전까지 AX 창 트리를 만들지 않는다. Safari가 그렇다.
-    /// 창이 실제로 열려 있고 화면에 보이는데도 `AXWindows`가 빈 배열을 돌려준다.
-    /// 그래서 `activationGrace` 안에 창을 못 찾으면 한 번만 앱을 활성화하고 계속 폴링한다.
-    /// 활성화를 처음부터 하지 않는 이유는 배치 도중 앱들이 서로 포커스를 뺏으면
-    /// 마지막에 지정 앱으로 포커스를 주는 동작과 충돌하기 때문이다.
+    /// Some apps don't build their AX window tree until they come to the front. Safari does this.
+    /// `AXWindows` returns an empty array even though the window is open and visible.
+    /// So when no window is found within `activationGrace`, the app is activated once and polling continues.
+    /// Activating from the start is avoided because apps stealing focus from each other mid-placement
+    /// would fight the final step that focuses the anchor app.
     public static func wait(
         pid: Int32, timeout: Duration, selector: WindowSelector = .mostRecentlyActive
     ) async throws -> AXWindow {
@@ -79,8 +79,8 @@ public enum WindowWaiter {
         throw EngineError.windowTimeout(pid: pid, seconds: seconds(of: timeout))
     }
 
-    /// 배치 전 창 상태를 정리한다. 최소화 해제, 필요 시 전체화면 해제.
-    /// 크기가 안정될 때까지 기다린 뒤 반환한다.
+    /// Settles a window before placing it: unminimize, and leave full screen if needed.
+    /// Returns once the size has stopped changing.
     public static func prepareForDesktopPlacement(_ window: AXWindow) async {
         if window.isMinimized {
             window.setMinimized(false)
@@ -93,32 +93,32 @@ public enum WindowWaiter {
         _ = await Polling.settle(timeout: layoutSettleTimeout) { window.currentFrame }
     }
 
-    /// 폴링 중에 본 제목을 기억해두는 이유는 타임아웃 후 다시 조회하면 그 시점에
-    /// 앱이 최전면이 아니라 AX가 빈 배열을 돌려주기 때문이다. 그러면 "열린 창이 없습니다"라는
-    /// 사실과 다른 안내가 나간다.
+    /// Titles seen while polling are remembered because looking again after a timeout returns an
+    /// empty array — the app is no longer frontmost by then. That would report "no windows are
+    /// open", which is not true.
     ///
-    /// 제목이 지정되면 그것을 포함하는 창만 남긴다. 대소문자는 가리지 않는다.
+    /// With a title given, only windows containing it are kept. Case is ignored.
     ///
-    /// 여럿이 걸리면 그중 가장 최근 활성 창이 앞에 온다. AX 창 목록이 최근 활성 순이기 때문이다.
+    /// Among several matches the most recently active comes first, because the AX window list is in that order.
     private static func matching(_ windows: [AXWindow], _ selector: WindowSelector) -> [AXWindow] {
         guard let wanted = selector.titleContains?.lowercased() else { return windows }
         return windows.filter { $0.title?.lowercased().contains(wanted) == true }
     }
 
-    /// 크기까지 바꿀 수 있는 창. 배치 대상으로 우선 선택한다.
+    /// A window that can also be resized. Preferred as the placement target.
     ///
-    /// 크기 변경 가능 여부를 조건에 넣은 이유는 Electron 앱의 스플래시 창 때문이다.
-    /// Discord는 기동 직후 300x300 고정 크기 창을 먼저 띄우고 잠시 뒤 1280x870 본창으로
-    /// 교체한다. 이 조건이 없으면 스플래시를 잡아 위치만 옮기고 크기는 실패한다.
+    /// Resizability is part of the condition because of Electron splash windows. Right after launch
+    /// Discord shows a fixed 300x300 window and swaps it for the real 1280x870 one a moment later.
+    /// Without this condition the splash gets caught: it moves but fails to resize.
     private static func isPlaceable(_ window: AXWindow) -> Bool {
         isRealWindow(window) && window.isSizeSettable
     }
 
-    /// 크기 고정 여부와 무관한 실제 창. 타임아웃 시 폴백으로 쓴다.
+    /// A real window regardless of whether it can be resized. Used as the fallback on timeout.
     ///
-    /// IINA의 시작 창처럼 앱이 가진 창이 전부 크기 고정인 경우가 있다. 그때 아무것도
-    /// 반환하지 않으면 "창이 없다"는 잘못된 보고가 나가므로, 이 창을 넘겨서
-    /// 배치 단계가 크기 제약을 사유로 CONSTRAINED를 내도록 한다.
+    /// Some apps have nothing but fixed-size windows, like IINA's start window. Returning nothing
+    /// there would report "no windows" incorrectly, so this window is handed over and the placement
+    /// step reports CONSTRAINED with the size limit as the reason.
     private static func isRealWindow(_ window: AXWindow) -> Bool {
         guard window.role == AXAttributes.windowRole else { return false }
         guard !window.isMinimized else { return false }

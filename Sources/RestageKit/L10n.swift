@@ -1,29 +1,29 @@
 import Foundation
 
-/// 화면과 터미널에 쓰는 언어.
+/// The language used on screen and in the terminal.
 ///
-/// `system`은 macOS가 고른 언어를 따른다. 나머지는 사용자가 패널에서 직접 고른 것이다.
+/// `system` follows what macOS chose. The others were picked by the user in the panel.
 public enum AppLanguage: String, CaseIterable, Sendable {
     case system
     case korean = "ko"
     case english = "en"
 
-    /// 번들에서 찾을 lproj 이름. 자동은 시스템이 고르므로 없다.
+    /// The lproj name to look for in the bundle. Automatic has none; the system chooses.
     var localizationCode: String? {
         self == .system ? nil : rawValue
     }
 }
 
-/// 번역 문구를 읽는 곳.
+/// Where translated text is read from.
 ///
-/// `String(localized:)`를 쓰지 않는 이유는 언어를 앱 안에서 바꿀 수 있어야 하기 때문이다.
-/// 그 API는 프로세스가 시작할 때 정해진 언어만 보므로 사용자가 고른 언어를 반영하려면
-/// 재시작해야 한다. 여기서는 고른 언어의 lproj 번들을 직접 열어 읽으므로 즉시 바뀐다.
+/// `String(localized:)` isn't used because the language has to be changeable inside the app.
+/// That API only sees the language fixed when the process started, so reflecting the user's
+/// choice would need a restart. Here the chosen lproj bundle is opened directly, so it is immediate.
 ///
-/// 기준 언어는 영어다. 번역이 빠진 키는 영어로, 영어까지 없으면 키 자체로 떨어진다.
-/// 키가 화면에 보이면 빠진 번역을 바로 알아볼 수 있다.
-/// `Bundle.module`을 찾는 자리를 잡아 주는 표식. 이 클래스가 든 번들이 곧 자원 번들의
-/// 이웃이다.
+/// English is the base language. A key missing a translation falls back to English, and with
+/// English missing too, to the key itself. A key on screen makes the gap obvious at once.
+/// A marker that fixes where `Bundle.module` is found. The bundle holding this class is the
+/// resource bundle's neighbour.
 private final class BundleToken {}
 
 public enum L10n {
@@ -31,37 +31,37 @@ public enum L10n {
 
     private static let bundleName = "restage_RestageKit.bundle"
 
-    /// 설정을 저장하는 자리.
+    /// Where the setting is stored.
     ///
-    /// `UserDefaults.standard`로는 안 된다. 설치 스크립트와 수식은 `bin/restage`를 앱 번들
-    /// 안으로 심볼릭 링크하는데, 링크로 실행하면 `Bundle.main`이 앱 번들을 가리키지 않아
-    /// 번들 식별자가 없다. 그러면 표준 저장소가 앱과 다른 곳을 본다. 메뉴바에서 고른 언어를
-    /// 터미널이 못 보게 된다. 자리를 이름으로 못박는다.
+    /// `UserDefaults.standard` won't do. The installer and the formula symlink `bin/restage` into
+    /// the app bundle, and run through that link `Bundle.main` doesn't point at the app bundle, so
+    /// there is no bundle identifier. The standard store then looks somewhere else than the app,
+    /// and the terminal can't see the language chosen in the menu bar. Pin the place by name.
     private static let identifier = "com.chakki.restage"
 
-    /// 저장된 값은 한 곳뿐이므로 매번 열어도 된다. 상수로 두면 Swift 6이 공유 가변 상태로
-    /// 보고 막는다.
+    /// There is only one stored value, so opening it every time is fine. As a constant Swift 6
+    /// treats it as shared mutable state and refuses.
     private static var defaults: UserDefaults {
-        // 앱 번들로 실행하면 표준 저장소가 이미 그 자리를 본다. 그때 같은 이름을 suite로
-        // 다시 열면 macOS가 "자기 식별자를 suite로 쓰는 것은 말이 안 된다"고 경고를 찍는다.
+        // Run from the app bundle, the standard store already looks at that place. Opening the same
+        // name as a suite there makes macOS log "using your own identifier as a suite makes no sense".
         if Bundle.main.bundleIdentifier == identifier { return .standard }
         return UserDefaults(suiteName: identifier) ?? .standard
     }
 
-    /// 번역 자원 번들. 못 찾으면 nil이고, 그때 문구는 키 그대로 나온다.
+    /// The translation resource bundle. nil when it can't be found, and then text falls back to keys.
     ///
-    /// `Bundle.module`을 쓰지 않는 이유는 그것이 못 찾았을 때 프로세스를 죽이기 때문이다.
-    /// 실제로 죽었다. 설치 스크립트와 수식이 `bin/restage`를 앱 번들 안으로 심볼릭 링크하는데,
-    /// 링크로 실행하면 `Bundle.main`이 링크가 놓인 폴더를 가리켜 자원을 찾지 못한다.
-    /// 터미널에서 restage를 부르면 첫 문구에서 바로 죽었다.
+    /// `Bundle.module` isn't used because it kills the process when it can't find the bundle.
+    /// It did. The installer and the formula symlink `bin/restage` into the app bundle, and run
+    /// through that link `Bundle.main` points at the folder holding the link, where the resources
+    /// aren't. Calling restage from the terminal died on the very first string.
     ///
-    /// 그래서 직접 찾는다. 실행 파일의 심볼릭 링크를 풀어 그 옆과 번들의 Resources까지 본다.
+    /// So it is found by hand: resolve the executable's symlink and look beside it and in Resources.
     private static let resources: Bundle? = {
         var roots: [URL] = []
         if let url = Bundle.main.resourceURL { roots.append(url) }
         let token = Bundle(for: BundleToken.self)
         if let url = token.resourceURL { roots.append(url) }
-        // 테스트에서는 자원 번들이 .xctest 안이 아니라 그 옆에 놓인다.
+        // In tests the resource bundle sits beside the .xctest, not inside it.
         roots.append(token.bundleURL.deletingLastPathComponent())
         roots.append(Bundle.main.bundleURL)
         if let executable = Bundle.main.executableURL?.resolvingSymlinksInPath() {
@@ -102,27 +102,27 @@ public enum L10n {
         String(format: string(key), locale: locale, arguments: arguments)
     }
 
-    /// 숫자와 날짜 서식에 쓸 로케일. 문구와 서식이 다른 언어를 따르면 어색하다.
+    /// The locale for formatting numbers and dates. Text and formatting in different languages reads wrong.
     public static var locale: Locale {
         Locale(identifier: effective.rawValue)
     }
 
-    /// 지금 실제로 쓰고 있는 언어. 고르지 않았으면 시스템이 고른 것이다.
+    /// The language actually in use. Where none was chosen, the one the system chose.
     ///
-    /// 화면에는 자동이라는 상태를 보여주지 않는다. 사용자가 알아야 하는 것은 지금 어느
-    /// 언어로 보고 있는지이지, 그것을 누가 골랐는지가 아니다.
+    /// The screen never shows an automatic state. What the user needs to know is which language
+    /// they are reading, not who chose it.
     public static var effective: AppLanguage {
         if language != .system { return language }
         guard let resources else { return .english }
-        // 사용자 언어 목록을 직접 넘긴다. 넘기지 않으면 시스템이 ko-KR인데도 en이 나온다.
-        // 인자 없는 형태는 주 번들의 언어 목록을 보는데, 터미널에서 실행한 바이너리는
-        // 그 목록이 비어 있어 첫 번째 언어로 떨어진다.
+        // The user's language list is passed explicitly. Without it, en comes out even when the
+        // system is ko-KR: the argument-less form reads the main bundle's language list, and a
+        // binary run from the terminal has an empty one, so it falls to the first language.
         let preferred = Bundle.preferredLocalizations(
             from: resources.localizations, forPreferences: Locale.preferredLanguages)
         return preferred.first.flatMap(AppLanguage.init(rawValue:)) ?? .english
     }
 
-    /// 테스트가 같은 번들을 보게 하는 창구.
+    /// The window that lets tests see the same bundle.
     static var resourcesForTesting: Bundle? { resources }
 
     private static var selected: Bundle? {

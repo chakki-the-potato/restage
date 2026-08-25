@@ -1,14 +1,14 @@
 #!/bin/bash
-# 화면과 터미널에 보이는 문구가 소스에 박혀 있는지 본다.
+# Looks for text shown on screen or in the terminal that is baked into the source.
 #
-# 박혀 있으면 번역할 방법이 없다. 한글 문자열 리터럴을 찾되 주석은 제외한다.
-# restage-icon은 아이콘을 굽는 내부 도구라 사용자가 보지 않는다.
+# Baked in, there is no way to translate it. This finds Korean string literals and skips
+# comments. restage-icon is an internal build tool nobody sees.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-# 언어 이름은 어느 언어에서도 제 이름 그대로 쓴다. 번역 대상이 아니다.
+# Language names are written in their own language everywhere. They are not to be translated.
 ALLOWED='"한국어"'
 
 FOUND="$(
@@ -22,9 +22,9 @@ FOUND="$(
 )"
 
 if [ -n "$FOUND" ]; then
-  echo "번역되지 않은 문구가 있습니다. L10n.string(키)로 옮기세요." >&2
+  echo "Untranslated text found. Move it to L10n.string(key)." >&2
   echo "$FOUND" >&2
   exit 1
 fi
 
-echo "하드코딩된 문구 없음"
+echo "No hardcoded text"

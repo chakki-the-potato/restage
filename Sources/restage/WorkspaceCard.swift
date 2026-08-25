@@ -56,7 +56,9 @@ struct WorkspaceCard: View {
                     isHighlighted ? PanelPalette.hoverBorder : PanelPalette.cardBorder,
                     lineWidth: 1))
         .onHover { isHovering = $0 }
-        .help(item.error ?? "")
+        // 부제가 카드 폭보다 길면 잘린다. 앱이 셋에 화면이 여러 대면 영어에서 그렇다.
+        // 잘린 것을 마우스로 되찾을 수 있게 전문을 붙인다.
+        .help(item.error ?? item.subtitle)
     }
 
     private var header: some View {

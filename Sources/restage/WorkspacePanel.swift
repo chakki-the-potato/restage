@@ -3,20 +3,20 @@ import RestageKit
 import RestageKitDarwin
 import SwiftUI
 
-/// 메뉴바 아이콘을 누르면 뜨는 패널.
+/// The panel that opens when the menu bar icon is clicked.
 struct WorkspacePanel: View {
     @ObservedObject var store: PanelStore
     @StateObject private var language = LanguageSetting()
 
-    /// 창을 여는 동작 전에 패널을 닫는다. 알림 창이 패널 뒤에 가리면 눌 수 없다.
+    /// Closes the panel before anything that opens a window. A dialog behind the panel can't be clicked.
     let dismiss: () -> Void
-    /// 창을 닫은 뒤 패널을 다시 여는 길.
+    /// The way back: reopen the panel once that window is done.
     let reopen: () -> Void
-    /// 시스템 메뉴를 띄우는 길. 두 번째 인자는 버튼의 창 좌표다.
+    /// The way to raise a system menu. The second argument is the button's window coordinates.
     let presentMenu: ([PanelMenu.Item], CGRect) -> Void
     let onQuit: () -> Void
 
-    /// 각 카드의 더보기 버튼 위치. 그 자리에 메뉴를 띄운다.
+    /// Where each card's More button sits. The menu opens there.
     @State private var anchors: [String: CGRect] = [:]
     private var isBusy: Bool { store.runningName != nil }
 
@@ -27,8 +27,9 @@ struct WorkspacePanel: View {
             content
         }
         .frame(width: 320)
-        // 팝오버 기본 재질을 그대로 두면 앱이 비활성일 때 어두워진다. 다른 창을 클릭했을
-        // 뿐인데 패널 색이 바뀌면 무언가 꺼진 것처럼 보인다. 불투명 배경으로 덮는다.
+        // Left with the popover's default material, the panel darkens whenever the app is inactive.
+        // Its colour changing merely because another window was clicked reads as something being
+        // switched off. An opaque background covers it.
         .background(Color(nsColor: .windowBackgroundColor))
         .onPreferenceChange(MenuAnchorKey.self) { anchors = $0 }
         .onExitCommand { dismiss() }
@@ -36,7 +37,7 @@ struct WorkspacePanel: View {
 
     private static let optionsAnchor = "__options"
 
-    /// 카드의 더보기 메뉴 항목.
+    /// The items in a card's More menu.
     private func cardMenuItems(_ item: PanelStore.Item) -> [PanelMenu.Item] {
         [
             PanelMenu.Item(title: L10n.string("card.menu.rename"), symbol: "pencil.line") {
@@ -96,10 +97,10 @@ struct WorkspacePanel: View {
         return items
     }
 
-    // MARK: - 머리말
+    // MARK: - Header
 
-    /// 설정을 머리말 오른쪽으로 올린다. 꼬리말에 버튼 하나만 두면 구분선과 여백까지
-    /// 38pt를 그 하나에 쓴다.
+    /// Settings move up to the right of the header. A footer holding a single button spends 38pt
+    /// on that one thing, divider and padding included.
     private var header: some View {
         HStack(spacing: 8) {
             Image(systemName: "square.split.2x1")
@@ -129,7 +130,7 @@ struct WorkspacePanel: View {
         .padding(.vertical, 11)
     }
 
-    // MARK: - 본문
+    // MARK: - Body
 
     @ViewBuilder
     private var content: some View {
@@ -189,8 +190,8 @@ struct WorkspacePanel: View {
         .disabled(isBusy)
     }
 
-    /// 처음 여는 사람이 보는 화면. 무엇이 없는지만 알리면 다음에 무엇을 해야 하는지
-    /// 알 수 없다.
+    /// What someone opening it for the first time sees. Saying only what is missing does not tell
+    /// them what to do next.
     private var emptyState: some View {
         VStack(spacing: 10) {
             LayoutGlyph(shape: .leftRight)
@@ -216,8 +217,8 @@ struct WorkspacePanel: View {
         .padding(.vertical, 18)
     }
 
-    /// 배너 전체를 누르게 두면 눌러도 되는지 알 수 없다. 버튼을 따로 두고 왜 필요한지를
-    /// 한 줄로 적는다.
+    /// Making the whole banner clickable gives no sign that it can be clicked. A real button, and
+    /// one line saying why it is needed.
     private var permissionBanner: some View {
         HStack(spacing: 10) {
             Image(systemName: "exclamationmark.triangle.fill")
@@ -269,7 +270,7 @@ struct WorkspacePanel: View {
         .padding(.vertical, 6)
     }
 
-    // MARK: - 동작
+    // MARK: - Actions
 
     private func create() {
         act {
@@ -288,7 +289,7 @@ struct WorkspacePanel: View {
         }
     }
 
-    /// 패널을 닫고 동작을 실행한다. 실패하면 사유를 알린다.
+    /// Closes the panel and runs the action. Reports the reason on failure.
     private func act(_ operation: @escaping () -> String?) {
         dismiss()
         DispatchQueue.main.async {
@@ -296,16 +297,16 @@ struct WorkspacePanel: View {
                 Prompt.message(L10n.string("dialog.failed.title"), failure)
             }
             store.reload()
-            // 창이 끝나면 패널을 다시 연다. 이름을 바꾸고 단축키도 정하려면 매번 메뉴바를
-            // 다시 눌러야 하는데, 한 번에 하나만 하라는 뜻이 아니다.
+            // Reopen once the window is done. Renaming and then setting a shortcut would otherwise
+            // mean going back to the menu bar every time, and one at a time is not the intent.
             reopen()
         }
     }
 
-    /// 저장된 config를 설정 창으로 불러와 고친다.
+    /// Loads a saved config into the editor window and changes it.
     ///
-    /// 파일을 편집기로 여는 방식이었을 때는 자리 이름을 외워야 했고, 자리가 애매하다는
-    /// 표시를 봐도 그 자리에서 고칠 수 없었다.
+    /// When this opened the file in an editor instead, slot names had to be memorised, and seeing
+    /// a position marked ambiguous gave no way to fix it there and then.
     private func editWorkspace(_ name: String) -> String? {
         let existing: WorkspaceDraft
         do {
@@ -321,7 +322,7 @@ struct WorkspacePanel: View {
         return WorkspaceFiles.save(edited)
     }
 
-    /// 새 버전이 있는지 GitHub에 물어본다. 사용자가 누를 때만 부른다.
+    /// Asks GitHub whether a newer version exists. Only when the user presses it.
     private func checkForUpdate() {
         dismiss()
         Task { @MainActor in
@@ -339,7 +340,7 @@ struct WorkspacePanel: View {
         }
     }
 
-    /// 새 버전을 알린다. 받는 방법이 설치 경로마다 달라 문구도 갈린다.
+    /// Announces a new version. How to get it differs by install path, so the wording does too.
     private func announce(latest: SemanticVersion, page: String) {
         let title = L10n.string("update.available.title", "\(latest)")
         let current = AppVersion.current

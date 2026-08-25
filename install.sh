@@ -1,11 +1,11 @@
 #!/bin/bash
-# restage 설치 스크립트.
+# The restage installer.
 #
 #   curl -fsSL https://raw.githubusercontent.com/chakki-the-potato/restage/main/install.sh | bash
 #
-# 소스를 받아 이 컴퓨터에서 빌드한다. 미리 빌드한 앱을 나눠주려면 Developer ID 인증서로
-# 서명하고 공증해야 하는데 유료 계정이 필요하다. 직접 빌드하면 Gatekeeper가 막지 않으므로
-# 우클릭으로 여는 번거로움도 없다.
+# It fetches the source and builds it on this machine. Handing out a prebuilt app would
+# need a Developer ID certificate and notarization, which need a paid account. Building it
+# here means Gatekeeper never gets in the way and there is no right-click-to-open dance.
 set -euo pipefail
 
 REPO="chakki-the-potato/restage"
@@ -13,14 +13,14 @@ APP_DIR="${RESTAGE_APP_DIR:-/Applications}"
 BIN_DIR="${RESTAGE_BIN_DIR:-/usr/local/bin}"
 MIN_MACOS=13
 
-# 안내는 시스템 언어를 따른다. 설치는 앱을 켜기 전에 도는 것이라 앱 안의 언어 설정을
-# 아직 읽을 수 없다.
+# The messages follow the system language. This runs before the app is ever opened, so the
+# language chosen inside the app cannot be read yet.
 LANGUAGE="en"
 case "$(defaults read -g AppleLanguages 2>/dev/null | sed -n 2p)" in
   *ko*) LANGUAGE="ko" ;;
 esac
 
-# 번역을 키 하나에 나란히 둔다. 갈라 두면 한쪽만 고치게 된다.
+# Both translations sit under one key. Split apart, only one of them gets fixed.
 t() {
   local ko en
   case "$1" in
@@ -108,16 +108,16 @@ t() {
 say() { printf "\033[1m%s\033[0m\n" "$1"; }
 fail() { printf "\033[31m%s\033[0m\n" "$1" >&2; exit 1; }
 
-# 1. 이 맥에서 돌아가는지
+# 1. Does this Mac qualify
 [ "$(uname -s)" = "Darwin" ] || fail "$(t need_macos)"
 MAJOR="$(sw_vers -productVersion | cut -d. -f1)"
 [ "$MAJOR" -ge "$MIN_MACOS" ] \
   || fail "$(t need_macos_version "$(sw_vers -productVersion)")"
 
-# 2. Swift 컴파일러
+# 2. The Swift compiler
 #
-# Xcode 명령줄 도구가 없으면 설치 창을 띄운다. 그 설치는 사용자가 눌러야 끝나므로
-# 여기서 기다리지 않고 안내만 하고 멈춘다.
+# Without the Xcode command line tools, open the installer. That install finishes only when
+# the user clicks through it, so say so and stop rather than waiting here.
 if ! xcode-select -p >/dev/null 2>&1; then
   say "$(t need_clt)"
   xcode-select --install >/dev/null 2>&1 || true
@@ -125,7 +125,7 @@ if ! xcode-select -p >/dev/null 2>&1; then
 fi
 command -v swift >/dev/null 2>&1 || fail "$(t no_swift)"
 
-# 3. 소스 받기
+# 3. Fetch the source
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
@@ -146,13 +146,13 @@ tar -xzf "$WORK/src.tar.gz" -C "$WORK"
 SRC="$(find "$WORK" -maxdepth 1 -type d -name 'restage-*' | head -1)"
 [ -n "$SRC" ] || fail "$(t bad_archive)"
 
-# 4. 빌드
+# 4. Build
 say "$(t building)"
-# 빌드 로그는 실패했을 때만 보여준다. 성공했을 때 컴파일 진행 줄이 쏟아지면
-# 무엇을 해야 하는지 적어둔 안내가 묻힌다.
+# The build log is shown only on failure. On success a flood of compile lines would bury
+# the instructions that say what to do next.
 BUILD_LOG="$WORK/build.log"
-# 받은 태그를 그대로 앱에 박는다. 넘기지 않으면 앱이 자기 버전을 모르고, 업데이트
-# 확인이 방금 설치한 것에도 새 버전이 있다고 답한다.
+# Stamp the tag we fetched into the app. Without it the app doesn't know its own version and
+# the update check tells a fresh install that a newer version is available.
 if ! (
   cd "$SRC" && RESTAGE_VERSION="${TAG#v}" ./scripts/make-app.sh "$SRC/build/restage.app"
 ) >"$BUILD_LOG" 2>&1; then
@@ -160,7 +160,7 @@ if ! (
   fail "$(t build_failed)"
 fi
 
-# 5. 설치
+# 5. Install
 say "$(t installing)"
 if [ -w "$APP_DIR" ]; then
   rm -rf "${APP_DIR:?}/restage.app"
@@ -170,7 +170,7 @@ else
   sudo cp -R "$SRC/build/restage.app" "$APP_DIR/"
 fi
 
-# 터미널에서도 쓸 수 있게 이어준다. 실패해도 앱은 이미 설치됐으므로 멈추지 않는다.
+# Wire it up for the terminal too. A failure here doesn't stop us: the app is already in.
 LINK_NOTE=""
 if [ -d "$BIN_DIR" ]; then
   if [ -w "$BIN_DIR" ]; then

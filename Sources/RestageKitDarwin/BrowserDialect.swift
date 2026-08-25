@@ -1,14 +1,14 @@
 import Foundation
 import RestageKit
 
-/// 브라우저별 AppleScript 어휘 차이를 이 파일에만 가둔다.
-/// 새 브라우저를 지원하려면 여기에 항목을 추가하면 된다.
+/// Confines the AppleScript vocabulary differences between browsers to this one file.
+/// Supporting a new browser means adding an entry here.
 struct BrowserDialect {
     let applicationName: String
     let makesWindowWithURL: Bool
 
-    /// 탭 제어 어휘를 외부에 열어두지 않은 브라우저. Chromium 문법이 통하지 않는다.
-    /// 되는 척하지 않고 명확히 실패로 보고하기 위해 목록으로 둔다.
+    /// Browsers that don't expose a tab control vocabulary. Chromium syntax doesn't reach them.
+    /// They are listed so the failure is reported plainly instead of pretending to work.
     private static let withoutTabControl: Set<String> = [
         "firefox", "firefox developer edition", "firefox nightly",
         "librewolf", "waterfox", "tor browser", "zen", "zen browser",
@@ -16,14 +16,14 @@ struct BrowserDialect {
 
     private static let safariName = "safari"
 
-    /// Safari만 독자 어휘를 쓰고 나머지는 전부 Chromium 계열과 같은 문법을 쓴다.
+    /// Only Safari has its own vocabulary; everything else uses the Chromium syntax.
     ///
-    /// 브라우저를 하나씩 등록하지 않는 이유는, 목록에 없는 브라우저를 쓰는 사람이 이 파일을
-    /// 고치고 다시 빌드해야 하는 상황을 만들지 않기 위해서다. Chrome, Edge, Brave, Arc,
-    /// Whale, Vivaldi는 모두 Chromium 경로를 그대로 탄다.
+    /// Browsers aren't registered one by one so that someone using a browser missing from a list
+    /// never has to edit this file and rebuild. Chrome, Edge, Brave, Arc, Whale, and Vivaldi all
+    /// take the Chromium path as is.
     ///
-    /// 검증한 것은 Safari와 Chrome 둘뿐이다. 나머지는 같은 코드 경로를 타지만 실제로
-    /// 확인하지는 않았다.
+    /// Only Safari and Chrome were verified. The rest run the same code path but weren't
+    /// actually checked.
     @MainActor
     static func forApp(_ app: AppID) throws -> BrowserDialect {
         let bundleID = try InstalledApps.bundleID(for: app)
@@ -38,12 +38,12 @@ struct BrowserDialect {
             applicationName: name, makesWindowWithURL: name.lowercased() == safariName)
     }
 
-    /// 창 id와 각 창의 탭 URL을 줄 단위로 돌려준다.
-    /// 출력 형식은 창 하나당 한 줄이며 필드는 탭 문자로 구분한다.
+    /// Returns window ids and each window's tab URLs, one line per window.
+    /// Fields within a line are separated by a tab character.
     ///
-    /// 구분자를 `tell` 블록 밖에서 만드는 이유는 블록 안에서 `tab`이 AppleScript의
-    /// 탭 상수가 아니라 브라우저의 `tab` 클래스로 해석되기 때문이다. 그대로 쓰면
-    /// 구분자 자리에 문자열 "tab"이 들어가 파싱이 전부 실패한다. 실제로 겪었다.
+    /// The separator is built outside the `tell` block because inside it `tab` resolves to the
+    /// browser's `tab` class rather than AppleScript's tab constant. Used as is, the string "tab"
+    /// lands in the separator's place and every parse fails. That happened.
     func readWindowsScript() -> String {
         """
         set fieldSeparator to character id 9
@@ -64,10 +64,10 @@ struct BrowserDialect {
         """
     }
 
-    /// 새 창을 만들고 첫 URL을 연다.
+    /// Makes a new window and opens the first URL in it.
     ///
-    /// 만들어진 창이 맨 앞으로 온다는 보장이 없다. Safari에서 실제로 확인했다.
-    /// 호출자는 반드시 첫 탭 URL로 창을 다시 찾아야 한다.
+    /// There is no guarantee the new window comes to the front. Confirmed in Safari.
+    /// The caller has to find the window again by its first tab URL.
     func newWindowScript(url: String) -> String {
         if makesWindowWithURL {
             return """
@@ -84,11 +84,11 @@ struct BrowserDialect {
         """
     }
 
-    /// 창 좌표와 각 탭 URL을 줄 단위로 돌려준다. 앞 네 칸이 bounds다.
+    /// Returns window bounds and each tab URL, one line per window. The first four fields are the bounds.
     ///
-    /// `readWindowsScript`가 창 id를 쓰는 것과 달리 좌표를 쓰는 이유는, 현재 배치를 config로
-    /// 옮길 때 AX가 본 창과 브라우저가 아는 창을 맞춰야 하는데 둘 사이에 공통된 id가 없기
-    /// 때문이다. 제목은 두 API가 서로 다르게 주지만 `bounds`는 AX의 위치·크기와 정확히 같다.
+    /// Unlike `readWindowsScript`, which uses window ids, this uses coordinates: turning the current
+    /// layout into a config means matching the window AX saw with the one the browser knows, and the
+    /// two share no id. Titles differ between the APIs, but `bounds` matches AX's position and size exactly.
     func readWindowGeometryScript() -> String {
         """
         set fieldSeparator to character id 9
@@ -111,11 +111,11 @@ struct BrowserDialect {
         """
     }
 
-    /// 창 id로 직접 지목해 탭을 붙인다.
+    /// Adds tabs by naming the window id directly.
     ///
-    /// `repeat`로 창을 훑어 `tabs of w`에 넣는 방식은 Brave에서 조용히 무시된다. 오류도
-    /// 나지 않고 탭도 생기지 않아, 성공으로 보고하면서 아무 일도 하지 않는다. 실제로 겪었다.
-    /// `tell window id`로 지목하면 Brave, Chrome, Safari 모두에서 동작한다.
+    /// Walking windows with `repeat` and appending to `tabs of w` is silently ignored by Brave. No
+    /// error is raised and no tab appears, so it reports success having done nothing. That happened.
+    /// Naming the window with `tell window id` works in Brave, Chrome, and Safari alike.
     func addTabScript(windowID: Int, url: String) -> String {
         """
         tell application "\(applicationName)"
