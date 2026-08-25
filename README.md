@@ -351,6 +351,8 @@ docs/superpowers/           design specs and measurements
 
 `docs/` records why things are built the way they are and how macOS actually
 behaves. It isn't a manual — it may help someone hitting the same walls.
+[findings.md](docs/findings.md) is the short version: everything measured on real
+machines that cannot be recovered by reading the code.
 
 </details>
 
