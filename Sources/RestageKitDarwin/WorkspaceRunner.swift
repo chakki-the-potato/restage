@@ -17,6 +17,7 @@ public struct WorkspaceRunner {
     ) async -> [ItemOutcome] {
         var outcomes: [ItemOutcome] = []
         let total = resolved.screens.reduce(0) { $0 + $1.items.count } + resolved.skipped.count
+        let home = HomeSpace.capture()
 
         for screen in resolved.screens {
             outcomes.append(contentsOf: await runScreen(
@@ -28,6 +29,9 @@ public struct WorkspaceRunner {
                 screenID: skipped.id, app: nil, status: .skipped, detail: skipped.reason))
         }
 
+        if let home, WindowInventory.onScreenWindowCount(pid: home) == 0 {
+            HomeSpace.returnTo(home)
+        }
         focusFirstAnchor(resolved)
         return outcomes
     }
@@ -108,7 +112,7 @@ public struct WorkspaceRunner {
         let window: WindowHandle
         do {
             window = try await engine.waitForWindow(
-                handle, selector: placement.selector, timeout: Self.windowTimeout)
+                handle, selector: placement.selector, timeout: Self.windowTimeout, mayFollowOtherSpaces: true)
         } catch {
             return ItemOutcome(
                 screenID: screen.id, app: placement.app,
@@ -147,7 +151,7 @@ public struct WorkspaceRunner {
 
         do {
             _ = try await engine.waitForWindow(
-                handle, selector: .mostRecentlyActive, timeout: Self.windowTimeout)
+                handle, selector: .mostRecentlyActive, timeout: Self.windowTimeout, mayFollowOtherSpaces: true)
         } catch {
             let status: OutcomeStatus = CurrentState.windowCount(pid: handle.pid) > 0
                 ? .unreachable : .failed
@@ -184,7 +188,7 @@ public struct WorkspaceRunner {
 
         AXWindow.setApplicationFrontmost(pid: handle.pid)
         guard let window = try? await engine.waitForWindow(
-            handle, selector: .mostRecentlyActive, timeout: Self.windowTimeout)
+            handle, selector: .mostRecentlyActive, timeout: Self.windowTimeout, mayFollowOtherSpaces: true)
         else {
             return tabOutcome(tabs, plan: plan, screen: screen)
         }

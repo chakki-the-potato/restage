@@ -9,7 +9,8 @@ public enum WindowWaiter {
     static let splashGrace: Duration = .seconds(4)
 
     public static func wait(
-        pid: Int32, timeout: Duration, selector: WindowSelector = .mostRecentlyActive
+        pid: Int32, timeout: Duration, selector: WindowSelector = .mostRecentlyActive,
+        mayFollowOtherSpaces: Bool = false
     ) async throws -> AXWindow {
         var lastError: Error?
         var fixedSizeCandidate: AXWindow?
@@ -46,7 +47,8 @@ public enum WindowWaiter {
                 activated = true
                 let onScreen = WindowInventory.onScreenWindowCount(pid: pid)
                 let anywhere = WindowInventory.windowCount(pid: pid)
-                if shouldActivate(onScreen: onScreen, anywhere: anywhere) {
+                if shouldActivate(onScreen: onScreen, anywhere: anywhere)
+                    || mayFollowOtherSpaces {
                     AXWindow.setApplicationFrontmost(pid: pid)
                 } else {
                     throw EngineError.windowOnOtherSpace(pid: pid, windowCount: anywhere)
