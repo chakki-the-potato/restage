@@ -67,6 +67,18 @@ from about 48s to 5.7s cold.
 **Focus needs the AX path.** `NSRunningApplication.activate()` is ignored by
 macOS when the caller is not a GUI app. Only setting `AXFrontmost` works.
 
+**Following does not always work.** With
+`com.apple.dock workspaces-auto-swoosh` on, setting `AXFrontmost` usually takes
+the view to the app's Space. Measured on a ten-app workspace it gathered eight
+apps that had been scattered. It failed for two: one whose window accessibility
+reported as absent even after activating, and one whose windows were in a full
+screen Space. Neither `AXFrontmost` nor AppleScript `activate` moved them.
+
+**Leaving full screen works while the window is reachable.** Setting
+`AXFullScreen` to false returns the window to the desktop. What cannot be done
+is clearing it from another Space, because accessibility does not see the window
+there at all.
+
 ## Browsers
 
 **Brave silently ignores the loop form.** Walking windows with `repeat` and

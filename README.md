@@ -253,9 +253,12 @@ Most of these are things macOS doesn't allow.
 API. `mode: fullscreen` is the way around it — macOS makes a dedicated Space for
 you.
 
-**Full screen is one-way.** It can be entered but not left. A full screen app's
-window moves to its own Space and there's no way to switch to it. Leave it by
-hand with `ctrl+cmd+F`.
+**Leaving full screen only works while the window is reachable.** Accessibility
+can clear the full screen attribute, and restage does that before placing. But a
+full screen app's window sits on its own Space, and from anywhere else
+accessibility cannot see it at all — so there is nothing to clear. restage
+follows the window to its Space first, and when that fails the window has to be
+brought out by hand with `ctrl+cmd+F`.
 
 **Handling windows on another desktop needs one setting.** Left alone they're
 reported as `unreachable`. Moving a window to another desktop works through

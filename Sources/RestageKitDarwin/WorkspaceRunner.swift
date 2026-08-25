@@ -5,6 +5,8 @@ import RestageKit
 public struct WorkspaceRunner {
     public static let windowTimeout: Duration = .seconds(15)
 
+    static let reachRounds = 3
+
     private let engine: AXWindowEngine
 
     public init(engine: AXWindowEngine = AXWindowEngine()) {
@@ -95,21 +97,30 @@ public struct WorkspaceRunner {
             placed.append(await task.value)
         }
 
-        var index = 0
-        for item in screen.items {
-            guard handles[item.app] != nil, launchFailures[item.app] == nil else { continue }
-            defer { index += 1 }
-            guard placed[index].status == .unreachable,
-                  let handle = handles[item.app] else { continue }
+        for _ in 0..<Self.reachRounds {
+            var reached = false
+            var index = 0
 
-            switch item {
-            case .place(let placement):
-                placed[index] = await apply(
-                    placement, handle: handle, screen: screen, follow: true)
-            case .tabs(let plan):
-                placed[index] = await applyTabs(
-                    plan, handle: handle, screen: screen, follow: true)
+            for item in screen.items {
+                guard handles[item.app] != nil, launchFailures[item.app] == nil else { continue }
+                defer { index += 1 }
+                guard placed[index].status == .unreachable,
+                      let handle = handles[item.app] else { continue }
+
+                let retried: ItemOutcome
+                switch item {
+                case .place(let placement):
+                    retried = await apply(
+                        placement, handle: handle, screen: screen, follow: true)
+                case .tabs(let plan):
+                    retried = await applyTabs(
+                        plan, handle: handle, screen: screen, follow: true)
+                }
+                if retried.status != .unreachable { reached = true }
+                placed[index] = retried
             }
+
+            guard reached, placed.contains(where: { $0.status == .unreachable }) else { break }
         }
         outcomes.append(contentsOf: placed)
 
