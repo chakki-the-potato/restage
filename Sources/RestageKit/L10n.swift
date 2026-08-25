@@ -31,6 +31,23 @@ public enum L10n {
 
     private static let bundleName = "restage_RestageKit.bundle"
 
+    /// 설정을 저장하는 자리.
+    ///
+    /// `UserDefaults.standard`로는 안 된다. 설치 스크립트와 수식은 `bin/restage`를 앱 번들
+    /// 안으로 심볼릭 링크하는데, 링크로 실행하면 `Bundle.main`이 앱 번들을 가리키지 않아
+    /// 번들 식별자가 없다. 그러면 표준 저장소가 앱과 다른 곳을 본다. 메뉴바에서 고른 언어를
+    /// 터미널이 못 보게 된다. 자리를 이름으로 못박는다.
+    private static let identifier = "com.chakki.restage"
+
+    /// 저장된 값은 한 곳뿐이므로 매번 열어도 된다. 상수로 두면 Swift 6이 공유 가변 상태로
+    /// 보고 막는다.
+    private static var defaults: UserDefaults {
+        // 앱 번들로 실행하면 표준 저장소가 이미 그 자리를 본다. 그때 같은 이름을 suite로
+        // 다시 열면 macOS가 "자기 식별자를 suite로 쓰는 것은 말이 안 된다"고 경고를 찍는다.
+        if Bundle.main.bundleIdentifier == identifier { return .standard }
+        return UserDefaults(suiteName: identifier) ?? .standard
+    }
+
     /// 번역 자원 번들. 못 찾으면 nil이고, 그때 문구는 키 그대로 나온다.
     ///
     /// `Bundle.module`을 쓰지 않는 이유는 그것이 못 찾았을 때 프로세스를 죽이기 때문이다.
@@ -61,16 +78,16 @@ public enum L10n {
 
     public static var language: AppLanguage {
         get {
-            guard let raw = UserDefaults.standard.string(forKey: defaultsKey),
+            guard let raw = defaults.string(forKey: defaultsKey),
                   let language = AppLanguage(rawValue: raw)
             else { return .system }
             return language
         }
         set {
             if newValue == .system {
-                UserDefaults.standard.removeObject(forKey: defaultsKey)
+                defaults.removeObject(forKey: defaultsKey)
             } else {
-                UserDefaults.standard.set(newValue.rawValue, forKey: defaultsKey)
+                defaults.set(newValue.rawValue, forKey: defaultsKey)
             }
         }
     }
