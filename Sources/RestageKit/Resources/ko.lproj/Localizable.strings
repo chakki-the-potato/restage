@@ -147,10 +147,11 @@
 "error.place.not_resizable" = "크기를 바꿀 수 없는 창입니다";
 "error.place.retries_exhausted" = "%d회 시도 후에도 목표 좌표에 도달하지 못했습니다";
 "warn.other_space" = "다른 Space에 있어 화면에 보이지 않습니다";
-"constraint.min_size" = "최소 크기 %1$dx%2$d";
-"constraint.min_width_unexposed" = "최소 너비 %d (앱이 AXMinSize를 노출하지 않음)";
-"constraint.min_height_unexposed" = "최소 높이 %d (앱이 AXMinSize를 노출하지 않음)";
-"constraint.min_size_unexposed" = "최소 크기 %1$dx%2$d (앱이 AXMinSize를 노출하지 않음)";
+"constraint.min_size" = "최소 크기 %1$@x%2$@";
+"constraint.min_width_unexposed" = "최소 너비 %@ (앱이 AXMinSize를 노출하지 않음)";
+"constraint.min_height_unexposed" = "최소 높이 %@ (앱이 AXMinSize를 노출하지 않음)";
+"constraint.min_size_unexposed" = "최소 크기 %1$@x%2$@ (앱이 AXMinSize를 노출하지 않음)";
+"constraint.quantized_size" = "앱이 자기 단위로만 크기를 바꿉니다 (%1$@x%2$@)";
 
 /* 실행 결과 */
 "outcome.already_satisfied" = "이미 목표 상태";

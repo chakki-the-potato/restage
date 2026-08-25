@@ -7,6 +7,8 @@ public enum WindowPlacer {
     static let tolerance: CGFloat = 2
     static let maxAttempts = 40
     static let totalTimeout: Duration = .seconds(8)
+
+    static let quantizeTolerance: CGFloat = 40
     static let settleTimeout: Duration = .milliseconds(800)
 
     public static func place(_ window: AXWindow, target: CGRect) async -> PlacementResult {
@@ -90,6 +92,10 @@ public enum WindowPlacer {
             return .constrained(actual: observed, expected: target, reason: reason)
         }
 
+        if let reason = quantizedSizeReason(target: target, observed: observed) {
+            return .constrained(actual: observed, expected: target, reason: reason)
+        }
+
         return .failed(
             expected: target,
             actual: observed,
@@ -106,7 +112,19 @@ public enum WindowPlacer {
 
         guard (widthBlocked && widthSettledAtMin) || (heightBlocked && heightSettledAtMin)
         else { return nil }
-        return L10n.string("constraint.min_size", Int(minSize.width), Int(minSize.height))
+        return L10n.string(
+            "constraint.min_size", "\(Int(minSize.width))", "\(Int(minSize.height))")
+    }
+
+    private static func quantizedSizeReason(target: CGRect, observed: CGRect) -> String? {
+        guard abs(observed.minX - target.minX) <= tolerance,
+              abs(observed.minY - target.minY) <= tolerance,
+              abs(observed.width - target.width) <= quantizeTolerance,
+              abs(observed.height - target.height) <= quantizeTolerance
+        else { return nil }
+        return L10n.string(
+            "constraint.quantized_size",
+            "\(Int(observed.width))", "\(Int(observed.height))")
     }
 
     private static func inferredMinimumReason(target: CGRect, observed: CGRect) -> String? {
@@ -119,13 +137,15 @@ public enum WindowPlacer {
         let heightMatches = abs(observed.height - target.height) <= tolerance
 
         if widthStuckLarger && heightMatches {
-            return L10n.string("constraint.min_width_unexposed", Int(observed.width))
+            return L10n.string("constraint.min_width_unexposed", "\(Int(observed.width))")
         }
         if heightStuckLarger && widthMatches {
-            return L10n.string("constraint.min_height_unexposed", Int(observed.height))
+            return L10n.string("constraint.min_height_unexposed", "\(Int(observed.height))")
         }
         if widthStuckLarger && heightStuckLarger {
-            return L10n.string("constraint.min_size_unexposed", Int(observed.width), Int(observed.height))
+            return L10n.string(
+                "constraint.min_size_unexposed",
+                "\(Int(observed.width))", "\(Int(observed.height))")
         }
         return nil
     }

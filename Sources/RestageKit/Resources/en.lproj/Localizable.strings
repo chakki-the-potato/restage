@@ -147,10 +147,11 @@
 "error.place.not_resizable" = "This window can't be resized";
 "error.place.retries_exhausted" = "The window never reached its target position after %d attempts";
 "warn.other_space" = "It is on another Space, so it isn't visible";
-"constraint.min_size" = "Minimum size %1$dx%2$d";
-"constraint.min_width_unexposed" = "Minimum width %d (the app doesn't expose AXMinSize)";
-"constraint.min_height_unexposed" = "Minimum height %d (the app doesn't expose AXMinSize)";
-"constraint.min_size_unexposed" = "Minimum size %1$dx%2$d (the app doesn't expose AXMinSize)";
+"constraint.min_size" = "Minimum size %1$@x%2$@";
+"constraint.min_width_unexposed" = "Minimum width %@ (the app doesn't expose AXMinSize)";
+"constraint.min_height_unexposed" = "Minimum height %@ (the app doesn't expose AXMinSize)";
+"constraint.min_size_unexposed" = "Minimum size %1$@x%2$@ (the app doesn't expose AXMinSize)";
+"constraint.quantized_size" = "The app only resizes in its own steps (%1$@x%2$@)";
 
 /* 실행 결과 */
 "outcome.already_satisfied" = "Already where it should be";
