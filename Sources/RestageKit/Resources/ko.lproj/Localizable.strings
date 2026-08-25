@@ -1,7 +1,5 @@
 /* 패널 */
 "panel.new_from_current" = "현재 창 배치로 새로 만들기";
-"panel.hotkey.placeholder" = "단축키";
-"panel.language.auto" = "자동";
 "panel.retry" = "다시 시도";
 "panel.dismiss" = "닫기";
 "panel.settings" = "설정";

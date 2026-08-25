@@ -53,19 +53,25 @@ public enum L10n {
 
     /// 숫자와 날짜 서식에 쓸 로케일. 문구와 서식이 다른 언어를 따르면 어색하다.
     public static var locale: Locale {
-        guard let code = language.localizationCode else { return .current }
-        return Locale(identifier: code)
+        Locale(identifier: effective.rawValue)
     }
 
-    private static var selected: Bundle? {
-        if let code = language.localizationCode { return lproj(code) ?? .module }
+    /// 지금 실제로 쓰고 있는 언어. 고르지 않았으면 시스템이 고른 것이다.
+    ///
+    /// 화면에는 자동이라는 상태를 보여주지 않는다. 사용자가 알아야 하는 것은 지금 어느
+    /// 언어로 보고 있는지이지, 그것을 누가 골랐는지가 아니다.
+    public static var effective: AppLanguage {
+        if language != .system { return language }
         // 사용자 언어 목록을 직접 넘긴다. 넘기지 않으면 시스템이 ko-KR인데도 en이 나온다.
         // 인자 없는 형태는 주 번들의 언어 목록을 보는데, 터미널에서 실행한 바이너리는
         // 그 목록이 비어 있어 첫 번째 언어로 떨어진다.
         let preferred = Bundle.preferredLocalizations(
             from: Bundle.module.localizations, forPreferences: Locale.preferredLanguages)
-        guard let best = preferred.first else { return .module }
-        return lproj(best) ?? .module
+        return preferred.first.flatMap(AppLanguage.init(rawValue:)) ?? .english
+    }
+
+    private static var selected: Bundle? {
+        lproj(effective.rawValue) ?? .module
     }
 
     private static var english: Bundle? {

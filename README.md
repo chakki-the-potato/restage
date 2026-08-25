@@ -259,8 +259,7 @@ Clicking the menu bar icon opens a panel. Clicking a card runs it.
 
 A card shows what's inside the workspace: up to three real app icons overlapped in front, counted as `+2` beyond that, and under the name the shape of the arrangement as a small drawing plus its name. How many displays it uses is only spelled out when there's more than one.
 
-- Hovering reveals the **shortcut slot**, **Edit**, and **More**
-- A card without a shortcut only shows its dashed slot on hover. Click it to set one
+- Hovering hides the shortcut chip and puts **Edit** and **More** in its place
 - **More** has Rename, Change Shortcut, Reveal in Finder, and Delete
 - To set a shortcut, just press the combination you want. Only the `hotkey` line of the config changes
 - Delete asks first, then moves the file to the Trash
@@ -274,7 +273,7 @@ A shortcut another app already owns won't register. The card says so.
 
 ### Language
 
-The panel and the terminal both speak English and Korean. It follows the system language by default, and **Auto · 한국어 · English** under the list overrides it. The change is immediate — no restart.
+The panel and the terminal both speak English and Korean. It follows the system language by default, and **한국어 · English** under the list overrides it — whichever the system chose is the one lit up until you pick. The change is immediate; no restart.
 
 The terminal follows the same setting.
 

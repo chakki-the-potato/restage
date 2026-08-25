@@ -43,7 +43,7 @@ func renderPanelForReview() throws {
     ) -> some View {
         WorkspaceCard(
             item: value, isRunning: running, isBusy: false, progress: progress, message: message,
-            onRun: {}, onEdit: {}, onSetHotkey: {}, onToggleActions: {}, onDismissMessage: {})
+            onRun: {}, onEdit: {}, onToggleActions: {}, onDismissMessage: {})
     }
 
     let sheet = VStack(alignment: .leading, spacing: 6) {

@@ -1,7 +1,5 @@
 /* 패널 */
 "panel.new_from_current" = "New from Current Layout";
-"panel.hotkey.placeholder" = "Shortcut";
-"panel.language.auto" = "Auto";
 "panel.retry" = "Retry";
 "panel.dismiss" = "Dismiss";
 "panel.settings" = "Settings";

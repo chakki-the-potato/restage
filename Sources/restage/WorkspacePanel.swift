@@ -145,7 +145,6 @@ struct WorkspacePanel: View {
             message: store.messages[item.name],
             onRun: { store.run(item.name) },
             onEdit: { act { editWorkspace(item.name) } },
-            onSetHotkey: { act { setHotkey(for: item) } },
             onToggleActions: {
                 guard let anchor = anchors[item.name] else { return }
                 presentMenu(cardMenuItems(item), anchor)

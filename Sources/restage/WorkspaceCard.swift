@@ -17,7 +17,6 @@ struct WorkspaceCard: View {
 
     let onRun: () -> Void
     let onEdit: () -> Void
-    let onSetHotkey: () -> Void
     let onToggleActions: () -> Void
     let onDismissMessage: () -> Void
 
@@ -135,11 +134,12 @@ struct WorkspaceCard: View {
         return Double(progress.completed) / Double(progress.total)
     }
 
+    /// 단축키 칩과 관리 버튼은 같은 자리를 나눠 쓴다. 둘을 같이 두면 마우스를 올릴 때마다
+    /// 이름과 칩이 옆으로 밀린다. 단축키를 정하는 길은 더보기 메뉴에 있다.
     @ViewBuilder
     private var trailing: some View {
         if isHovering {
             HStack(spacing: 3) {
-                hotkeyChip
                 iconButton("pencil", L10n.string("card.menu.edit"), onEdit)
                 iconButton("ellipsis", L10n.string("card.menu.more"), onToggleActions)
                     .menuAnchor(item.name)
@@ -147,31 +147,6 @@ struct WorkspaceCard: View {
             .foregroundStyle(.secondary)
         } else if let hotkey = item.hotkey {
             chip(hotkey)
-        }
-    }
-
-    /// 마우스를 올렸을 때만 점선 자리를 보여준다. 늘 보이면 미지정 카드가 많은 목록에서
-    /// 점선만 반복된다. 이미 지정된 칩은 올려도 그대로 둔다. 확인하려고 올렸는데 사라지면
-    /// 곤란하다.
-    @ViewBuilder
-    private var hotkeyChip: some View {
-        if let hotkey = item.hotkey {
-            chip(hotkey)
-        } else {
-            Button(action: onSetHotkey) {
-                Text(L10n.string("panel.hotkey.placeholder"))
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundStyle(.tertiary)
-                    .padding(.horizontal, 7)
-                    .padding(.vertical, 3)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .strokeBorder(
-                                Color.primary.opacity(0.20),
-                                style: StrokeStyle(lineWidth: 1, dash: [3, 2])))
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
         }
     }
 
