@@ -16,7 +16,7 @@ cask "restage" do
   desc "Restore a declared layout of apps and windows in one step"
   homepage "https://github.com/chakki-the-potato/restage"
 
-  depends_on macos: ">= :ventura"
+  depends_on macos: :ventura
 
   app "restage.app"
 
