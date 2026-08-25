@@ -319,17 +319,31 @@ struct WorkspacePanel: View {
                     L10n.string("update.current.title"),
                     L10n.string("update.current.body", "\(version)"))
             case .available(let latest, let url):
-                if Prompt.confirmDestructive(
-                    title: L10n.string("update.available.title", "\(latest)"),
-                    body: L10n.string("update.available.body", Bundle.main.shortVersion),
-                    confirmTitle: L10n.string("update.available.confirm"), destructive: false),
-                   let page = URL(string: url) {
-                    NSWorkspace.shared.open(page)
-                }
+                announce(latest: latest, page: url)
             case .failed(let reason):
                 Prompt.message(L10n.string("update.failed.title"), reason)
             }
             reopen()
+        }
+    }
+
+    /// 새 버전을 알린다. 받는 방법이 설치 경로마다 달라 문구도 갈린다.
+    private func announce(latest: SemanticVersion, page: String) {
+        let title = L10n.string("update.available.title", "\(latest)")
+        let current = Bundle.main.shortVersion
+
+        guard InstallSource.current == .elsewhere else {
+            Prompt.message(
+                title,
+                L10n.string("update.available.body.homebrew", current, InstallSource.formula))
+            return
+        }
+        if Prompt.confirmDestructive(
+            title: title,
+            body: L10n.string("update.available.body", current),
+            confirmTitle: L10n.string("update.available.confirm"), destructive: false),
+           let url = URL(string: page) {
+            NSWorkspace.shared.open(url)
         }
     }
 

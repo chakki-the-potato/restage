@@ -47,6 +47,7 @@
 "update.available.title" = "Version %@ is available";
 "update.available.body" = "You're running v%@.\nThe release page explains how to update.";
 "update.available.confirm" = "Open Release Page";
+"update.available.body.homebrew" = "You're running v%1$@.\n\nUpdate it from the terminal:\n\nbrew upgrade %2$@";
 "update.failed.title" = "Couldn't check for updates";
 
 /* 오류 */
@@ -125,7 +126,6 @@
 "error.display.external_missing" = "External display %d isn't connected";
 
 /* 메뉴 */
-"menu.permission_needed" = "Grant Accessibility permission";
 
 /* 창 조작 */
 "error.window.unsupported_handle" = "Unsupported window handle";
@@ -167,7 +167,6 @@
 "error.file.trash_failed" = "Couldn't move it to the Trash: %@";
 "error.file.name_taken" = "A workspace named '%@' already exists";
 "error.file.rename_failed" = "Couldn't rename it: %@";
-"error.file.editor_failed" = "Couldn't open an editor";
 "error.file.hotkey_save_failed" = "Couldn't save the shortcut: %@";
 "error.file.save_failed" = "Couldn't save: %@";
 "error.file.saved_but_unreadable" = "It saved but couldn't be read back. Check the file: %1$@\n%2$@";

@@ -15,6 +15,12 @@ guard let command = arguments.first else {
 }
 
 switch command {
+case "--version", "-v":
+    print("restage \(Bundle.main.shortVersion)")
+    exit(0)
+case "--help", "-h":
+    print(usage)
+    exit(0)
 case "new":
     guard arguments.count >= 2 else {
         print(L10n.string("cli.new.needs_name"))

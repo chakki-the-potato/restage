@@ -9,8 +9,18 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP="${1:-$ROOT/build/restage.app}"
 BUNDLE_ID="com.chakki.restage"
-# 릴리스는 태그에서 받은 버전을 박는다. 로컬 빌드는 기본값을 쓴다.
-VERSION="${RESTAGE_VERSION:-0.1.0}"
+# 릴리스 스크립트가 태그에서 받은 버전을 넘겨준다. 없으면 이 저장소의 최근 태그를 쓰고,
+# git이 없는 tarball 빌드에서는 0.0.0으로 둔다.
+#
+# 실재하는 버전을 기본값으로 두면 안 된다. 넘겨주는 것을 빠뜨려도 그럴듯한 번호가 박혀서
+# 잘못됐다는 사실이 드러나지 않는다. 실제로 수식과 설치 스크립트가 이 값을 빠뜨려
+# 설치한 사람 모두의 앱이 자기를 0.1.0이라고 믿었고, 업데이트 확인이 늘 새 버전이
+# 있다고 답했다.
+VERSION="${RESTAGE_VERSION:-}"
+if [ -z "$VERSION" ]; then
+  VERSION="$(git -C "$ROOT" describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || true)"
+fi
+VERSION="${VERSION:-0.0.0}"
 
 cd "$ROOT"
 

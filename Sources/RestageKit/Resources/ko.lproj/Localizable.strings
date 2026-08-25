@@ -47,6 +47,7 @@
 "update.available.title" = "새 버전 v%@이 있습니다";
 "update.available.body" = "지금 쓰는 것은 v%@입니다.\n받는 방법은 릴리스 페이지에 있습니다.";
 "update.available.confirm" = "릴리스 페이지 열기";
+"update.available.body.homebrew" = "지금 쓰는 것은 v%1$@입니다.\n\n터미널에서 다음을 실행하세요:\n\nbrew upgrade %2$@";
 "update.failed.title" = "업데이트를 확인하지 못했습니다";
 
 /* 오류 */
@@ -125,7 +126,6 @@
 "error.display.external_missing" = "외장 디스플레이 %d번이 연결되어 있지 않습니다";
 
 /* 메뉴 */
-"menu.permission_needed" = "접근성 권한을 허용하세요";
 
 /* 창 조작 */
 "error.window.unsupported_handle" = "지원하지 않는 WindowHandle 구현";
@@ -167,7 +167,6 @@
 "error.file.trash_failed" = "휴지통으로 보내지 못했습니다: %@";
 "error.file.name_taken" = "'%@'이라는 워크스페이스가 이미 있습니다";
 "error.file.rename_failed" = "이름을 바꾸지 못했습니다: %@";
-"error.file.editor_failed" = "편집기를 열지 못했습니다";
 "error.file.hotkey_save_failed" = "단축키를 저장하지 못했습니다: %@";
 "error.file.save_failed" = "저장하지 못했습니다: %@";
 "error.file.saved_but_unreadable" = "저장은 됐지만 다시 읽지 못했습니다. 파일을 확인하세요: %1$@\n%2$@";

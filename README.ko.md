@@ -228,6 +228,8 @@ restage open dev              # 이름으로
 restage open ./my.yaml        # 경로로
 restage list                  # 등록된 워크스페이스
 restage menubar               # 메뉴바 실행
+restage --version             # 버전
+restage --help                # 사용법
 ```
 
 `restage open`은 결과를 표로 출력한다.
@@ -273,6 +275,18 @@ restage menubar
 종료를 고른다.
 
 다른 앱이 이미 쓰는 단축키는 등록되지 않는다. 그때도 카드에 사유가 뜬다.
+
+### 업데이트
+
+톱니의 **업데이트 확인**을 누를 때만 GitHub에 물어본다. 주기적으로 확인하지 않는다. 이
+도구를 쓰는 데 네트워크가 필요 없어야 하기 때문이다.
+
+새 버전이 있으면 받는 방법을 알려준다. Homebrew로 설치했으면 그 명령을, 아니면 릴리스
+페이지를 안내한다.
+
+```bash
+brew upgrade chakki-the-potato/tap/restage
+```
 
 ### 언어
 
@@ -364,7 +378,7 @@ Safari와 Chromium 계열(Chrome, Edge, Brave, Arc, Whale, Vivaldi)은 같은 �
 
 ```bash
 swift build
-swift test        # 205개
+swift test        # 204개
 ```
 
 검증용 하네스가 있다.

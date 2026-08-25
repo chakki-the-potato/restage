@@ -151,7 +151,11 @@ say "$(t building)"
 # 빌드 로그는 실패했을 때만 보여준다. 성공했을 때 컴파일 진행 줄이 쏟아지면
 # 무엇을 해야 하는지 적어둔 안내가 묻힌다.
 BUILD_LOG="$WORK/build.log"
-if ! ( cd "$SRC" && ./scripts/make-app.sh "$SRC/build/restage.app" ) >"$BUILD_LOG" 2>&1; then
+# 받은 태그를 그대로 앱에 박는다. 넘기지 않으면 앱이 자기 버전을 모르고, 업데이트
+# 확인이 방금 설치한 것에도 새 버전이 있다고 답한다.
+if ! (
+  cd "$SRC" && RESTAGE_VERSION="${TAG#v}" ./scripts/make-app.sh "$SRC/build/restage.app"
+) >"$BUILD_LOG" 2>&1; then
   tail -30 "$BUILD_LOG" >&2
   fail "$(t build_failed)"
 fi

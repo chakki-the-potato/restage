@@ -52,15 +52,6 @@ enum WorkspaceFiles {
         }
     }
 
-    /// 기본 편집기로 연다. 확장자 연결이 없으면 TextEdit으로 넘어간다.
-    static func openInEditor(_ name: String) -> Failure {
-        guard let path = path(for: name) else {
-            return L10n.string("error.file.not_found", name)
-        }
-        return NSWorkspace.shared.open(URL(fileURLWithPath: path))
-            ? nil : L10n.string("error.file.editor_failed")
-    }
-
     static func revealInFinder(_ name: String) -> Failure {
         guard let path = path(for: name) else {
             return L10n.string("error.file.not_found", name)

@@ -21,6 +21,10 @@ class Restage < Formula
     # sandbox_apply가 거부되어 매니페스트 컴파일부터 실패한다.
     ENV["RESTAGE_SWIFT_FLAGS"] = "--disable-sandbox"
 
+    # 앱에 박을 버전을 넘긴다. 넘기지 않으면 앱이 자기 버전을 모르고, 업데이트 확인이
+    # 방금 설치한 것에도 새 버전이 있다고 답한다.
+    ENV["RESTAGE_VERSION"] = version.to_s
+
     # 메뉴바 앱은 번들이어야 한다. SMAppService가 번들을 요구하고, Finder에서 여는
     # 경로도 번들이어야 열린다.
     system "./scripts/make-app.sh", buildpath/"build/restage.app"
@@ -31,25 +35,27 @@ class Restage < Formula
 
   def caveats
     <<~EOS
-      메뉴바 앱을 열려면:
+      To open the menu bar app:
         open #{opt_prefix}/restage.app
 
-      로그인할 때 자동으로 뜨게 하려면 앱을 연 뒤 Options에서 켜세요.
+      To have it start at login, open the app and turn it on under the gear.
 
-      창을 옮기려면 접근성 권한이 필요합니다. 앱을 처음 열면 안내가 뜹니다.
-        시스템 설정 > 개인정보 보호 및 보안 > 손쉬운 사용
+      Moving windows needs Accessibility permission. The app asks the first
+      time you open it.
+        System Settings > Privacy & Security > Accessibility
 
-      터미널에서 쓰려면:
-        restage new 작업이름     지금 창 배치로 워크스페이스 만들기
-        restage open 작업이름    복원하기
-        restage list            목록 보기
+      From the terminal:
+        restage new somename     save the current window layout
+        restage open somename    restore it
+        restage list             list what you saved
 
-      다른 데스크탑에 있는 창까지 다루려면 이 설정을 켜세요:
-        시스템 설정 > 데스크탑 및 Dock >
-        "응용 프로그램으로 전환할 때, 해당 앱의 열린 윈도우가 있는 공간으로 전환"
+      To reach windows on other desktops, turn this on:
+        System Settings > Desktop & Dock >
+        "When switching to an application, switch to a Space with open
+         windows for the application"
 
-      업그레이드하면 접근성 권한을 다시 켜야 할 수 있습니다. 무료 서명은 빌드마다
-      신원이 바뀌기 때문입니다.
+      To update:
+        brew upgrade chakki-the-potato/tap/restage
     EOS
   end
 

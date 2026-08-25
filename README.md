@@ -228,6 +228,8 @@ restage open dev              # by name
 restage open ./my.yaml        # by path
 restage list                  # saved workspaces
 restage menubar               # run in the menu bar
+restage --version             # the version
+restage --help                # this list
 ```
 
 `restage open` prints a table of what happened.
@@ -270,6 +272,16 @@ A card shows what's inside the workspace: up to three real app icons overlapped 
 The **gear** at the top right holds Open at Login, **Check for Updates**, Open Config Folder, and Quit.
 
 A shortcut another app already owns won't register. The card says so.
+
+### Updates
+
+It asks GitHub only when you press **Check for Updates** under the gear. It never checks on a schedule — using this tool shouldn't need a network.
+
+When there is a newer version it tells you how to get it: the Homebrew command if that's how it was installed, the release page otherwise.
+
+```bash
+brew upgrade chakki-the-potato/tap/restage
+```
 
 ### Language
 
@@ -356,7 +368,7 @@ Browser tab control needs Apple Events permission once per target app.
 
 ```bash
 swift build
-swift test        # 205 tests
+swift test        # 204 tests
 ```
 
 There's a harness for checking placement.
