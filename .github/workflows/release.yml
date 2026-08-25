@@ -16,15 +16,15 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: 태그에서 버전 뽑기
+      - name: Read the version from the tag
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
 
-      - name: 앱과 zip, dmg 만들기
+      - name: Build the app, zip, and dmg
         run: scripts/make-release.sh "$VERSION"
 
       # cask가 dmg를 받아가므로 zip과 함께 올린다. 하나라도 빠지면 그 경로의 설치가
       # 404로 끊긴다.
-      - name: Release에 붙이기
+      - name: Attach to the release
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "$GITHUB_REF_NAME" build/release/*.zip build/release/*.dmg --generate-notes

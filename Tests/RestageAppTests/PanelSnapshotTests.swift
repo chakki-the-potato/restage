@@ -18,6 +18,10 @@ private let snapshotDirectory = ProcessInfo.processInfo.environment["RESTAGE_SNA
 @Test(.enabled(if: snapshotDirectory != nil))
 func renderPanelForReview() throws {
     let out = try #require(snapshotDirectory)
+    // README에 넣을 그림은 영어로 뜬다. 읽는 사람이 영어 문서를 보고 있기 때문이다.
+    let original = L10n.language
+    defer { L10n.language = original }
+    L10n.language = .english
 
     func item(
         _ name: String, apps: [String], shape: LayoutShape, screens: Int = 1, hotkey: String? = nil
@@ -36,6 +40,8 @@ func renderPanelForReview() throws {
         "design", apps: ["Safari", "Notion", "Music", "Mail", "Calendar"],
         shape: .leftRight, screens: 3, hotkey: "⌃⌥⌘4")
     let missing = item("planning", apps: ["Zed"], shape: .single(.leftHalf))
+    let writing = item(
+        "writing", apps: ["Notion", "Safari", "Music"], shape: .panes(3), hotkey: "⌃⌥⌘3")
 
     func card(
         _ value: PanelStore.Item, running: Bool = false, progress: RunProgress? = nil,
@@ -65,13 +71,18 @@ func renderPanelForReview() throws {
     .frame(width: 320)
     .background(Color(nsColor: .windowBackgroundColor))
 
-    let panel = WorkspacePanel(
+    let empty = WorkspacePanel(
         store: PanelStore(), dismiss: {}, reopen: {}, presentMenu: { _, _ in }, onQuit: {})
+    let filled = WorkspacePanel(
+        store: PanelStore(items: [dev, research, writing]),
+        dismiss: {}, reopen: {}, presentMenu: { _, _ in }, onQuit: {})
 
     try write(sheet, to: out + "/cards-light.png", dark: false)
     try write(sheet, to: out + "/cards-dark.png", dark: true)
-    try write(panel, to: out + "/panel-light.png", dark: false)
-    try write(panel, to: out + "/panel-dark.png", dark: true)
+    try write(empty, to: out + "/empty-light.png", dark: false)
+    try write(empty, to: out + "/empty-dark.png", dark: true)
+    try write(filled, to: out + "/panel-light.png", dark: false)
+    try write(filled, to: out + "/panel-dark.png", dark: true)
 }
 
 @MainActor

@@ -13,6 +13,11 @@ enum AppVersion {
 
     /// 번들 밖에서 돌 때는 "dev"다. 저장소에서 `swift run`으로 부른 경우가 그렇다.
     static let current: String = {
+        // 화면을 그림으로 떠서 README에 넣을 때만 쓴다. 번들이 없어 "dev"가 되는데,
+        // 읽는 사람에게는 그것이 고장으로 보인다.
+        if let override = ProcessInfo.processInfo.environment["RESTAGE_VERSION_OVERRIDE"] {
+            return override
+        }
         if let version = Bundle.main.object(forInfoDictionaryKey: key) as? String {
             return version
         }

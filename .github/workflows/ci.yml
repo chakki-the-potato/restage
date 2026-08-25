@@ -11,19 +11,19 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: 빌드
+      - name: Build
         run: swift build -c release
 
-      - name: 테스트
+      - name: Test
         run: swift test
 
       # 화면에 보이는 문구가 소스에 박히면 번역할 방법이 없다. 주석과 언어 이름은 제외한다.
-      - name: 하드코딩된 문구 확인
+      - name: Check for hardcoded strings
         run: scripts/check-hardcoded-strings.sh
 
       # 번들 조립이 깨지면 릴리스 때가 아니라 여기서 걸려야 한다.
       # 서명은 러너에 인증서가 없으므로 adhoc으로 떨어진다.
-      - name: 앱 번들 조립 확인
+      - name: Check the app bundle
         run: |
           scripts/make-release.sh 0.0.0-ci
           ditto -x -k build/release/restage-0.0.0-ci-macos.zip "$RUNNER_TEMP/unzip"
@@ -36,7 +36,7 @@ jobs:
       # 설치 스크립트와 수식은 bin/restage를 앱 번들 안으로 심볼릭 링크한다. 링크로
       # 실행하면 Bundle.main이 링크가 놓인 폴더를 가리켜 번역 자원도 Info.plist도
       # 찾지 못한다. 실제로 그렇게 죽었다. 링크로 한 번 불러 본다.
-      - name: 심볼릭 링크로 실행 확인
+      - name: Run through a symlink
         run: |
           mkdir -p "$RUNNER_TEMP/bin"
           ln -sf "$RUNNER_TEMP/unzip/restage.app/Contents/MacOS/restage" "$RUNNER_TEMP/bin/restage"

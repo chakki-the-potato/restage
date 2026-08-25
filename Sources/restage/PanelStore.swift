@@ -47,6 +47,13 @@ final class PanelStore: ObservableObject {
 
     let loginItemSupported = LoginItem.isSupported
 
+    init() {}
+
+    /// 화면을 그림으로 떠서 눈으로 보기 위한 것. 실제 실행에서는 reload()가 채운다.
+    init(items: [Item]) {
+        self.items = items
+    }
+
     private let hotkeys = HotkeyRegistry()
     private var registrations: [String: HotkeyRegistry.Registration] = [:]
 
