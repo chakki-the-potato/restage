@@ -75,9 +75,11 @@ public struct WorkspaceRunner {
                 let outcome: ItemOutcome
                 switch item {
                 case .place(let placement):
-                    outcome = await apply(placement, handle: handle, screen: screen)
+                    outcome = await apply(
+                        placement, handle: handle, screen: screen, follow: false)
                 case .tabs(let plan):
-                    outcome = await applyTabs(plan, handle: handle, screen: screen)
+                    outcome = await applyTabs(
+                        plan, handle: handle, screen: screen, follow: false)
                 }
                 done += 1
                 onProgress?(RunProgress(
@@ -87,10 +89,29 @@ public struct WorkspaceRunner {
             })
         }
 
+        var placed: [ItemOutcome] = []
         for task in pending {
             guard let task else { continue }
-            outcomes.append(await task.value)
+            placed.append(await task.value)
         }
+
+        var index = 0
+        for item in screen.items {
+            guard handles[item.app] != nil, launchFailures[item.app] == nil else { continue }
+            defer { index += 1 }
+            guard placed[index].status == .unreachable,
+                  let handle = handles[item.app] else { continue }
+
+            switch item {
+            case .place(let placement):
+                placed[index] = await apply(
+                    placement, handle: handle, screen: screen, follow: true)
+            case .tabs(let plan):
+                placed[index] = await applyTabs(
+                    plan, handle: handle, screen: screen, follow: true)
+            }
+        }
+        outcomes.append(contentsOf: placed)
 
         if let anchor = screen.anchor, let handle = handles[anchor] {
             AXWindow.setApplicationFrontmost(pid: handle.pid)
@@ -100,7 +121,7 @@ public struct WorkspaceRunner {
     }
 
     private func apply(
-        _ placement: Placement, handle: ProcessHandle, screen: ScreenPlan
+        _ placement: Placement, handle: ProcessHandle, screen: ScreenPlan, follow: Bool
     ) async -> ItemOutcome {
         if placement.selector.titleContains == nil,
            isSatisfied(placement, handle: handle, screen: screen) {
@@ -112,7 +133,7 @@ public struct WorkspaceRunner {
         let window: WindowHandle
         do {
             window = try await engine.waitForWindow(
-                handle, selector: placement.selector, timeout: Self.windowTimeout, mayFollowOtherSpaces: true)
+                handle, selector: placement.selector, timeout: Self.windowTimeout, mayFollowOtherSpaces: follow)
         } catch {
             return ItemOutcome(
                 screenID: screen.id, app: placement.app,
@@ -138,7 +159,7 @@ public struct WorkspaceRunner {
     }
 
     private func applyTabs(
-        _ plan: TabPlan, handle: ProcessHandle, screen: ScreenPlan
+        _ plan: TabPlan, handle: ProcessHandle, screen: ScreenPlan, follow: Bool
     ) async -> ItemOutcome {
         let dialect: BrowserDialect
         do {
@@ -151,7 +172,7 @@ public struct WorkspaceRunner {
 
         do {
             _ = try await engine.waitForWindow(
-                handle, selector: .mostRecentlyActive, timeout: Self.windowTimeout, mayFollowOtherSpaces: true)
+                handle, selector: .mostRecentlyActive, timeout: Self.windowTimeout, mayFollowOtherSpaces: follow)
         } catch {
             let status: OutcomeStatus = CurrentState.windowCount(pid: handle.pid) > 0
                 ? .unreachable : .failed
@@ -173,12 +194,13 @@ public struct WorkspaceRunner {
             return tabOutcome(tabs, plan: plan, screen: screen)
         }
         return await placeBrowserWindow(
-            target, slot: slot, plan: plan, handle: handle, screen: screen, tabs: tabs)
+            target, slot: slot, plan: plan, handle: handle, screen: screen, tabs: tabs,
+            follow: follow)
     }
 
     private func placeBrowserWindow(
         _ target: CGRect, slot: Slot, plan: TabPlan, handle: ProcessHandle,
-        screen: ScreenPlan, tabs: TabController.Result
+        screen: ScreenPlan, tabs: TabController.Result, follow: Bool
     ) async -> ItemOutcome {
         if tabs.openedCount == 0, CurrentState.isPlaced(pid: handle.pid, target: target) {
             return ItemOutcome(
@@ -188,7 +210,7 @@ public struct WorkspaceRunner {
 
         AXWindow.setApplicationFrontmost(pid: handle.pid)
         guard let window = try? await engine.waitForWindow(
-            handle, selector: .mostRecentlyActive, timeout: Self.windowTimeout, mayFollowOtherSpaces: true)
+            handle, selector: .mostRecentlyActive, timeout: Self.windowTimeout, mayFollowOtherSpaces: follow)
         else {
             return tabOutcome(tabs, plan: plan, screen: screen)
         }
