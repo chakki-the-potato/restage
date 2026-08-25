@@ -8,8 +8,8 @@
 class Restage < Formula
   desc "Restore a declared layout of apps and windows in one step"
   homepage "https://github.com/chakki-the-potato/restage"
-  url "https://github.com/chakki-the-potato/restage/archive/refs/tags/v0.4.2.tar.gz"
-  sha256 "c7c65e41601707a636c0c100679d96bb9188065c434bce1ec25215ce2fc4c563"
+  url "https://github.com/chakki-the-potato/restage/archive/refs/tags/v0.5.0.tar.gz"
+  sha256 "55f0f36f2109562b70d69951b45b99d50826b33e91501eba652e1f5ae37259bf"
   license "MIT"
   head "https://github.com/chakki-the-potato/restage.git", branch: "main"
 
