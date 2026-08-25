@@ -372,7 +372,7 @@ Browser tab control needs Apple Events permission once per target app.
 
 ```bash
 swift build
-swift test        # 206 tests
+swift test        # 211 tests
 ```
 
 There's a harness for checking placement.

@@ -162,6 +162,9 @@ final class PopoverController: NSObject, NSWindowDelegate {
     /// 메뉴를 여는 순간 패널이 닫힌다.
     func windowDidResignKey(_ notification: Notification) {
         guard !menu.isShowing else { return }
+        // 메뉴바가 나타나기만 해도 키를 잃는다. 누른 것이 없으므로 닫지 않는다.
+        // 메뉴바의 다른 아이콘을 실제로 눌렀다면 바깥 클릭 감시자가 닫는다.
+        guard !MenuBarZone.contains(NSEvent.mouseLocation) else { return }
         closePanel()
     }
 

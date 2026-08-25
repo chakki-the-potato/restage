@@ -383,7 +383,7 @@ Safari와 Chromium 계열(Chrome, Edge, Brave, Arc, Whale, Vivaldi)은 같은 �
 
 ```bash
 swift build
-swift test        # 206개
+swift test        # 211개
 ```
 
 검증용 하네스가 있다.
