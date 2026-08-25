@@ -32,3 +32,14 @@ jobs:
           test -d "$RUNNER_TEMP/unzip/restage.app/Contents/Resources/restage_RestageKit.bundle/ko.lproj"
           test -f "$RUNNER_TEMP/unzip/restage.app/Contents/Resources/ko.lproj/InfoPlist.strings"
           codesign --verify --strict "$RUNNER_TEMP/unzip/restage.app"
+
+      # 설치 스크립트와 수식은 bin/restage를 앱 번들 안으로 심볼릭 링크한다. 링크로
+      # 실행하면 Bundle.main이 링크가 놓인 폴더를 가리켜 번역 자원도 Info.plist도
+      # 찾지 못한다. 실제로 그렇게 죽었다. 링크로 한 번 불러 본다.
+      - name: 심볼릭 링크로 실행 확인
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin"
+          ln -sf "$RUNNER_TEMP/unzip/restage.app/Contents/MacOS/restage" "$RUNNER_TEMP/bin/restage"
+          version="$("$RUNNER_TEMP/bin/restage" --version)"
+          echo "$version"
+          test "$version" = "restage 0.0.0-ci"

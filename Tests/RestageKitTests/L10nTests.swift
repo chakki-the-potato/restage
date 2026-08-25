@@ -4,7 +4,7 @@ import Testing
 @testable import RestageKit
 
 private func table(_ code: String) -> [String: String] {
-    guard let lproj = Bundle.module.path(forResource: code, ofType: "lproj"),
+    guard let lproj = L10n.resourcesForTesting?.path(forResource: code, ofType: "lproj"),
           let dictionary = NSDictionary(
             contentsOf: URL(fileURLWithPath: lproj + "/Localizable.strings"))
             as? [String: String]

@@ -16,7 +16,7 @@ guard let command = arguments.first else {
 
 switch command {
 case "--version", "-v":
-    print("restage \(Bundle.main.shortVersion)")
+    print("restage \(AppVersion.current)")
     exit(0)
 case "--help", "-h":
     print(usage)

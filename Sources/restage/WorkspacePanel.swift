@@ -107,7 +107,7 @@ struct WorkspacePanel: View {
                 .foregroundStyle(Color.accentColor)
             Text("restage")
                 .font(.system(size: 13, weight: .semibold))
-            Text("v\(Bundle.main.shortVersion)")
+            Text("v\(AppVersion.current)")
                 .font(.system(size: 11))
                 .foregroundStyle(.tertiary)
             Spacer()
@@ -325,7 +325,7 @@ struct WorkspacePanel: View {
     private func checkForUpdate() {
         dismiss()
         Task { @MainActor in
-            switch await UpdateChecker.check(current: Bundle.main.shortVersion) {
+            switch await UpdateChecker.check(current: AppVersion.current) {
             case .upToDate(let version):
                 Prompt.message(
                     L10n.string("update.current.title"),
@@ -342,7 +342,7 @@ struct WorkspacePanel: View {
     /// 새 버전을 알린다. 받는 방법이 설치 경로마다 달라 문구도 갈린다.
     private func announce(latest: SemanticVersion, page: String) {
         let title = L10n.string("update.available.title", "\(latest)")
-        let current = Bundle.main.shortVersion
+        let current = AppVersion.current
 
         guard InstallSource.current == .elsewhere else {
             Prompt.message(
@@ -385,11 +385,5 @@ struct WorkspacePanel: View {
             confirmTitle: L10n.string("card.menu.delete"))
         else { return nil }
         return WorkspaceFiles.moveToTrash(name)
-    }
-}
-
-extension Bundle {
-    var shortVersion: String {
-        object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev"
     }
 }

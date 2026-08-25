@@ -22,8 +22,42 @@ public enum AppLanguage: String, CaseIterable, Sendable {
 ///
 /// 기준 언어는 영어다. 번역이 빠진 키는 영어로, 영어까지 없으면 키 자체로 떨어진다.
 /// 키가 화면에 보이면 빠진 번역을 바로 알아볼 수 있다.
+/// `Bundle.module`을 찾는 자리를 잡아 주는 표식. 이 클래스가 든 번들이 곧 자원 번들의
+/// 이웃이다.
+private final class BundleToken {}
+
 public enum L10n {
     public static let defaultsKey = "preferredLanguage"
+
+    private static let bundleName = "restage_RestageKit.bundle"
+
+    /// 번역 자원 번들. 못 찾으면 nil이고, 그때 문구는 키 그대로 나온다.
+    ///
+    /// `Bundle.module`을 쓰지 않는 이유는 그것이 못 찾았을 때 프로세스를 죽이기 때문이다.
+    /// 실제로 죽었다. 설치 스크립트와 수식이 `bin/restage`를 앱 번들 안으로 심볼릭 링크하는데,
+    /// 링크로 실행하면 `Bundle.main`이 링크가 놓인 폴더를 가리켜 자원을 찾지 못한다.
+    /// 터미널에서 restage를 부르면 첫 문구에서 바로 죽었다.
+    ///
+    /// 그래서 직접 찾는다. 실행 파일의 심볼릭 링크를 풀어 그 옆과 번들의 Resources까지 본다.
+    private static let resources: Bundle? = {
+        var roots: [URL] = []
+        if let url = Bundle.main.resourceURL { roots.append(url) }
+        let token = Bundle(for: BundleToken.self)
+        if let url = token.resourceURL { roots.append(url) }
+        // 테스트에서는 자원 번들이 .xctest 안이 아니라 그 옆에 놓인다.
+        roots.append(token.bundleURL.deletingLastPathComponent())
+        roots.append(Bundle.main.bundleURL)
+        if let executable = Bundle.main.executableURL?.resolvingSymlinksInPath() {
+            let directory = executable.deletingLastPathComponent()
+            roots.append(directory)
+            roots.append(directory.deletingLastPathComponent().appendingPathComponent("Resources"))
+        }
+
+        for root in roots {
+            if let bundle = Bundle(url: root.appendingPathComponent(bundleName)) { return bundle }
+        }
+        return nil
+    }()
 
     public static var language: AppLanguage {
         get {
@@ -62,16 +96,20 @@ public enum L10n {
     /// 언어로 보고 있는지이지, 그것을 누가 골랐는지가 아니다.
     public static var effective: AppLanguage {
         if language != .system { return language }
+        guard let resources else { return .english }
         // 사용자 언어 목록을 직접 넘긴다. 넘기지 않으면 시스템이 ko-KR인데도 en이 나온다.
         // 인자 없는 형태는 주 번들의 언어 목록을 보는데, 터미널에서 실행한 바이너리는
         // 그 목록이 비어 있어 첫 번째 언어로 떨어진다.
         let preferred = Bundle.preferredLocalizations(
-            from: Bundle.module.localizations, forPreferences: Locale.preferredLanguages)
+            from: resources.localizations, forPreferences: Locale.preferredLanguages)
         return preferred.first.flatMap(AppLanguage.init(rawValue:)) ?? .english
     }
 
+    /// 테스트가 같은 번들을 보게 하는 창구.
+    static var resourcesForTesting: Bundle? { resources }
+
     private static var selected: Bundle? {
-        lproj(effective.rawValue) ?? .module
+        lproj(effective.rawValue) ?? resources
     }
 
     private static var english: Bundle? {
@@ -79,7 +117,7 @@ public enum L10n {
     }
 
     private static func lproj(_ code: String) -> Bundle? {
-        guard let path = Bundle.module.path(forResource: code, ofType: "lproj") else { return nil }
+        guard let path = resources?.path(forResource: code, ofType: "lproj") else { return nil }
         return Bundle(path: path)
     }
 }
