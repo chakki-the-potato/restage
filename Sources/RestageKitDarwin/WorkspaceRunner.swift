@@ -52,23 +52,40 @@ public struct WorkspaceRunner {
             }
         }
 
+        var pending: [Task<ItemOutcome, Never>?] = []
+        var done = 0
+
         for item in screen.items {
             if let reason = launchFailures[item.app] {
                 outcomes.append(ItemOutcome(
                     screenID: screen.id, app: item.app, status: .failed, detail: reason))
+                pending.append(nil)
                 continue
             }
-            guard let handle = handles[item.app] else { continue }
-            onProgress?(RunProgress(
-                phase: .placing, app: item.app,
-                completed: completed + outcomes.count, total: total))
-
-            switch item {
-            case .place(let placement):
-                outcomes.append(await apply(placement, handle: handle, screen: screen))
-            case .tabs(let plan):
-                outcomes.append(await applyTabs(plan, handle: handle, screen: screen))
+            guard let handle = handles[item.app] else {
+                pending.append(nil)
+                continue
             }
+
+            pending.append(Task { @MainActor in
+                let outcome: ItemOutcome
+                switch item {
+                case .place(let placement):
+                    outcome = await apply(placement, handle: handle, screen: screen)
+                case .tabs(let plan):
+                    outcome = await applyTabs(plan, handle: handle, screen: screen)
+                }
+                done += 1
+                onProgress?(RunProgress(
+                    phase: .placing, app: item.app,
+                    completed: completed + done, total: total))
+                return outcome
+            })
+        }
+
+        for task in pending {
+            guard let task else { continue }
+            outcomes.append(await task.value)
         }
 
         if let anchor = screen.anchor, let handle = handles[anchor] {
