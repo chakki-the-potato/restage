@@ -68,6 +68,18 @@ struct WorkspacePanel: View {
                     store.toggleLoginItem()
                 })
         }
+        items.append(PanelMenu.separator())
+        items.append(PanelMenu.header(L10n.string("options.appearance")))
+        for appearance in AppAppearance.allCases {
+            items.append(
+                PanelMenu.Item(
+                    title: L10n.string(appearance.titleKey), symbol: appearance.symbol,
+                    isChecked: AppearanceSetting.current == appearance, keepsPanelOpen: true
+                ) {
+                    AppearanceSetting.current = appearance
+                })
+        }
+        items.append(PanelMenu.separator())
         items.append(
             PanelMenu.Item(
                 title: L10n.string("options.check_updates"), symbol: "arrow.down.circle"

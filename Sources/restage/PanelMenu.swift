@@ -16,6 +16,8 @@ final class PanelMenu: NSObject, NSMenuDelegate {
         let symbol: String
         var isChecked = false
         var isDestructive = false
+        /// 고를 수 없는 구획 제목. 아래 항목들이 무엇을 고르는 것인지 밝힌다.
+        var isHeader = false
         /// true면 고른 뒤에도 패널을 닫지 않는다. 켜고 끄는 항목에 쓴다.
         var keepsPanelOpen = false
         let action: () -> Void
@@ -52,8 +54,13 @@ final class PanelMenu: NSObject, NSMenuDelegate {
         Item(title: "", symbol: "", action: {})
     }
 
+    static func header(_ title: String) -> Item {
+        Item(title: title, symbol: "", isHeader: true, action: {})
+    }
+
     private func menuItem(for item: Item) -> NSMenuItem {
         guard !item.title.isEmpty else { return .separator() }
+        if item.isHeader { return header(item.title) }
 
         let entry = NSMenuItem(title: item.title, action: #selector(fire(_:)), keyEquivalent: "")
         entry.target = self
@@ -67,6 +74,15 @@ final class PanelMenu: NSObject, NSMenuDelegate {
                 string: item.title,
                 attributes: [.foregroundColor: NSColor.systemRed])
         }
+        return entry
+    }
+
+    /// macOS 14부터는 구획 제목을 위한 항목이 따로 있다. 그 전에는 고를 수 없는 항목으로
+    /// 흉내 낸다.
+    private func header(_ title: String) -> NSMenuItem {
+        if #available(macOS 14.0, *) { return .sectionHeader(title: title) }
+        let entry = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+        entry.isEnabled = false
         return entry
     }
 

@@ -29,6 +29,10 @@
 
 /* 설정 메뉴 */
 "options.open_at_login" = "로그인 시 자동 실행";
+"options.appearance" = "모양";
+"options.appearance.system" = "시스템 설정";
+"options.appearance.light" = "라이트";
+"options.appearance.dark" = "다크";
 "options.check_updates" = "업데이트 확인";
 "options.open_config_folder" = "config 폴더 열기";
 "options.quit" = "종료";

@@ -9,6 +9,8 @@ enum MenuBarCommand {
 
     static func run() -> Never {
         AppKitBootstrap.ensureGUIApplication()
+        // 패널을 열기 전에도 알림 창이 뜰 수 있다. 밝기를 먼저 건다.
+        AppearanceSetting.apply()
         let controller = PopoverController()
         Self.controller = controller
         controller.start()

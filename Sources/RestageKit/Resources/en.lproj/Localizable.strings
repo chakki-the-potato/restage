@@ -29,6 +29,10 @@
 
 /* 설정 메뉴 */
 "options.open_at_login" = "Open at Login";
+"options.appearance" = "Appearance";
+"options.appearance.system" = "Match System";
+"options.appearance.light" = "Light";
+"options.appearance.dark" = "Dark";
 "options.check_updates" = "Check for Updates";
 "options.open_config_folder" = "Open Config Folder";
 "options.quit" = "Quit";

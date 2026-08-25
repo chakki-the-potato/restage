@@ -269,9 +269,13 @@ A card shows what's inside the workspace: up to three real app icons overlapped 
 - On failure the card carries the reason and a **Retry**
 - An app named in the config that isn't installed is drawn as a dashed placeholder with the reason underneath
 
-The **gear** at the top right holds Open at Login, **Check for Updates**, Open Config Folder, and Quit.
+The **gear** at the top right holds Open at Login, **Appearance**, **Check for Updates**, Open Config Folder, and Quit.
 
 A shortcut another app already owns won't register. The card says so.
+
+### Appearance
+
+It follows the system by default. **Appearance** under the gear offers **Match System · Light · Dark**. The change lands immediately, including on a panel that's already open.
 
 ### Updates
 
@@ -368,7 +372,7 @@ Browser tab control needs Apple Events permission once per target app.
 
 ```bash
 swift build
-swift test        # 204 tests
+swift test        # 206 tests
 ```
 
 There's a harness for checking placement.
