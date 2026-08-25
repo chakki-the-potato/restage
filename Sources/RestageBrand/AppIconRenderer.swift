@@ -1,19 +1,11 @@
 import CoreGraphics
 
-/// Finder와 시스템 설정 목록에 보이는 앱 아이콘을 그린다.
-///
-/// macOS 앱 아이콘은 캔버스를 꽉 채우지 않는다. 여백을 두고 둥근 사각형 판을 얹은 뒤
-/// 그 위에 마크를 올려야 다른 앱들과 크기가 맞아 보인다.
 public enum AppIconRenderer {
-    /// 이 크기 이하에서는 선으로 그린 슬롯의 안쪽 구멍이 1픽셀도 안 남아 뭉갠다.
-    /// 그래서 셋 다 채우고 마크를 키운 단순한 그림으로 바꾼다.
     private static let simplifiedThreshold = 40
 
     private static let plateInsetRatio: CGFloat = 100.0 / 1024.0
     private static let plateCornerRatio: CGFloat = 0.2247
 
-    /// 흰 판에 먹색 마크. 흰 배경에서는 판 자체가 묻히지만 아래로 갈수록 어두워지는
-    /// 그라디언트와 그림자가 경계를 만든다. 테두리를 덧대지 않는 이유다.
     private static let topColor = CGColor(srgbRed: 0.99, green: 0.99, blue: 1.00, alpha: 1)
     private static let bottomColor = CGColor(srgbRed: 0.87, green: 0.88, blue: 0.91, alpha: 1)
     private static let markColor = CGColor(srgbRed: 0.13, green: 0.14, blue: 0.17, alpha: 1)

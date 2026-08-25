@@ -3,20 +3,15 @@ import RestageKit
 import RestageKitDarwin
 import SwiftUI
 
-/// The panel that opens when the menu bar icon is clicked.
 struct WorkspacePanel: View {
     @ObservedObject var store: PanelStore
     @StateObject private var language = LanguageSetting()
 
-    /// Closes the panel before anything that opens a window. A dialog behind the panel can't be clicked.
     let dismiss: () -> Void
-    /// The way back: reopen the panel once that window is done.
     let reopen: () -> Void
-    /// The way to raise a system menu. The second argument is the button's window coordinates.
     let presentMenu: ([PanelMenu.Item], CGRect) -> Void
     let onQuit: () -> Void
 
-    /// Where each card's More button sits. The menu opens there.
     @State private var anchors: [String: CGRect] = [:]
     private var isBusy: Bool { store.runningName != nil }
 
@@ -27,9 +22,6 @@ struct WorkspacePanel: View {
             content
         }
         .frame(width: 320)
-        // Left with the popover's default material, the panel darkens whenever the app is inactive.
-        // Its colour changing merely because another window was clicked reads as something being
-        // switched off. An opaque background covers it.
         .background(Color(nsColor: .windowBackgroundColor))
         .onPreferenceChange(MenuAnchorKey.self) { anchors = $0 }
         .onExitCommand { dismiss() }
@@ -37,7 +29,6 @@ struct WorkspacePanel: View {
 
     private static let optionsAnchor = "__options"
 
-    /// The items in a card's More menu.
     private func cardMenuItems(_ item: PanelStore.Item) -> [PanelMenu.Item] {
         [
             PanelMenu.Item(title: L10n.string("card.menu.rename"), symbol: "pencil.line") {
@@ -97,10 +88,6 @@ struct WorkspacePanel: View {
         return items
     }
 
-    // MARK: - Header
-
-    /// Settings move up to the right of the header. A footer holding a single button spends 38pt
-    /// on that one thing, divider and padding included.
     private var header: some View {
         HStack(spacing: 8) {
             Image(systemName: "square.split.2x1")
@@ -129,8 +116,6 @@ struct WorkspacePanel: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 11)
     }
-
-    // MARK: - Body
 
     @ViewBuilder
     private var content: some View {
@@ -190,8 +175,6 @@ struct WorkspacePanel: View {
         .disabled(isBusy)
     }
 
-    /// What someone opening it for the first time sees. Saying only what is missing does not tell
-    /// them what to do next.
     private var emptyState: some View {
         VStack(spacing: 10) {
             LayoutGlyph(shape: .leftRight)
@@ -217,8 +200,6 @@ struct WorkspacePanel: View {
         .padding(.vertical, 18)
     }
 
-    /// Making the whole banner clickable gives no sign that it can be clicked. A real button, and
-    /// one line saying why it is needed.
     private var permissionBanner: some View {
         HStack(spacing: 10) {
             Image(systemName: "exclamationmark.triangle.fill")
@@ -270,8 +251,6 @@ struct WorkspacePanel: View {
         .padding(.vertical, 6)
     }
 
-    // MARK: - Actions
-
     private func create() {
         act {
             NewWorkspaceDialog.run()
@@ -289,7 +268,6 @@ struct WorkspacePanel: View {
         }
     }
 
-    /// Closes the panel and runs the action. Reports the reason on failure.
     private func act(_ operation: @escaping () -> String?) {
         dismiss()
         DispatchQueue.main.async {
@@ -297,16 +275,10 @@ struct WorkspacePanel: View {
                 Prompt.message(L10n.string("dialog.failed.title"), failure)
             }
             store.reload()
-            // Reopen once the window is done. Renaming and then setting a shortcut would otherwise
-            // mean going back to the menu bar every time, and one at a time is not the intent.
             reopen()
         }
     }
 
-    /// Loads a saved config into the editor window and changes it.
-    ///
-    /// When this opened the file in an editor instead, slot names had to be memorised, and seeing
-    /// a position marked ambiguous gave no way to fix it there and then.
     private func editWorkspace(_ name: String) -> String? {
         let existing: WorkspaceDraft
         do {
@@ -322,7 +294,6 @@ struct WorkspacePanel: View {
         return WorkspaceFiles.save(edited)
     }
 
-    /// Asks GitHub whether a newer version exists. Only when the user presses it.
     private func checkForUpdate() {
         dismiss()
         Task { @MainActor in
@@ -340,7 +311,6 @@ struct WorkspacePanel: View {
         }
     }
 
-    /// Announces a new version. How to get it differs by install path, so the wording does too.
     private func announce(latest: SemanticVersion, page: String) {
         let title = L10n.string("update.available.title", "\(latest)")
         let current = AppVersion.current

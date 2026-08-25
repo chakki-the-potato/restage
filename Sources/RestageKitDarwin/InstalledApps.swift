@@ -2,10 +2,8 @@ import AppKit
 import RestageKit
 
 public struct InstalledApp: Sendable, Equatable {
-    /// The name Finder shows. This is what goes in the config.
     public let name: String
     public let bundleID: String
-    /// The `.app` file name without its extension. It can differ from the display name.
     public let fileName: String
 
     public init(name: String, bundleID: String, fileName: String) {
@@ -15,18 +13,10 @@ public struct InstalledApp: Sendable, Equatable {
     }
 }
 
-/// Finds installed apps and resolves a name to a bundle ID.
-///
-/// Bundle ID strings must exist in this file alone. RestageKit deals only in the logical `AppID`,
-/// and OS-specific identifiers appear at this boundary and nowhere else.
-///
-/// There is no fixed list because everyone who takes this tool has different apps installed.
-/// A list baked into the code is only useful on the machine of whoever wrote it.
 @MainActor
 public enum InstalledApps {
     private static var cache: [InstalledApp]?
 
-    /// How many suggestions to offer when a lookup fails because the display name differs.
     private static let suggestionLimit = 3
 
     public static func all() -> [InstalledApp] {
@@ -34,7 +24,6 @@ public enum InstalledApps {
         return refresh()
     }
 
-    /// Reads the list again. Needed so apps installed while the menu bar app sits there aren't missed.
     @discardableResult
     public static func refresh() -> [InstalledApp] {
         let scanned = scan()
@@ -56,7 +45,6 @@ public enum InstalledApps {
             break
         }
 
-        // It may have been installed a moment ago, so drop the cache and look once more.
         switch match(name, in: refresh()) {
         case .found(let app):
             return app.bundleID
@@ -67,18 +55,6 @@ public enum InstalledApps {
         }
     }
 
-    /// Whether this app could be a browser. A necessary condition, not a verdict.
-    ///
-    /// A list of names won't do the job because there is no knowing every browser name.
-    /// Instead it asks whether the system has it registered as able to open https.
-    ///
-    /// The test is loose. Measured on this machine it caught iTerm and ChatGPT alongside Chrome,
-    /// Safari, and Chromium, because merely registering to open links is enough.
-    /// Checking `CFBundleDocumentTypes` for an html viewer was measured too, and was worse:
-    /// Safari dropped out and iTerm came in. There is no reliable signal.
-    ///
-    /// So this only filters, and the verdict is left to whether reading tabs actually succeeds.
-    /// Apps that plainly aren't browsers, like Notion or KakaoTalk, are filtered out here.
     public static func isBrowser(bundleID: String) -> Bool {
         browserBundleIDs().contains(bundleID)
     }
@@ -108,21 +84,12 @@ public enum InstalledApps {
             .map(\.name)
     }
 
-    // MARK: - Matching names
-
     public enum MatchResult: Sendable, Equatable {
         case found(InstalledApp)
         case ambiguous([InstalledApp])
         case notFound
     }
 
-    /// Matches a name the user wrote to one installed app.
-    ///
-    /// It is kept a pure function that never touches the file system because this is the part of
-    /// the file most likely to be wrong, and it has to be verified against a fixed list.
-    ///
-    /// The steps exist so that `chrome` means `Google Chrome` and `edge` means `Microsoft Edge`
-    /// while `Claude` doesn't leak into `Claude Code Notifier`. An exact match always wins.
     public nonisolated static func match(_ query: String, in apps: [InstalledApp]) -> MatchResult {
         let trimmed = query.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return .notFound }
@@ -163,8 +130,6 @@ public enum InstalledApps {
         Set(text.lowercased().split { !($0.isLetter || $0.isNumber) }.map(String.init))
     }
 
-    // MARK: - Searching
-
     private static var searchPaths: [String] {
         [
             "/Applications",
@@ -176,11 +141,6 @@ public enum InstalledApps {
         ]
     }
 
-    /// Walks the standard locations, descending one level into subfolders.
-    ///
-    /// Spotlight isn't used for a full sweep because it also catches helper apps living inside
-    /// other apps. On this machine the standard locations held 109 apps and Spotlight 388.
-    /// The rest are not things a user would call by name.
     private static func scan() -> [InstalledApp] {
         let fileManager = FileManager.default
         var seen = Set<String>()

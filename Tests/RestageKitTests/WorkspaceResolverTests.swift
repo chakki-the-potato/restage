@@ -2,7 +2,6 @@ import Testing
 import CoreGraphics
 @testable import RestageKit
 
-// 내장 1728x1117, 가용 영역 (0,57,1728,1027). 외장 2560x1440이 내장 위쪽에 배치.
 private let builtin = DisplayInfo(
     visibleFrame: CGRect(x: 0, y: 57, width: 1728, height: 1027), primaryMaxY: 1117)
 private let external = DisplayInfo(

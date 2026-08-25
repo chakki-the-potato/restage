@@ -1,5 +1,3 @@
-/// AX 속성 이름. Swift 6 strict concurrency에서 `kAX*` 전역 상수는
-/// 'not concurrency-safe' 에러를 내므로 리터럴로 정의한다.
 enum AXAttributes {
     static let windows = "AXWindows"
     static let frontmost = "AXFrontmost"

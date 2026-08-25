@@ -15,10 +15,6 @@ private func table(_ code: String) -> [String: String] {
     return dictionary
 }
 
-/// 문자열 안의 서식 지정자를 자리 번호로 정리한다.
-///
-/// 언어마다 어순이 달라 위치는 바뀌어도 자리 번호와 종류는 같아야 한다. 다르면
-/// `String(format:)`이 엉뚱한 값을 읽거나 죽는다.
 private func specifiers(_ text: String) -> [Int: String] {
     let pattern = /%(?:(\d+)\$)?([@a-zA-Z])/
     var found: [Int: String] = [:]
@@ -59,7 +55,6 @@ private func specifiers(_ text: String) -> [Int: String] {
     }
 }
 
-/// 언어는 프로세스 전체가 공유하는 값이라 이 둘은 나란히 돌 수 없다.
 @Suite(.serialized)
 struct LanguageSelectionTests {
     @Test func lookupFollowsTheChosenLanguage() {
@@ -73,7 +68,6 @@ struct LanguageSelectionTests {
         #expect(L10n.string("panel.retry") == "다시 시도")
     }
 
-    /// 번역이 없는 키는 키 자체로 떨어져야 한다. 화면에 키가 보이면 빠진 것을 바로 안다.
     @Test func unknownKeyFallsBackToItself() {
         let original = L10n.language
         defer { L10n.language = original }

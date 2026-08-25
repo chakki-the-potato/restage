@@ -6,10 +6,8 @@ struct BrowserWindow {
     let tabURLs: [String]
 }
 
-/// 대상 창을 찾아 없는 탭만 추가한다. 아무것도 닫지 않는다.
 @MainActor
 enum TabController {
-    /// 새 창을 만든 뒤 그것이 목록에 나타나기를 기다리는 시간.
     static let windowAppearTimeout: Duration = .seconds(5)
 
     struct Result {
@@ -44,10 +42,6 @@ enum TabController {
         return Result(openedCount: opened, windowID: windowID)
     }
 
-    /// config의 첫 URL을 첫 탭으로 가진 창을 찾는다. 없으면 만든다.
-    ///
-    /// 새로 만든 창은 맨 앞으로 온다는 보장이 없다. Safari에서 실제로 확인했다.
-    /// 그래서 만든 뒤에도 `front window`가 아니라 첫 탭 URL로 다시 찾는다.
     private static func resolveDedicatedWindow(
         firstURL: String, dialect: BrowserDialect
     ) async throws -> Int {

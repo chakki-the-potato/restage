@@ -3,7 +3,6 @@ import Foundation
 public struct WorkspaceEntry: Sendable {
     public let name: String
     public let path: String
-    /// 파싱에 실패하면 nil이다.
     public let summary: WorkspaceSummary?
     public let error: String?
 
@@ -17,9 +16,6 @@ public struct WorkspaceEntry: Sendable {
     }
 }
 
-/// 이름으로 워크스페이스 config를 찾는다.
-///
-/// 디렉토리를 주입받는 이유는 단위 테스트가 사용자 홈 디렉토리를 건드리지 않게 하기 위해서다.
 public struct WorkspaceRegistry {
     public static let defaultDirectory =
         NSHomeDirectory() + "/.config/restage"
@@ -32,10 +28,6 @@ public struct WorkspaceRegistry {
         self.directory = directory
     }
 
-    /// 인자를 이름 또는 경로로 해석해 실제 파일 경로를 돌려준다.
-    ///
-    /// `/`를 포함하거나 yaml 확장자로 끝나면 경로로 본다. 그래야 기존
-    /// `restage open examples/dev.yaml` 사용법이 그대로 동작한다.
     public func resolve(_ argument: String) throws -> String {
         if looksLikePath(argument) {
             return (argument as NSString).expandingTildeInPath
@@ -57,9 +49,6 @@ public struct WorkspaceRegistry {
             available: available)
     }
 
-    /// 디렉토리의 워크스페이스 목록. 파싱에 실패한 것도 오류와 함께 남긴다.
-    ///
-    /// 목록에서 빼면 사용자는 파일이 없는 줄 알고 엉뚱한 곳을 찾는다.
     public func list() throws -> [WorkspaceEntry] {
         guard FileManager.default.fileExists(atPath: directory) else {
             throw ConfigError.directoryNotFound(path: directory)

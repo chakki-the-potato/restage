@@ -27,7 +27,6 @@ import Testing
     #expect(SemanticVersion("v") == nil)
 }
 
-/// 문자열로 비교하면 "0.10.0" < "0.9.0"이 되어 새 버전을 놓친다.
 @Test func comparesNumericallyNotLexically() {
     let ten = SemanticVersion("0.10.0")!
     let nine = SemanticVersion("0.9.0")!

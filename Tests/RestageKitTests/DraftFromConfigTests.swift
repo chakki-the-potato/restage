@@ -49,8 +49,6 @@ private let yaml = """
     #expect(tabs == ["https://example.com", "https://example.org"])
 }
 
-/// 저장된 값은 사용자가 이미 정한 것이다. 물음표가 뜨면 자기가 고른 자리를 도구가
-/// 의심하는 것처럼 보인다.
 @Test func savedItemsAreConfident() throws {
     let draft = DraftFromConfig.draft(from: try WorkspaceConfig.decode(yaml: yaml))
     for screen in draft.screens {
@@ -61,7 +59,6 @@ private let yaml = """
     }
 }
 
-/// 편집 후 저장한 것이 그대로 다시 읽혀야 한다. 왕복에서 값이 흐르면 편집이 파괴가 된다.
 @Test func draftSurvivesRoundTripThroughWriter() throws {
     let original = try WorkspaceConfig.decode(yaml: yaml)
     let draft = DraftFromConfig.draft(from: original)

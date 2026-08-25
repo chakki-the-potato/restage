@@ -3,23 +3,15 @@ import RestageKit
 import RestageKitDarwin
 import SwiftUI
 
-/// 패널이 그리는 상태.
-///
-/// 화면과 분리하는 이유는 목록 갱신, 단축키 등록, 실행 중 표시가 서로 얽히기 때문이다.
-/// 뷰는 이 값을 읽어 그리기만 한다.
 @MainActor
 final class PanelStore: ObservableObject {
     struct Item: Identifiable, Equatable {
         var id: String { name }
         let name: String
         let summary: WorkspaceSummary?
-        /// config를 읽지 못한 사유. 있으면 실행할 수 없다.
         let error: String?
-        /// 등록된 단축키 표시 문자열.
         let hotkey: String?
-        /// config에 적힌 단축키. 설정 창에 현재 값을 채우는 데 쓴다.
         let hotkeySpec: HotkeySpec?
-        /// 단축키를 등록하지 못한 사유.
         let hotkeyWarning: String?
 
         var isRunnable: Bool { error == nil }
@@ -37,9 +29,7 @@ final class PanelStore: ObservableObject {
 
     @Published private(set) var items: [Item] = []
     @Published private(set) var runningName: String?
-    /// 실행 중인 워크스페이스가 어디까지 갔는지.
     @Published private(set) var progress: RunProgress?
-    /// 워크스페이스별 마지막 실패 사유. 성공하면 지운다.
     @Published private(set) var messages: [String: String] = [:]
     @Published private(set) var accessibilityGranted = true
     @Published private(set) var listError: String?
@@ -49,7 +39,6 @@ final class PanelStore: ObservableObject {
 
     init() {}
 
-    /// 화면을 그림으로 떠서 눈으로 보기 위한 것. 실제 실행에서는 reload()가 채운다.
     init(items: [Item]) {
         self.items = items
     }
@@ -64,8 +53,6 @@ final class PanelStore: ObservableObject {
         reload()
     }
 
-    /// 패널을 열 때마다 다시 읽는다. config 파일을 직접 고치는 것도 이 도구의 편집 방식이라
-    /// 한 번만 읽으면 앱을 재시작해야 한다.
     func reload() {
         accessibilityGranted = AccessibilityPermission.isTrusted()
         loginItemEnabled = LoginItem.isEnabled
@@ -124,8 +111,6 @@ final class PanelStore: ObservableObject {
         }
         loginItemEnabled = LoginItem.isEnabled
     }
-
-    // MARK: - 단축키
 
     private func declaredHotkeys(
         in entries: [WorkspaceEntry]

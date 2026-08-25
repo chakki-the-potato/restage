@@ -1,8 +1,6 @@
 import CoreGraphics
 
 public enum WorkspaceResolver {
-    /// config와 사용 가능한 디스플레이로 구체적 목표를 계산한다.
-    /// 요청한 디스플레이가 없는 화면은 건너뛰고 사유를 남긴다. 나머지 화면은 그대로 진행한다.
     public static func resolve(
         _ config: WorkspaceConfig, displays: DisplayList
     ) -> ResolvedWorkspace {

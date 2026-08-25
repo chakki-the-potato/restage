@@ -1,10 +1,6 @@
 import RestageKit
 import SwiftUI
 
-/// 워크스페이스에 든 앱을 겹쳐 그린다.
-///
-/// 개수를 세 개로 끊는 이유는 폭을 고정하기 위해서다. 앱 수에 따라 폭이 변하면 옆의 이름이
-/// 카드마다 다른 자리에서 시작해 목록이 흔들린다.
 struct AppIconStack: View {
     let apps: [AppID]
     var isDimmed = false

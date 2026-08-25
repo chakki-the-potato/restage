@@ -50,7 +50,6 @@ private func roundTrip(_ draft: WorkspaceDraft) throws -> WorkspaceConfig {
     #expect(item.tabs == tabs)
 }
 
-/// 브라우저의 slot을 비우면 창 크기를 건드리지 않는다는 뜻이다. 그 의미가 왕복에서 살아야 한다.
 @Test func browserWithoutSlotStaysWithoutSlot() throws {
     let draft = WorkspaceDraft(
         name: "web",
@@ -85,8 +84,6 @@ private func roundTrip(_ draft: WorkspaceDraft) throws -> WorkspaceConfig {
     #expect(item.title == "시작 페이지")
 }
 
-/// 앱 이름은 사용자 컴퓨터에서 오는 값이라 콜론이나 쉼표가 들어올 수 있다.
-/// 따옴표를 씌우지 않으면 구조가 깨진다.
 @Test func specialCharactersInNamesAreQuoted() throws {
     let draft = WorkspaceDraft(
         name: "odd",
@@ -105,7 +102,6 @@ private func roundTrip(_ draft: WorkspaceDraft) throws -> WorkspaceConfig {
     #expect(item.title == "a{b}c")
 }
 
-/// YAML에서 따옴표 없는 no/true는 불리언이다. 앱 이름이 그런 값이면 숫자나 참거짓으로 읽힌다.
 @Test func reservedWordsAndNumbersAreQuoted() {
     #expect(ConfigWriter.scalar("no") == "\"no\"")
     #expect(ConfigWriter.scalar("true") == "\"true\"")

@@ -5,11 +5,8 @@ import RestageKitDarwin
 
 struct ProbeOptions {
     var slot: Slot = .leftHalf
-    /// 비어 있으면 실행 중인 앱 전부를 대상으로 한다. 검증 표본을 코드에 박아두면
-    /// 그 목록을 만든 사람의 컴퓨터에서만 의미가 있다.
     var apps: [AppID] = []
     var includeFullScreen = false
-    /// 콜드 스타트는 대상 앱을 강제 종료한다. 되돌릴 수 없으므로 기본값은 끔이다.
     var includeColdStart = false
 
     static func parse(_ arguments: [String]) throws -> ProbeOptions {
@@ -100,7 +97,6 @@ enum ProbeCommand {
         return ProbeReport.hasFailure(rows) ? 1 : 0
     }
 
-    /// 지금 화면에 떠 있는 앱. Dock에 아이콘이 있는 앱만 센다.
     private static func runningApps() -> [AppID] {
         let running = NSWorkspace.shared.runningApplications
             .filter { $0.activationPolicy == .regular && !$0.isTerminated }
@@ -109,7 +105,6 @@ enum ProbeCommand {
         return names.sorted().map { AppID($0) }
     }
 
-    /// 앱을 강제 종료하기 전에 확인을 받는다. 작업 중인 창이 저장 없이 닫힐 수 있다.
     private static func confirmColdStart(_ options: ProbeOptions, apps: [AppID]) -> Bool {
         guard options.includeColdStart else { return true }
         let names = apps.map(\.rawValue).joined(separator: ", ")

@@ -1,18 +1,11 @@
 import RestageKit
 import RestageKitDarwin
 
-/// 워크스페이스 하나를 실행한다.
-///
-/// 메뉴바 패널과 전역 단축키가 같은 경로를 타야 하므로 화면과 분리한다.
-/// 실패를 던지지 않고 값으로 돌려주는 이유는 어느 쪽에서 불러도 사용자에게 보여줄 문장이
-/// 필요하기 때문이다.
 @MainActor
 enum WorkspaceLauncher {
     enum Outcome {
         case succeeded
-        /// 일부 항목이 실패했다. 나머지는 배치됐다.
         case partial(String)
-        /// 실행 자체가 시작되지 못했다.
         case failed(String)
 
         var message: String? {

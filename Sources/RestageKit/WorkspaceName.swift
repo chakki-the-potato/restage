@@ -1,12 +1,6 @@
-/// 워크스페이스 이름 규칙.
-///
-/// 이름은 곧 파일 이름이 되고, `WorkspaceRegistry.resolve`가 인자를 이름과 경로로 가르는
-/// 기준이기도 하다. 슬래시나 점이 들어오면 그쪽이 경로로 해석해 엉뚱한 파일을 연다.
-/// 만드는 곳이 CLI와 메뉴 두 군데라 규칙을 한곳에 둔다.
 public enum WorkspaceName {
     public static let maxLength = 64
 
-    /// 통과하면 nil, 아니면 사용자에게 보여줄 사유.
     public static func validate(_ name: String) -> String? {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
 
@@ -31,7 +25,6 @@ public enum WorkspaceName {
         return nil
     }
 
-    /// 앞뒤 공백을 털어낸 저장용 이름.
     public static func normalize(_ name: String) -> String {
         name.trimmingCharacters(in: .whitespaces)
     }

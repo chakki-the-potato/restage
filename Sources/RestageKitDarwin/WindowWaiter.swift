@@ -2,26 +2,12 @@ import RestageKit
 
 @MainActor
 public enum WindowWaiter {
-    /// How long to wait before falling back to activating the app.
     static let activationGrace: Duration = .milliseconds(750)
 
-    /// How long to wait for an app to finish its own layout before placing anything.
-    /// Placing while it is still sizing itself right after launch makes the two overwrite each other.
     static let layoutSettleTimeout: Duration = .seconds(2)
 
-    /// How long to wait before accepting a fixed-size window as the final candidate.
-    /// It buys time for a splash to be replaced by the real window. Measured, Discord swaps within 3s.
     static let splashGrace: Duration = .seconds(4)
 
-    /// Polls until a placeable window appears.
-    /// Conditions: AXRole == AXWindow, size greater than zero, not minimized.
-    /// Returns the first of the AX window list, that is the most recently active window.
-    ///
-    /// Some apps don't build their AX window tree until they come to the front. Safari does this.
-    /// `AXWindows` returns an empty array even though the window is open and visible.
-    /// So when no window is found within `activationGrace`, the app is activated once and polling continues.
-    /// Activating from the start is avoided because apps stealing focus from each other mid-placement
-    /// would fight the final step that focuses the anchor app.
     public static func wait(
         pid: Int32, timeout: Duration, selector: WindowSelector = .mostRecentlyActive
     ) async throws -> AXWindow {
@@ -79,8 +65,6 @@ public enum WindowWaiter {
         throw EngineError.windowTimeout(pid: pid, seconds: seconds(of: timeout))
     }
 
-    /// Settles a window before placing it: unminimize, and leave full screen if needed.
-    /// Returns once the size has stopped changing.
     public static func prepareForDesktopPlacement(_ window: AXWindow) async {
         if window.isMinimized {
             window.setMinimized(false)
@@ -93,32 +77,15 @@ public enum WindowWaiter {
         _ = await Polling.settle(timeout: layoutSettleTimeout) { window.currentFrame }
     }
 
-    /// Titles seen while polling are remembered because looking again after a timeout returns an
-    /// empty array — the app is no longer frontmost by then. That would report "no windows are
-    /// open", which is not true.
-    ///
-    /// With a title given, only windows containing it are kept. Case is ignored.
-    ///
-    /// Among several matches the most recently active comes first, because the AX window list is in that order.
     private static func matching(_ windows: [AXWindow], _ selector: WindowSelector) -> [AXWindow] {
         guard let wanted = selector.titleContains?.lowercased() else { return windows }
         return windows.filter { $0.title?.lowercased().contains(wanted) == true }
     }
 
-    /// A window that can also be resized. Preferred as the placement target.
-    ///
-    /// Resizability is part of the condition because of Electron splash windows. Right after launch
-    /// Discord shows a fixed 300x300 window and swaps it for the real 1280x870 one a moment later.
-    /// Without this condition the splash gets caught: it moves but fails to resize.
     private static func isPlaceable(_ window: AXWindow) -> Bool {
         isRealWindow(window) && window.isSizeSettable
     }
 
-    /// A real window regardless of whether it can be resized. Used as the fallback on timeout.
-    ///
-    /// Some apps have nothing but fixed-size windows, like IINA's start window. Returning nothing
-    /// there would report "no windows" incorrectly, so this window is handed over and the placement
-    /// step reports CONSTRAINED with the size limit as the reason.
     private static func isRealWindow(_ window: AXWindow) -> Bool {
         guard window.role == AXAttributes.windowRole else { return false }
         guard !window.isMinimized else { return false }

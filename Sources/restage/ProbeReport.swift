@@ -78,12 +78,6 @@ enum ProbeReport {
             "cli.report.tally", parts.joined(separator: " / "), rows.count, verdict)
     }
 
-    /// 전체화면 해제 실패를 표시한다. 전환 자체의 판정은 유지하고 경고만 붙인다.
-    ///
-    /// 실패로 뒤집지 않는 이유는 이것이 구현 결함이 아니라 플랫폼 한계이기 때문이다.
-    /// 앱이 전체화면이 되면 전용 Space로 옮겨지는데, 화면은 그 Space로 전환되지 않고
-    /// AX는 다른 Space의 창을 열거하지 못한다. 그래서 해제할 창에 도달할 방법이 없다.
-    /// 사용자가 직접 `ctrl+cmd+F`로 빠져나와야 한다.
     static func markRestoreFailure(_ row: ProbeRow) -> ProbeRow {
         ProbeRow(
             app: row.app, start: row.start,
@@ -97,7 +91,6 @@ enum ProbeReport {
         rows.contains { $0.label == "FAIL" }
     }
 
-    /// 열 너비를 내용에 맞춘다. 앱 이름은 사용자 컴퓨터에서 오는 값이라 길 수 있다.
     private static func width(of values: [String]) -> Int {
         (values.map(\.count).max() ?? 0) + 2
     }

@@ -2,11 +2,6 @@ import AppKit
 import Carbon.HIToolbox
 import RestageKit
 
-/// 전역 단축키를 등록하고 발화를 콜백으로 전달한다.
-///
-/// Carbon `RegisterEventHotKey`를 쓰는 이유는 추가 권한이 필요 없기 때문이다.
-/// `NSEvent.addGlobalMonitorForEvents`는 접근성 권한이 필요하고 이벤트를 소비하지 못해
-/// 다른 앱에도 키가 전달된다. `CGEvent` 탭은 시스템 전체 키 입력을 가로채므로 과하다.
 @MainActor
 final class HotkeyRegistry {
     enum Registration {
@@ -27,7 +22,6 @@ final class HotkeyRegistry {
     private var handler: EventHandlerRef?
     private var onFire: ((String) -> Void)?
 
-    /// 등록된 조합. 같은 조합을 두 워크스페이스가 쓰면 뒤엣것은 충돌로 처리한다.
     private var claimed: Set<String> = []
 
     func install(onFire: @escaping (String) -> Void) {
@@ -53,10 +47,6 @@ final class HotkeyRegistry {
             1, &eventType, Unmanaged.passUnretained(self).toOpaque(), &handler)
     }
 
-    /// 전부 해제하고 다시 등록한다.
-    ///
-    /// 차이를 계산하지 않는 이유는 워크스페이스가 수십 개를 넘지 않기 때문이다.
-    /// 메뉴를 열 때마다 호출되므로 config를 고치면 그 시점에 반영된다.
     @discardableResult
     func reload(_ hotkeys: [(workspace: String, raw: String)]) -> [String: Registration] {
         unregisterAll()

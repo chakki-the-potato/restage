@@ -12,7 +12,6 @@ private func candidates(_ pairs: [(String, String)]) -> [WindowIdentity.Candidat
     #expect(result.droppedByApp.isEmpty)
 }
 
-/// 제목이 비어 있어도 창이 하나면 담을 수 있다. 고를 필요가 없기 때문이다.
 @Test func singleWindowWithoutTitleIsKept() {
     let result = WindowIdentity.select(candidates([("Claude", "")]))
     #expect(result.kept == [0])
@@ -27,8 +26,6 @@ private func candidates(_ pairs: [(String, String)]) -> [WindowIdentity.Candidat
     #expect(result.droppedByApp.isEmpty)
 }
 
-/// 제목이 전부 비면 골라낼 방법이 없다. 하나만 담고 나머지는 버린다.
-/// 넷을 다 담으면 실행 때 같은 창을 네 번 옮기고 끝난다. 실제로 겪었다.
 @Test func indistinguishableWindowsKeepOnlyOne() {
     let result = WindowIdentity.select(
         candidates([("Claude", ""), ("Claude", ""), ("Claude", ""), ("Claude", "")]))
@@ -44,8 +41,6 @@ private func candidates(_ pairs: [(String, String)]) -> [WindowIdentity.Candidat
     #expect(result.droppedByApp == ["Safari": 1])
 }
 
-/// 고유한 제목이 섞여 있으면 그것만 담는다. 구분 못 하는 창을 함께 담으면 그것이
-/// 제목 없는 선택자가 되어 이미 담은 창을 다시 가로챈다.
 @Test func mixedTitlesKeepOnlyIdentifiableOnes() {
     let result = WindowIdentity.select(
         candidates([("Safari", "문서"), ("Safari", ""), ("Safari", "메일")]))
@@ -61,7 +56,6 @@ private func candidates(_ pairs: [(String, String)]) -> [WindowIdentity.Candidat
     #expect(result.droppedByApp.isEmpty)
 }
 
-/// 같은 제목이라도 앱이 다르면 서로 상관없다.
 @Test func sameTitleAcrossAppsIsFine() {
     let result = WindowIdentity.select(
         candidates([("Safari", "GitHub"), ("Google Chrome", "GitHub")]))

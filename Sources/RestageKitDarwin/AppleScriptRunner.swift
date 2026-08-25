@@ -20,7 +20,6 @@ enum AppleScriptError: Error, CustomStringConvertible {
 
 @MainActor
 enum AppleScriptRunner {
-    /// Apple Events 권한 거부. 사용자가 팝업에서 거부했거나 설정에서 껐을 때 온다.
     private static let permissionDeniedCode = -1743
 
     static func run(_ source: String, applicationName: String) throws -> String {

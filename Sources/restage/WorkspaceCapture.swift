@@ -2,19 +2,12 @@ import Foundation
 import RestageKit
 import RestageKitDarwin
 
-/// 지금 열려 있는 창을 워크스페이스 초안으로 옮긴다.
-///
-/// 좌표를 그대로 담지 않고 `SlotClassifier`로 slot을 고른다. 좌표를 저장하면 모니터가
-/// 바뀔 때마다 config를 고쳐야 하고, 그것이 이 도구가 없애려는 문제다.
 @MainActor
 enum WorkspaceCapture {
     struct Result {
         let draft: WorkspaceDraft
-        /// 브라우저인데 탭을 읽지 못한 앱과 그 사유.
         let browsersWithoutTabs: [SkippedBrowser]
-        /// 다른 데스크탑에 있어 실행 시 접근하지 못할 수 있는 항목의 개수.
         let onOtherSpaceCount: Int
-        /// 창을 골라낼 수 없어 담지 않은 개수. 앱 이름별로 센다.
         let indistinguishable: [String: Int]
     }
 
@@ -67,9 +60,6 @@ enum WorkspaceCapture {
             indistinguishable: selection.droppedByApp)
     }
 
-    /// 브라우저면 열린 탭까지 담고, 아니면 창 위치만 담는다.
-    ///
-    /// 브라우저 창과 창 목록을 좌표로 맞춘다. 둘 사이에 공통된 식별자가 없기 때문이다.
     private static func draft(
         for window: CapturedWindow, slot: Slot?, overlap: Double?, title: String?,
         tabsByApp: inout [String: [CapturedBrowserWindow]], withoutTabs: inout [String: String]
@@ -108,7 +98,6 @@ enum WorkspaceCapture {
             wasOnCurrentSpace: window.isOnCurrentSpace)
     }
 
-    /// 주 디스플레이를 먼저, 외장은 번호 순으로. 창을 만난 순서에 따라 목록이 뒤바뀌지 않게 한다.
     private static func rank(_ selector: DisplaySelector) -> Int {
         switch selector {
         case .builtin, .any: return 0

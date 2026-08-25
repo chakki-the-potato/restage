@@ -3,11 +3,9 @@ import RestageKit
 import RestageKitDarwin
 import SwiftUI
 
-/// 항목 하나를 어디에 놓을지. 자리와 전체화면은 서로 배타적이라 한 값으로 묶는다.
 enum Placement: Hashable {
     case slot(Slot)
     case fullscreen
-    /// 브라우저에서만 쓴다. 창 크기를 건드리지 않는다.
     case keepSize
 
     var label: String {
@@ -19,12 +17,10 @@ enum Placement: Hashable {
     }
 }
 
-/// 초안을 고치는 상태. 알림 창이 모달로 도는 동안 뷰가 여기에 표시를 남긴다.
 @MainActor
 final class DraftEditor: ObservableObject {
     @Published var excluded: Set<Int> = []
     @Published var placements: [Int: Placement] = [:]
-    /// 목록에 없던 앱을 직접 넣은 것.
     @Published var added: [ItemDraft] = []
 
     private let draft: WorkspaceDraft
@@ -78,9 +74,6 @@ final class DraftEditor: ObservableObject {
     }
 }
 
-/// 담을 항목과 자리를 고르는 목록.
-///
-/// 새로 만들 때와 기존 것을 고칠 때 같은 화면을 쓴다.
 struct DraftEditorView: View {
     let rows: [Row]
     @ObservedObject var editor: DraftEditor
@@ -96,17 +89,11 @@ struct DraftEditorView: View {
         let app: String
         let tabCount: Int
         let placement: Placement
-        /// 자리 분류에 확신이 없는 항목. 사용자가 고르면 사라진다.
         let isUncertain: Bool
-        /// 창과 고른 자리가 얼마나 겹치는지. 물음표를 설명할 때 쓴다.
         let overlap: Double?
         let isOnOtherSpace: Bool
         let allowsKeepSize: Bool
 
-        /// 물음표에 마우스를 올렸을 때 보여줄 설명.
-        ///
-        /// "애매하다"만 적으면 무엇이 애매한지 알 수 없다. 어느 자리와 얼마나 어긋나는지를
-        /// 보여줘야 그대로 둘지 다른 자리를 고를지 판단할 수 있다.
         var uncertaintyDetail: String {
             let percent = overlap.map { Int(($0 * 100).rounded()) }
             let match = percent.map { L10n.string("draft.overlap_percent", $0) }
@@ -257,7 +244,6 @@ struct DraftEditorView: View {
         .padding(.vertical, 3)
     }
 
-    /// 지금 안 켜둔 앱도 넣을 수 있게 한다. 캡처만으로는 켜져 있는 것만 담긴다.
     private var addSection: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {

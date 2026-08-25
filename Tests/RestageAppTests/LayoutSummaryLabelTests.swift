@@ -18,7 +18,6 @@ struct LayoutSummaryLabelTests {
         body()
     }
 
-    /// 화면이 하나면 개수를 적지 않는다. 모든 카드에 '화면 1'이 붙으면 아무것도 구분하지 못한다.
     @Test func oneScreenSaysNothingAboutScreens() {
         withKorean {
             #expect(label(.leftRight, screens: 1) == "좌우 분할")
@@ -31,7 +30,6 @@ struct LayoutSummaryLabelTests {
         }
     }
 
-    /// 자리 하나만 쓰는 배치는 그 자리 이름을 그대로 쓴다.
     @Test func aSingleSlotUsesItsOwnName() {
         withKorean {
             #expect(label(.single(.leftHalf), screens: 1) == "왼쪽 절반")

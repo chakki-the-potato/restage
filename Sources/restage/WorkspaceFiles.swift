@@ -1,21 +1,14 @@
 import AppKit
 import RestageKit
 
-/// 워크스페이스 config 파일을 다루는 동작.
-///
-/// 메뉴가 파일을 직접 만지지 않게 여기로 모은다. 삭제와 이름 바꾸기는 되돌릴 수 없는
-/// 동작이라 실패 사유를 반드시 돌려준다.
 @MainActor
 enum WorkspaceFiles {
-    /// 성공하면 nil, 실패하면 사용자에게 보여줄 사유.
     typealias Failure = String?
 
     static func path(for name: String) -> String? {
         try? WorkspaceRegistry().resolve(name)
     }
 
-    /// 휴지통으로 보낸다. 지우지 않는 이유는 사용자가 되돌릴 수 있어야 하기 때문이다.
-    /// 손으로 쓴 config가 며칠치 작업일 수 있다.
     static func moveToTrash(_ name: String) -> Failure {
         guard let path = path(for: name) else {
             return L10n.string("error.file.not_found", name)
@@ -67,7 +60,6 @@ enum WorkspaceFiles {
         NSWorkspace.shared.open(URL(fileURLWithPath: directory))
     }
 
-    /// config의 hotkey 줄만 갈아 끼운다. nil이면 지운다.
     static func setHotkey(_ hotkey: String?, for name: String) -> Failure {
         guard let path = path(for: name) else {
             return L10n.string("error.file.not_found", name)
@@ -87,7 +79,6 @@ enum WorkspaceFiles {
         path(for: name) != nil
     }
 
-    /// 초안을 저장한다. 저장 뒤 다시 읽어 실제로 열리는지 확인한다.
     static func save(_ draft: WorkspaceDraft) -> Failure {
         let directory = WorkspaceRegistry.defaultDirectory
         let path = "\(directory)/\(draft.name).yaml"

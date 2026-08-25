@@ -2,27 +2,14 @@ import AppKit
 import CoreGraphics
 import RestageKit
 
-/// 현재 창 상태를 Space와 무관하게 조회한다.
-///
-/// AX를 쓰지 않는 이유는 AX가 현재 Space의 창만 열거하기 때문이다. 전체화면 앱은
-/// 전용 Space로 옮겨져 AX에서 사라지므로, AX로 판정하면 이미 목표를 달성한 앱을
-/// "창 없음"으로 오판한다. `CGWindowList`는 Space와 무관하게 창을 본다.
 @MainActor
 public enum CurrentState {
     public static let tolerance: CGFloat = 2
 
-    /// 목표 사각형과 일치하는 창이 있는지.
     public static func isPlaced(pid: Int32, target: CGRect) -> Bool {
         windowRects(pid: pid).contains { matches($0, target) }
     }
 
-    /// 해당 디스플레이를 가득 채우는 창이 있는지. 전체화면 달성 판정에 쓴다.
-    ///
-    /// 크기만 보면 안 된다. 외장 디스플레이를 채운 창은 주 디스플레이보다 크므로,
-    /// 크기만으로 판정하면 주 디스플레이 기준에서 전체화면으로 오판한다.
-    /// 창이 그 디스플레이 위에 있는지까지 확인한다.
-    ///
-    /// 전체화면 창은 메뉴바 영역까지 덮어 `visibleFrame`보다 크므로 90% 기준을 쓴다.
     public static func isFullScreen(pid: Int32, on display: DisplayInfo) -> Bool {
         let bounds = display.axBounds
         return windowRects(pid: pid).contains { rect in
@@ -31,7 +18,6 @@ public enum CurrentState {
         }
     }
 
-    /// 해당 프로세스가 가진 창의 개수. 0이 아닌데 AX가 못 보면 다른 Space에 있다는 뜻이다.
     public static func windowCount(pid: Int32) -> Int {
         windowRects(pid: pid).count
     }

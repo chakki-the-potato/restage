@@ -48,14 +48,10 @@ enum RunReport {
         outcomes.contains { !$0.status.isSuccess }
     }
 
-    /// 열 너비를 내용에 맞춘다. 앱 이름은 사용자 컴퓨터에서 오는 값이라
-    /// "Google Chrome"이나 "Microsoft PowerPoint"처럼 길 수 있다.
     private static func width(of values: [String]) -> Int {
         (values.map(\.count).max() ?? 0) + 2
     }
 
-    /// 열 너비를 넘는 값이 와도 최소 한 칸은 띄운다. 그러지 않으면 긴 앱 이름 뒤에
-    /// 다음 열이 붙어 표가 깨진다.
     private static func pad(_ text: String, _ width: Int) -> String {
         let padding = max(1, width - text.count)
         return text + String(repeating: " ", count: padding)

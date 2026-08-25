@@ -1,13 +1,8 @@
 import RestageKit
 
-/// 워크스페이스 초안을 사람이 읽는 목록으로 만든다.
-///
-/// 터미널의 `restage new`와 메뉴바의 새로 만들기 창이 같은 내용을 보여줘야 하므로 한곳에 둔다.
-/// 번호는 터미널에서만 쓴다. 창에서는 고를 수 없으니 붙이면 눌러도 되는 것처럼 보인다.
 enum DraftSummary {
     static var uncertaintyNote: String { L10n.string("draft.uncertainty_note") }
 
-    /// 화면 이름과 그 아래 항목들. 빈 초안이면 빈 배열이다.
     static func lines(_ draft: WorkspaceDraft, numbered: Bool) -> [String] {
         var lines: [String] = []
         var number = 0
@@ -40,7 +35,6 @@ enum DraftSummary {
         return text
     }
 
-    /// 같은 앱의 창이 여럿이면 제목을 붙여 구분한다.
     private static func label(for item: ItemDraft) -> String {
         guard let title = item.titleHint, !title.isEmpty else { return item.app }
         return "\(item.app) · \(trimmed(title))"

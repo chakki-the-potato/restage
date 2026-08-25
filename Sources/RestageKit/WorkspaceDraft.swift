@@ -1,8 +1,3 @@
-/// 아직 파일로 저장되지 않은 워크스페이스.
-///
-/// `WorkspaceConfig`가 읽기 전용 스키마인 것과 달리 이쪽은 편집 중인 상태를 담는다.
-/// 둘을 한 타입으로 합치지 않는 이유는 읽을 때와 만들 때 필요한 것이 다르기 때문이다.
-/// 읽을 때는 검증된 값만 있으면 되지만, 만드는 중에는 확신도처럼 저장되지 않는 정보가 붙는다.
 public struct WorkspaceDraft: Sendable, Equatable {
     public var name: String
     public var hotkey: String?
@@ -35,16 +30,12 @@ public struct ItemDraft: Sendable, Equatable {
         case browser(tabs: [String])
     }
 
-    /// 전용 데스크탑으로 보낼지. slot 대신 쓴다.
     public var fullscreen = false
 
-    /// 설치된 앱의 표시 이름. bundle ID가 아니다.
     public var app: String
     public var slot: Slot?
     public var kind: Kind
-    /// 현재 창 배치에서 분류한 확신도. 낮으면 사용자에게 되묻는다. 저장되지는 않는다.
     public var overlap: Double?
-    /// 담을 당시 현재 데스크탑에 있었는지. 저장되지는 않고 확인 목록에만 쓴다.
     public var wasOnCurrentSpace = true
 
     public init(
@@ -82,7 +73,6 @@ public struct ItemDraft: Sendable, Equatable {
             wasOnCurrentSpace: wasOnCurrentSpace)
     }
 
-    /// 목록에서 같은 앱의 창을 구분하는 데 쓰는 꼬리표.
     public var titleHint: String? {
         if case .app(let title) = kind { return title }
         return nil

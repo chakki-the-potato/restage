@@ -3,9 +3,6 @@ import ImageIO
 import RestageBrand
 import UniformTypeIdentifiers
 
-/// iconutil이 먹는 .iconset 디렉터리를 만든다. 번들 빌드 때만 쓰는 도구라 배포물에는
-/// 들어가지 않는다.
-
 let variants: [(name: String, pixels: Int)] = [
     ("icon_16x16.png", 16),
     ("icon_16x16@2x.png", 32),

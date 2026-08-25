@@ -47,7 +47,6 @@ private func screen(_ items: String, mode: String = "desktop") -> String {
     #expect(shape == .fullScreen)
 }
 
-/// 자리 하나만 쓰는 배치는 그 자리 이름으로 부른다. '1분할'은 뜻이 없다.
 @Test func oneWindowInAHalfKeepsTheSlotName() throws {
     #expect(try summary(screen("{type: app, app: safari, slot: left-half}")).shape
         == .single(.leftHalf))
@@ -61,7 +60,6 @@ private func screen(_ items: String, mode: String = "desktop") -> String {
     #expect(shape == .panes(3))
 }
 
-/// 브라우저가 창 크기를 그대로 두면 자리를 모른다. 모양을 지어내지 않는다.
 @Test func itemsWithoutASlotLeaveTheShapeUnknown() throws {
     let shape = try summary(screen("{type: browser, app: safari, tabs: [https://a.dev]}")).shape
     #expect(shape == .mixed)

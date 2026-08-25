@@ -1,10 +1,6 @@
 import AppKit
 import RestageKit
 
-/// 키 조합을 눌러 단축키를 정한다.
-///
-/// 텍스트로 적게 하지 않는 이유는 `ctrl+alt+cmd+1` 같은 표기를 외워야 하고 오타가 나기
-/// 때문이다. 누른 것을 그대로 받는 편이 짧고 틀릴 수 없다.
 @MainActor
 enum HotkeyRecorder {
     enum Outcome {
@@ -13,7 +9,6 @@ enum HotkeyRecorder {
         case cancelled
     }
 
-    /// 이름이 있는 키. 나머지는 눌린 문자를 그대로 쓴다.
     private static let namedKeys: [UInt16: String] = [
         49: "space", 36: "return", 48: "tab",
         122: "f1", 120: "f2", 99: "f3", 118: "f4", 96: "f5", 97: "f6",
@@ -39,7 +34,6 @@ enum HotkeyRecorder {
         save.isEnabled = current != nil
 
         let monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            // Escape는 대화상자를 닫는 데 쓴다. 단축키로 잡으면 나갈 방법이 없다.
             guard event.keyCode != 53 else { return event }
             guard let spec = spec(from: event) else {
                 display.stringValue = L10n.string("hotkey.needs_modifier")
@@ -76,7 +70,6 @@ enum HotkeyRecorder {
         return spec.isUsableAsGlobalHotkey ? spec : nil
     }
 
-    /// 수식키를 뺀 글자를 쓴다. `charactersIgnoringModifiers`가 아니면 ⌥1이 ¡로 들어온다.
     private static func keyName(for event: NSEvent) -> String? {
         if let named = namedKeys[event.keyCode] { return named }
         guard let characters = event.charactersIgnoringModifiers?.lowercased(),

@@ -1,13 +1,10 @@
 import CoreGraphics
 
 public enum PlacementResult: Sendable {
-    /// 목표 좌표에 도달했다. warnings가 비어있지 않으면 주의가 필요하지만 실패는 아니다.
     case ok(actual: CGRect, attempts: Int, elapsed: Duration, warnings: [String])
 
-    /// 앱이 허용하지 않아 목표에 도달할 수 없다. 고칠 수 없는 제약이므로 통과로 취급한다.
     case constrained(actual: CGRect, expected: CGRect, reason: String)
 
-    /// 도달하지 못했고 원인이 최소 크기 제약이 아니다.
     case failed(expected: CGRect, actual: CGRect?, reason: String)
 
     public var isPass: Bool {

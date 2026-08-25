@@ -1,14 +1,6 @@
 import Foundation
 import RestageKit
 
-/// GitHub Releases에서 최신 버전을 확인한다.
-///
-/// Sparkle 같은 자동 업데이트 프레임워크를 쓰지 않는 이유는 그것이 서명된 appcast와
-/// 배포 서버를 요구하기 때문이다. 이 도구는 소스를 받아 각자 빌드하는 방식이라 새 버전이
-/// 있다는 사실만 알려주면 된다. 받는 것은 사용자가 GitHub에서 한다.
-///
-/// 사용자가 누를 때만 확인한다. 주기적으로 부르지 않는 이유는 도구를 쓰는 데 네트워크가
-/// 필요 없어야 하기 때문이다.
 enum UpdateChecker {
     enum Result {
         case upToDate(SemanticVersion)

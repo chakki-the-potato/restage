@@ -30,7 +30,6 @@ private let draft = WorkspaceDraft(
     #expect(DraftSelection.apply(excluding: [], to: draft) == draft)
 }
 
-/// 인덱스가 화면 경계를 넘어 이어진다. 2번은 두 번째 화면의 첫 항목이다.
 @Test func excludesAcrossScreenBoundary() {
     let result = DraftSelection.apply(excluding: [2], to: draft)
     #expect(result.itemCount == 3)
@@ -38,7 +37,6 @@ private let draft = WorkspaceDraft(
     #expect(result.screens[0].items.map(\.app) == ["Safari", "Notion"])
 }
 
-/// 화면의 항목이 전부 빠지면 화면도 사라져야 한다. 빈 화면이 남으면 파싱에 실패한다.
 @Test func dropsScreenWhenAllItemsExcluded() {
     let result = DraftSelection.apply(excluding: [0, 1], to: draft)
     #expect(result.screens.count == 1)
@@ -59,7 +57,6 @@ private let draft = WorkspaceDraft(
     #expect(result.hotkey == "ctrl+alt+cmd+1")
 }
 
-/// 범위 밖 인덱스는 무시한다. 목록이 갱신된 뒤 오래된 선택이 남아 있을 수 있다.
 @Test func ignoresOutOfRangeIndexes() {
     #expect(DraftSelection.apply(excluding: [99, -1], to: draft) == draft)
 }
@@ -72,15 +69,12 @@ private let draft = WorkspaceDraft(
     #expect(config.screens[1].items.count == 1)
 }
 
-// MARK: - 자리 바꾸기
-
 @Test func slotOverrideReplacesSavedSlot() {
     let result = DraftSelection.apply(excluding: [], slots: [0: .q4], to: draft)
     #expect(result.screens[0].items[0].slot == .q4)
     #expect(result.screens[0].items[1].slot == .rightHalf)
 }
 
-/// 사용자가 직접 고른 자리에는 물음표가 붙지 않아야 한다.
 @Test func slotOverrideClearsUncertainty() {
     var uncertain = draft
     uncertain.screens[0].items[0].overlap = 0.4
@@ -95,7 +89,6 @@ private let draft = WorkspaceDraft(
     #expect(result.screens[1].items[1].slot == .bottomHalf)
 }
 
-/// 제외한 항목의 자리를 바꿔도 결과에 영향이 없어야 한다.
 @Test func slotOverrideOnExcludedItemIsIgnored() {
     let result = DraftSelection.apply(excluding: [0], slots: [0: .q4], to: draft)
     #expect(result.screens[0].items.map(\.app) == ["Notion"])
@@ -110,8 +103,6 @@ private let draft = WorkspaceDraft(
     }
     #expect(item.slot == .centered)
 }
-
-// MARK: - 전체 화면과 직접 추가
 
 @Test func fullscreenOverrideIsApplied() {
     let result = DraftSelection.apply(excluding: [], fullscreen: [0: true], to: draft)
@@ -129,7 +120,6 @@ private let draft = WorkspaceDraft(
     #expect(item.fullscreen)
 }
 
-/// 전체화면을 끄면 자리 배치로 돌아가야 한다.
 @Test func fullscreenCanBeTurnedOff() {
     var withFullScreen = draft
     withFullScreen.screens[0].items[0].fullscreen = true
@@ -144,7 +134,6 @@ private let draft = WorkspaceDraft(
     #expect(result.itemCount == 5)
 }
 
-/// 담은 것이 하나도 없어도 직접 추가한 것이 있으면 화면을 만들어야 한다.
 @Test func addedItemsCreateScreenWhenAllExcluded() {
     let result = DraftSelection.apply(
         excluding: [0, 1, 2, 3], added: [.app("Figma", slot: .full)], to: draft)
@@ -165,7 +154,6 @@ private let draft = WorkspaceDraft(
     #expect(item.fullscreen)
 }
 
-/// 기존 config에 fullscreen이 없으면 false여야 한다. 옛 파일이 깨지면 안 된다.
 @Test func missingFullscreenDefaultsToFalse() throws {
     let config = try WorkspaceConfig.decode(yaml: """
         workspace: old

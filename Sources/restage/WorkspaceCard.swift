@@ -1,13 +1,6 @@
 import RestageKit
 import SwiftUI
 
-/// 워크스페이스 하나를 나타내는 카드.
-///
-/// 카드 전체가 실행 버튼이다. 편집과 더보기는 마우스를 올렸을 때만 나타난다. 매일 누르는
-/// 것은 실행이고 관리는 가끔이므로, 관리 버튼이 늘 보이면 실행을 누를 자리가 좁아진다.
-///
-/// 더보기 메뉴는 카드가 아니라 패널이 그린다. 카드 안에 그리면 다음 카드에 가려지고
-/// 카드 높이도 늘어나 목록이 밀린다. 카드는 버튼 위치만 올려보낸다.
 struct WorkspaceCard: View {
     let item: PanelStore.Item
     let isRunning: Bool
@@ -56,8 +49,6 @@ struct WorkspaceCard: View {
                     isHighlighted ? PanelPalette.hoverBorder : PanelPalette.cardBorder,
                     lineWidth: 1))
         .onHover { isHovering = $0 }
-        // 부제가 카드 폭보다 길면 잘린다. 앱이 셋에 화면이 여러 대면 영어에서 그렇다.
-        // 잘린 것을 마우스로 되찾을 수 있게 전문을 붙인다.
         .help(item.error ?? item.subtitle)
     }
 
@@ -98,8 +89,6 @@ struct WorkspaceCard: View {
         }
     }
 
-    /// 실행 중에는 부제 자리에 어디까지 갔는지를 적는다. 도는 표시만으로는 멈춘 것인지
-    /// 알 수 없고, 앱을 여는 데 몇 초가 걸린다.
     private var running: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(progressText)
@@ -110,8 +99,6 @@ struct WorkspaceCard: View {
         }
     }
 
-    /// 막대를 직접 그린다. `ProgressView`는 AppKit 컨트롤이라 3pt 높이도, 카드 안의
-    /// 색도 우리가 정한 대로 나오지 않는다.
     private var progressBar: some View {
         GeometryReader { proxy in
             ZStack(alignment: .leading) {
@@ -136,8 +123,6 @@ struct WorkspaceCard: View {
         return Double(progress.completed) / Double(progress.total)
     }
 
-    /// 단축키 칩과 관리 버튼은 같은 자리를 나눠 쓴다. 둘을 같이 두면 마우스를 올릴 때마다
-    /// 이름과 칩이 옆으로 밀린다. 단축키를 정하는 길은 더보기 메뉴에 있다.
     @ViewBuilder
     private var trailing: some View {
         if isHovering {
@@ -179,8 +164,6 @@ struct WorkspaceCard: View {
         .help(label)
     }
 
-    /// 실패 사유는 알림 창 대신 카드 안에 붙인다. 모달은 흐름을 끊고, 어느 워크스페이스의
-    /// 문제인지도 제목으로만 알 수 있다.
     private func noteRow(
         _ text: String, onRetry: (() -> Void)? = nil, onDismiss: (() -> Void)? = nil
     ) -> some View {

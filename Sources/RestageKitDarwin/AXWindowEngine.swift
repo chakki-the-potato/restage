@@ -3,7 +3,6 @@ import RestageKit
 
 @MainActor
 public struct AXWindowEngine: WindowEngine {
-    /// 창 요소가 무효화됐을 때 새 창을 다시 찾는 데 허용하는 시간.
     static let staleRetryTimeout: Duration = .seconds(10)
 
     public init() {}
@@ -50,7 +49,6 @@ public struct AXWindowEngine: WindowEngine {
         return await FullScreenController.enter(axWindow)
     }
 
-    /// 전체화면을 해제하고 성공 여부를 반환한다. 실패하면 앱이 전용 Space에 남는다.
     public func exitFullscreen(_ window: WindowHandle) async -> Bool {
         guard let axWindow = window as? AXWindow else { return false }
         return await FullScreenController.exit(axWindow)

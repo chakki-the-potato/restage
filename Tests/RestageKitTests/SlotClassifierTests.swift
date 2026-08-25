@@ -25,7 +25,6 @@ private func frame(_ slot: Slot) -> CGRect {
     #expect(match?.isConfident == true)
 }
 
-/// 사용자가 대충 끌어다 놓으면 확신도가 떨어져야 한다. 그래야 되물을 수 있다.
 @Test func roughlyPlacedWindowIsNotConfident() {
     let sloppy = CGRect(x: 40, y: 60, width: 900, height: 700)
     let match = SlotClassifier.classify(frame: sloppy, in: display)
@@ -33,8 +32,6 @@ private func frame(_ slot: Slot) -> CGRect {
     #expect(match?.isConfident == false)
 }
 
-/// 화면을 가득 채운 창이 모든 slot에서 만점을 받으면 안 된다.
-/// 교집합 비율만 쓰면 그렇게 되므로 합집합까지 반영하는지 확인한다.
 @Test func fullWindowDoesNotMatchHalfSlots() {
     let ranked = SlotClassifier.ranked(frame: frame(.full), in: display)
     #expect(ranked.first?.slot == .full)
@@ -57,7 +54,6 @@ private func frame(_ slot: Slot) -> CGRect {
     #expect(SlotClassifier.classify(frame: .zero, in: display) == nil)
 }
 
-/// 다른 디스플레이에 있는 창은 겹치지 않으므로 확신도가 0이어야 한다.
 @Test func windowOnAnotherDisplayOverlapsNothing() {
     let elsewhere = CGRect(x: -2000, y: 0, width: 720, height: 805)
     let match = SlotClassifier.classify(frame: elsewhere, in: display)

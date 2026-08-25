@@ -14,7 +14,6 @@ public enum ConfigLoader {
         return try validated(WorkspaceConfig.decode(yaml: text))
     }
 
-    /// 스키마 디코딩이 잡지 못하는 의미 규칙을 검사한다.
     public static func validated(_ config: WorkspaceConfig) throws -> WorkspaceConfig {
         guard !config.screens.isEmpty else { throw ConfigError.emptyScreens }
 

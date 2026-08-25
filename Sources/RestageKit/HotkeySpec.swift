@@ -6,7 +6,6 @@ public enum HotkeyModifier: String, Sendable, CaseIterable {
     case shift
     case command
 
-    /// config 파일에 적는 이름. `HotkeyModifier.named`가 받아들이는 값이어야 한다.
     public var configName: String {
         switch self {
         case .control: return "ctrl"
@@ -16,7 +15,6 @@ public enum HotkeyModifier: String, Sendable, CaseIterable {
         }
     }
 
-    /// macOS 관례 표기. 메뉴에 보여줄 때 이 순서로 나열한다.
     public var symbol: String {
         switch self {
         case .control: return "⌃"
@@ -37,13 +35,8 @@ public enum HotkeyModifier: String, Sendable, CaseIterable {
     }
 }
 
-/// `"ctrl+alt+cmd+1"` 같은 문자열을 OS에 의존하지 않는 형태로 표현한다.
-///
-/// Carbon 상수는 `restage` 타겟의 `HotkeyRegistry`에만 존재한다. 여기서는 키를
-/// 정규화된 이름으로만 다뤄 파싱을 순수 함수로 유지하고 단위 테스트가 가능하게 한다.
 public struct HotkeySpec: Equatable, Sendable {
     public let modifiers: Set<HotkeyModifier>
-    /// 정규화된 키 이름. "1", "a", "f1", "space" 등.
     public let key: String
 
     private static let namedKeys: Set<String> = ["space", "return", "tab", "escape"]
@@ -75,7 +68,6 @@ public struct HotkeySpec: Equatable, Sendable {
         return HotkeySpec(modifiers: modifiers, key: key)
     }
 
-    /// 메뉴에 표시할 기호 문자열. 수식키는 macOS 관례 순서로 정렬한다.
     public var displayString: String {
         let symbols = HotkeyModifier.allCases
             .filter { modifiers.contains($0) }
@@ -84,7 +76,6 @@ public struct HotkeySpec: Equatable, Sendable {
         return symbols + key.uppercased()
     }
 
-    /// config 파일에 적는 문자열. `parse`의 역이다.
     public var configString: String {
         let names = HotkeyModifier.allCases
             .filter { modifiers.contains($0) }
@@ -97,7 +88,6 @@ public struct HotkeySpec: Equatable, Sendable {
         self.key = key
     }
 
-    /// 수식키 없는 조합은 받지 않는다. 전역 단축키로 등록하면 평범한 타자를 가로챈다.
     public var isUsableAsGlobalHotkey: Bool {
         !modifiers.isEmpty && Self.isValidKey(key)
     }

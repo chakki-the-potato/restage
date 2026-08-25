@@ -1,7 +1,6 @@
 import AppKit
 import RestageKit
 
-/// 메뉴에서 띄우는 알림 창. AppKit 호출을 한곳에 모아 화면을 부르는 쪽이 흩어지지 않게 한다.
 @MainActor
 enum Prompt {
     static func message(_ title: String, _ body: String) {
@@ -12,7 +11,6 @@ enum Prompt {
         alert.runModal()
     }
 
-    /// 되돌릴 수 없는 동작 앞에서 확인을 받는다. 기본 선택은 항상 취소다.
     static func confirmDestructive(
         title: String, body: String, confirmTitle: String, destructive: Bool = true
     ) -> Bool {
@@ -29,7 +27,6 @@ enum Prompt {
         return alert.runModal() == .alertFirstButtonReturn
     }
 
-    /// 한 줄을 입력받는다. 취소하면 nil이다.
     static func text(
         title: String, body: String, initial: String = "", confirmTitle: String = L10n.string("common.ok")
     ) -> String? {
@@ -55,9 +52,6 @@ enum Prompt {
         case cancelled
     }
 
-    /// 임의의 뷰를 붙인 확인 창. 체크박스 목록처럼 고를 것이 있을 때 쓴다.
-    ///
-    /// `alternateTitle`을 주면 버튼이 셋이 된다. 저장도 취소도 아닌 제3의 선택을 위한 것이다.
     static func confirm(
         title: String, body: String, accessory: NSView, confirmTitle: String,
         alternateTitle: String? = nil

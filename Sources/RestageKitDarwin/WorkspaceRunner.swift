@@ -11,8 +11,6 @@ public struct WorkspaceRunner {
         self.engine = engine
     }
 
-    /// - Parameter onProgress: 항목 하나를 시작할 때마다 부른다. 실행 화면이 어디까지
-    ///   갔는지 보여주는 데 쓴다. 없으면 아무것도 보고하지 않는다.
     public func run(
         _ resolved: ResolvedWorkspace,
         onProgress: ((RunProgress) -> Void)? = nil
@@ -42,8 +40,6 @@ public struct WorkspaceRunner {
         var launchFailures: [AppID: String] = [:]
         var outcomes: [ItemOutcome] = []
 
-        // 실행은 먼저 전부 시도해 여러 앱의 기동 시간이 겹치게 하고,
-        // 보고는 선언 순서대로 낸다.
         for item in screen.items {
             guard handles[item.app] == nil, launchFailures[item.app] == nil else { continue }
             onProgress?(RunProgress(
@@ -111,7 +107,6 @@ public struct WorkspaceRunner {
         }
 
         let result = await engine.place(window, slot: placement.slot, display: screen.display)
-        // 화면 단위 mode와 항목 단위 fullscreen 중 하나라도 켜져 있으면 전용 데스크탑으로 보낸다.
         let wantsFullScreen = screen.mode == .fullscreen || placement.fullscreen
         guard wantsFullScreen, result.isPass else {
             return outcome(from: result, placement: placement, screen: screen)
@@ -160,10 +155,6 @@ public struct WorkspaceRunner {
             target, slot: slot, plan: plan, handle: handle, screen: screen, tabs: tabs)
     }
 
-    /// 탭 작업을 한 창을 배치한다.
-    ///
-    /// AppleScript로 식별한 창과 AX 창을 직접 대응시킬 방법이 없으므로, 그 앱을 맨 앞으로
-    /// 올린 뒤 AX 창 목록의 첫 번째를 쓴다. AX 목록은 최근 활성 순이다.
     private func placeBrowserWindow(
         _ target: CGRect, slot: Slot, plan: TabPlan, handle: ProcessHandle,
         screen: ScreenPlan, tabs: TabController.Result
@@ -205,21 +196,11 @@ public struct WorkspaceRunner {
             detail: L10n.string("outcome.tabs_added", result.openedCount))
     }
 
-    /// 제목이 안 맞는 것은 config를 고쳐야 하는 문제이므로 `unreachable`이 아니라 `failed`다.
-    /// `unreachable`은 다른 Space에 있어 손댈 수 없다는 뜻으로만 쓴다.
     private func status(for error: Error, pid: Int32) -> OutcomeStatus {
         if case EngineError.noWindowMatchingTitle = error { return .failed }
         return CurrentState.windowCount(pid: pid) > 0 ? .unreachable : .failed
     }
 
-    /// 이미 목표 상태인지 판정한다. 이것이 멱등성의 핵심이다.
-    ///
-    /// 제목을 지정한 항목에는 쓰지 않는다. 이 판정은 그 앱의 아무 창이나 목표에 있으면
-    /// 참을 내므로, 창이 여러 개인 앱에서 엉뚱한 창을 보고 통과시킨다.
-    /// 그 경우에는 창을 먼저 찾은 뒤 그 창의 좌표를 직접 비교한다.
-    ///
-    /// 전체화면 목표는 AX로 판정할 수 없다. 전체화면 앱의 창은 다른 Space에 있어
-    /// `AXWindows`가 비어 있기 때문이다. `CurrentState`가 `CGWindowList`로 판정한다.
     private func isSatisfied(
         _ placement: Placement, handle: ProcessHandle, screen: ScreenPlan
     ) -> Bool {
@@ -249,10 +230,6 @@ public struct WorkspaceRunner {
         }
     }
 
-    /// 전체가 끝난 뒤 첫 화면의 anchor로 최종 포커스를 준다.
-    ///
-    /// 포커스에 `NSRunningApplication.activate()`를 쓰지 않는다. 호출하는 쪽이 GUI 앱이
-    /// 아니면 macOS가 무시하기 때문이다. AX 경로만 실제로 동작한다.
     private func focusFirstAnchor(_ resolved: ResolvedWorkspace) {
         guard let screen = resolved.screens.first,
               let anchor = screen.anchor,

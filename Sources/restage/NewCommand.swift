@@ -2,10 +2,6 @@ import Foundation
 import RestageKit
 import RestageKitDarwin
 
-/// 현재 창 배치를 읽어 워크스페이스 config를 만든다.
-///
-/// 폼을 채우게 하지 않고 이미 만들어둔 배치에서 출발하는 이유는, 창을 끌어다 놓는 일은
-/// 누구나 이미 할 줄 알기 때문이다. 대신 분류가 애매하면 반드시 되묻는다.
 @MainActor
 enum NewCommand {
     private struct Position {
@@ -49,8 +45,6 @@ enum NewCommand {
             print(L10n.string("new.tabs_unreadable", "\(skipped.app)", skipped.reason))
         }
     }
-
-    // MARK: - 편집 루프
 
     private static func edit(_ draft: inout WorkspaceDraft) -> Int32 {
         while true {
@@ -113,8 +107,6 @@ enum NewCommand {
         print("\(item.app) → \(SlotLabel.text(slot))")
     }
 
-    // MARK: - 항목 추가
-
     private static func addApp(_ draft: inout WorkspaceDraft) {
         guard let name = askInstalledApp(L10n.string("new.prompt.app_name")) else { return }
         guard let slot = askSlot(for: name) else { return }
@@ -142,7 +134,6 @@ enum NewCommand {
         print(L10n.string("new.added_browser", name, tabs.count))
     }
 
-    /// 설치된 앱 이름을 받아 표시 이름으로 정규화한다. 못 찾으면 사유를 보여주고 nil이다.
     private static func askInstalledApp(_ prompt: String) -> String? {
         guard let raw = Console.ask(prompt) else { return nil }
         let typed = raw.trimmingCharacters(in: .whitespaces)
@@ -168,7 +159,6 @@ enum NewCommand {
         return slot
     }
 
-    /// 브라우저는 자리를 비워둘 수 있다. 비우면 창 크기를 건드리지 않는다.
     private static func askOptionalSlot(for app: String) -> Slot? {
         print(L10n.string("new.pick_slot_optional", app))
         print(SlotLabel.picker())
@@ -177,7 +167,6 @@ enum NewCommand {
         return SlotLabel.slot(atChoice: choice)
     }
 
-    /// 화면이 하나면 묻지 않는다. 화면이 아예 없으면 주 디스플레이로 하나 만든다.
     private static func askScreen(in draft: inout WorkspaceDraft) -> Int? {
         if draft.screens.isEmpty {
             draft.screens.append(ScreenDraft(id: "main", display: .builtin, items: []))
@@ -197,8 +186,6 @@ enum NewCommand {
         }
         return choice - 1
     }
-
-    // MARK: - 표시
 
     private static func render(_ draft: WorkspaceDraft) -> String {
         guard draft.itemCount > 0 else {
@@ -228,8 +215,6 @@ enum NewCommand {
         return nil
     }
 
-    // MARK: - 저장
-
     private static func save(_ draft: WorkspaceDraft) -> Int32 {
         guard draft.itemCount > 0 else {
             print(L10n.string("new.nothing_to_save"))
@@ -244,7 +229,6 @@ enum NewCommand {
             }
         }
 
-        // 저장 뒤 다시 읽어 실제로 열리는지 확인한다. 확인 없이 성공을 알리지 않는다.
         if let reason = WorkspaceFiles.save(draft) {
             print(reason)
             return 1
@@ -258,8 +242,6 @@ enum NewCommand {
 }
 
 extension String {
-    /// 목록을 세로로 맞추기 위한 자리 채움. 한글은 폭이 넓어 글자 수로만 맞추면 어긋나므로
-    /// 한글과 한자를 두 칸으로 센다.
     func padded(to width: Int) -> String {
         let displayWidth = reduce(0) { $0 + ($1.isWideInTerminal ? 2 : 1) }
         guard displayWidth < width else { return self + " " }

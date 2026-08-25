@@ -1,10 +1,6 @@
 import RestageKit
 import SwiftUI
 
-/// 배치 모양을 작은 도형으로 그린다.
-///
-/// 글자만으로는 '좌우 분할'과 '상하 분할'을 한눈에 가르기 어렵다. 부제 앞에 실제 모양을
-/// 두면 읽지 않고도 구분된다.
 struct LayoutGlyph: View {
     let shape: LayoutShape
 
@@ -30,7 +26,6 @@ struct LayoutGlyph: View {
         .accessibilityHidden(true)
     }
 
-    /// 0~1 좌표의 칸들. 첫 칸을 진하게 칠해 어느 쪽이 주가 되는지 보여준다.
     private var cells: [CGRect] {
         switch shape {
         case .fullScreen:
@@ -50,8 +45,6 @@ struct LayoutGlyph: View {
         }
     }
 
-    /// 이름 붙은 조합이 아닌 배치. 왼쪽을 주 칸으로 두고 나머지를 오른쪽에 쌓는다.
-    /// 실제 자리를 그대로 옮기지 않는 이유는 16pt 안에서 구분이 되지 않기 때문이다.
     private func panes(_ count: Int) -> [CGRect] {
         let stacked = max(1, count - 1)
         let height = 1.0 / Double(stacked)

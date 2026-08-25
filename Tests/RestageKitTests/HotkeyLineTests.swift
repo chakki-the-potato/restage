@@ -34,7 +34,6 @@ private let config = """
     #expect(HotkeyLine.apply(nil, to: config) == config)
 }
 
-/// 손으로 쓴 파일이라 주석과 줄 순서가 그대로 남아야 한다. 초안에서 다시 쓰면 사라진다.
 @Test func preservesCommentsAndFormatting() {
     let handWritten = """
         # 아침 작업용
@@ -53,7 +52,6 @@ private let config = """
     #expect(HotkeyLine.apply(nil, to: updated) == handWritten)
 }
 
-/// 들여쓴 `hotkey:`는 다른 뜻이므로 건드리면 안 된다.
 @Test func ignoresIndentedHotkeyKeys() {
     let nested = """
         workspace: dev
@@ -72,8 +70,6 @@ private let config = """
     #expect(parsed.hotkey == "ctrl+alt+cmd+1")
 }
 
-// MARK: - config 표기
-
 @Test func configStringIsParseableBack() throws {
     let spec = HotkeySpec(modifiers: [.command, .shift], key: "9")
     #expect(spec.configString == "shift+cmd+9")
@@ -85,7 +81,6 @@ private let config = """
     #expect(spec.configString == "ctrl+alt+cmd+1")
 }
 
-/// 수식키 없는 조합을 전역으로 등록하면 평범한 타자를 가로챈다.
 @Test func plainKeyIsNotUsableAsGlobalHotkey() {
     #expect(!HotkeySpec(modifiers: [], key: "a").isUsableAsGlobalHotkey)
     #expect(HotkeySpec(modifiers: [.command], key: "a").isUsableAsGlobalHotkey)
