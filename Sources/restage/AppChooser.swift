@@ -31,6 +31,16 @@ enum AppChooser {
         return name(ofBundleAt: url)
     }
 
+    static func appName(fromPath path: String) -> String? {
+        let trimmed = path.trimmingCharacters(in: .whitespaces)
+        guard trimmed.hasSuffix(".app") || trimmed.contains("/") else { return nil }
+        let candidates = trimmed.hasPrefix("/") ? [trimmed] : [trimmed, "/" + trimmed]
+        for candidate in candidates {
+            if let name = name(ofBundleAt: URL(fileURLWithPath: candidate)) { return name }
+        }
+        return nil
+    }
+
     static func name(ofBundleAt url: URL) -> String? {
         guard url.pathExtension.lowercased() == "app",
               let bundleID = Bundle(url: url)?.bundleIdentifier else { return nil }

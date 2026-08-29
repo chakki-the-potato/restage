@@ -350,15 +350,6 @@ struct DraftEditorView: View {
                 .frame(width: 90)
                 .onChange(of: addMode) { _ in suggestions = [] }
                 nameField
-                Button(action: chooseFile) {
-                    Image(systemName: "folder")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 20, height: 20)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .help(L10n.string("draft.choose_app_file"))
                 Picker("", selection: $newPlacement) {
                     ForEach(Slot.allCases, id: \.self) { slot in
                         Text(SlotLabel.text(slot)).tag(Placement.slot(slot))
@@ -390,20 +381,42 @@ struct DraftEditorView: View {
         .padding(.vertical, 8)
         .background(isDropTarget ? Color.accentColor.opacity(0.08) : Color.clear)
         .onDrop(of: [.fileURL], isTargeted: $isDropTarget) { providers in
-            AppChooser.acceptDrop(providers) { name in addDropped(name) }
+            AppChooser.acceptDrop(providers) { name in addResolved(name) }
         }
     }
 
     private var nameField: some View {
-        TextField(
-            L10n.string(addMode == .app
-                ? "draft.app_name_placeholder" : "draft.browser_name_placeholder"),
-            text: $newAppName)
-            .textFieldStyle(.roundedBorder)
-            .font(.system(size: 12))
+        HStack(spacing: 0) {
+            TextField(
+                L10n.string(addMode == .app
+                    ? "draft.app_name_placeholder" : "draft.browser_name_placeholder"),
+                text: $newAppName)
+                .textFieldStyle(.plain)
+                .font(.system(size: 12))
+            Button(action: chooseFile) {
+                Image(systemName: "folder")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .frame(width: Self.fieldButtonWidth, height: 18)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help(L10n.string("draft.choose_app_file"))
+        }
+        .padding(.leading, 5)
+        .padding(.vertical, 3)
+        .background(
+            RoundedRectangle(cornerRadius: 5, style: .continuous)
+                .fill(Color(nsColor: .textBackgroundColor))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .strokeBorder(Color(nsColor: .separatorColor))))
             .onSubmit { add() }
             .onChange(of: newAppName) { typed in
                 suggestions = AppChooser.suggestions(for: typed, browsersOnly: addMode == .web)
+            }
+            .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+                AppChooser.acceptDrop(providers) { name in addResolved(name) }
             }
             .popover(
                 isPresented: Binding(
@@ -444,7 +457,13 @@ struct DraftEditorView: View {
         addError = nil
     }
 
-    private func addDropped(_ name: String) {
+    private func addResolved(_ name: String) {
+        guard addMode == .app else {
+            newAppName = name
+            suggestions = []
+            addError = nil
+            return
+        }
         switch newPlacement {
         case .slot(let slot):
             editor.add(.app(name, slot: slot))
@@ -453,6 +472,8 @@ struct DraftEditorView: View {
         case .keepSize:
             editor.add(.app(name, slot: .full))
         }
+        newAppName = ""
+        suggestions = []
         addError = nil
     }
 
@@ -470,38 +491,41 @@ struct DraftEditorView: View {
             .map(URLNormalizer.normalize)
     }
 
+    private static let fieldButtonWidth: CGFloat = 24
+
     private func add() {
         let typed = newAppName.trimmingCharacters(in: .whitespaces)
         guard !typed.isEmpty else { return }
+        guard let name = resolvedName(typed) else { return }
+
+        switch addMode {
+        case .app:
+            addResolved(name)
+            return
+        case .web:
+            let urls = parsedURLs
+            guard !urls.isEmpty else {
+                addError = L10n.string("draft.no_urls")
+                return
+            }
+            let slot: Slot?
+            if case .slot(let chosen) = newPlacement { slot = chosen } else { slot = nil }
+            editor.add(.browser(name, slot: slot, tabs: urls))
+            newURLs = ""
+        }
+        newAppName = ""
+        suggestions = []
+        addError = nil
+    }
+
+    private func resolvedName(_ typed: String) -> String? {
+        if let fromPath = AppChooser.appName(fromPath: typed) { return fromPath }
         do {
             let bundleID = try InstalledApps.resolve(name: typed)
-            let name = InstalledApps.displayName(bundleID: bundleID) ?? typed
-            switch addMode {
-            case .app:
-                switch newPlacement {
-                case .slot(let slot):
-                    editor.add(.app(name, slot: slot))
-                case .fullscreen:
-                    editor.add(.app(name, slot: .full, fullscreen: true))
-                case .keepSize:
-                    editor.add(.app(name, slot: .full))
-                }
-            case .web:
-                let urls = parsedURLs
-                guard !urls.isEmpty else {
-                    addError = L10n.string("draft.no_urls")
-                    return
-                }
-                let slot: Slot?
-                if case .slot(let chosen) = newPlacement { slot = chosen } else { slot = nil }
-                editor.add(.browser(name, slot: slot, tabs: urls))
-                newURLs = ""
-            }
-            newAppName = ""
-            suggestions = []
-            addError = nil
+            return InstalledApps.displayName(bundleID: bundleID) ?? typed
         } catch {
             addError = "\(error)"
+            return nil
         }
     }
 }

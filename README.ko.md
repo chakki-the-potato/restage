@@ -314,7 +314,7 @@ restage가 이를 감지해 사유를 밝히고 멈춘다.
 
 ```bash
 swift build
-swift test        # 252개
+swift test        # 256개
 ```
 
 실행 중인 앱을 대상으로 배치 성공률을 측정한다.
