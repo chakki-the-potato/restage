@@ -306,7 +306,7 @@
 "draft.app_name_placeholder" = "앱 이름 (예: Figma)";
 "draft.choose_app_file" = "설치된 앱 고르기";
 "draft.browser_name_placeholder" = "브라우저 (Safari, Chrome…)";
-"draft.urls_placeholder" = "주소. 여러 개면 공백으로 구분";
+"draft.url_placeholder" = "주소 (예: https://github.com)";
 "draft.add_mode.app" = "앱";
 "draft.add_mode.web" = "웹";
 "draft.no_urls" = "주소를 하나 이상 넣으세요";

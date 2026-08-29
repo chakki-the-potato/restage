@@ -99,7 +99,7 @@ struct DraftEditorView: View {
 
     @State private var addMode: AddMode = .app
     @State private var newAppName = ""
-    @State private var newURLs = ""
+    @State private var newURLRows: [String] = [""]
     @State private var newPlacement: Placement = .slot(.full)
     @State private var addError: String?
     @State private var tabsPopoverRow: Int?
@@ -348,7 +348,10 @@ struct DraftEditorView: View {
                 .pickerStyle(.segmented)
                 .labelsHidden()
                 .frame(width: Self.modeWidth)
-                .onChange(of: addMode) { _ in suggestions = [] }
+                .onChange(of: addMode) { mode in
+                    suggestions = []
+                    if mode == .app { newURLRows = [""] }
+                }
                 nameField
                 Picker("", selection: $newPlacement) {
                     ForEach(Slot.allCases, id: \.self) { slot in
@@ -386,17 +389,9 @@ struct DraftEditorView: View {
     private static let rowSpacing: CGFloat = 8
 
     private var urlRow: some View {
-        HStack(spacing: Self.columnSpacing) {
-            Color.clear.frame(width: Self.modeWidth, height: 0)
-            TextField(L10n.string("draft.urls_placeholder"), text: $newURLs)
-                .textFieldStyle(.plain)
-                .font(.system(size: 12))
-                .frame(height: FieldBox.contentHeight)
-                .padding(.horizontal, 5)
-                .fieldBox()
-                .onSubmit { add() }
-            Color.clear.frame(width: Self.addButtonWidth, height: 0)
-        }
+        URLRowsField(
+            rows: $newURLRows, leadingInset: Self.modeWidth,
+            trailingWidth: Self.addButtonWidth, spacing: Self.columnSpacing)
     }
 
     private var nameField: some View {
@@ -479,8 +474,8 @@ struct DraftEditorView: View {
     }
 
     private var parsedURLs: [String] {
-        newURLs
-            .split(whereSeparator: { $0.isWhitespace || $0.isNewline })
+        newURLRows
+            .flatMap { $0.split(whereSeparator: { $0.isWhitespace || $0.isNewline }) }
             .map(String.init)
             .filter { !$0.isEmpty }
             .map(URLNormalizer.normalize)
@@ -504,7 +499,7 @@ struct DraftEditorView: View {
             let slot: Slot?
             if case .slot(let chosen) = newPlacement { slot = chosen } else { slot = nil }
             editor.add(.browser(name, slot: slot, tabs: urls))
-            newURLs = ""
+            newURLRows = [""]
         }
         newAppName = ""
         suggestions = []
