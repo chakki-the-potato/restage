@@ -339,15 +339,15 @@ struct DraftEditorView: View {
     }
 
     private var addSection: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: Self.rowSpacing) {
+            HStack(spacing: Self.columnSpacing) {
                 Picker("", selection: $addMode) {
                     Text(L10n.string("draft.add_mode.app")).tag(AddMode.app)
                     Text(L10n.string("draft.add_mode.web")).tag(AddMode.web)
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
-                .frame(width: 90)
+                .frame(width: Self.modeWidth)
                 .onChange(of: addMode) { _ in suggestions = [] }
                 nameField
                 Picker("", selection: $newPlacement) {
@@ -363,13 +363,9 @@ struct DraftEditorView: View {
                 .frame(width: 120)
                 Button(L10n.string("common.add"), action: add)
                     .disabled(!canAdd)
+                    .frame(width: Self.addButtonWidth)
             }
-            if addMode == .web {
-                TextField(L10n.string("draft.urls_placeholder"), text: $newURLs)
-                    .textFieldStyle(.roundedBorder)
-                    .font(.system(size: 12))
-                    .onSubmit { add() }
-            }
+            if addMode == .web { urlRow }
             if let addError {
                 Text(addError)
                     .font(.system(size: 10))
@@ -381,6 +377,25 @@ struct DraftEditorView: View {
         .padding(.vertical, 8)
         .onDrop(of: [.fileURL], isTargeted: nil) { providers in
             AppChooser.acceptDrop(providers) { name in addResolved(name) }
+        }
+    }
+
+    private static let modeWidth: CGFloat = 90
+    private static let addButtonWidth: CGFloat = 54
+    private static let columnSpacing: CGFloat = 6
+    private static let rowSpacing: CGFloat = 8
+
+    private var urlRow: some View {
+        HStack(spacing: Self.columnSpacing) {
+            Color.clear.frame(width: Self.modeWidth, height: 0)
+            TextField(L10n.string("draft.urls_placeholder"), text: $newURLs)
+                .textFieldStyle(.plain)
+                .font(.system(size: 12))
+                .frame(height: FieldBox.contentHeight)
+                .padding(.horizontal, 5)
+                .fieldBox()
+                .onSubmit { add() }
+            Color.clear.frame(width: Self.addButtonWidth, height: 0)
         }
     }
 

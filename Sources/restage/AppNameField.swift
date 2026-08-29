@@ -10,7 +10,6 @@ struct AppNameField: View {
     @State private var isHovering = false
 
     private static let buttonWidth: CGFloat = 24
-    private static let cornerRadius: CGFloat = 5
     private static let reaction: Animation = .easeOut(duration: 0.12)
 
     var body: some View {
@@ -18,11 +17,11 @@ struct AppNameField: View {
             TextField(placeholder, text: $text)
                 .textFieldStyle(.plain)
                 .font(.system(size: 12))
+                .frame(height: FieldBox.contentHeight)
             folderButton
         }
         .padding(.leading, 5)
-        .padding(.vertical, 3)
-        .background(box)
+        .fieldBox(isHighlighted: isDropTarget)
         .animation(Self.reaction, value: isDropTarget)
         .animation(Self.reaction, value: isHovering)
     }
@@ -32,7 +31,7 @@ struct AppNameField: View {
             Image(systemName: isDropTarget ? "folder.badge.plus" : "folder")
                 .font(.system(size: 11))
                 .foregroundStyle(iconColor)
-                .frame(width: Self.buttonWidth, height: 18)
+                .frame(width: Self.buttonWidth, height: FieldBox.contentHeight)
                 .contentShape(Rectangle())
         }
         .buttonStyle(FieldIconButtonStyle(isHovering: isHovering))
@@ -45,17 +44,6 @@ struct AppNameField: View {
         return isHovering ? .primary : .secondary
     }
 
-    private var box: some View {
-        RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
-            .fill(isDropTarget
-                ? Color.accentColor.opacity(0.08)
-                : Color(nsColor: .textBackgroundColor))
-            .overlay(
-                RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
-                    .strokeBorder(
-                        isDropTarget ? Color.accentColor : Color(nsColor: .separatorColor),
-                        lineWidth: isDropTarget ? 1.5 : 1))
-    }
 }
 
 private struct FieldIconButtonStyle: ButtonStyle {
