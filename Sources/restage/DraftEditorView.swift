@@ -104,6 +104,8 @@ struct DraftEditorView: View {
     @State private var addError: String?
     @State private var tabsPopoverRow: Int?
     @State private var tabsPopoverAdded: Int?
+    @State private var suggestions: [InstalledApp] = []
+    @State private var isDropTarget = false
 
     struct Row: Identifiable {
         let id: Int
@@ -346,13 +348,17 @@ struct DraftEditorView: View {
                 .pickerStyle(.segmented)
                 .labelsHidden()
                 .frame(width: 90)
-                TextField(
-                    L10n.string(addMode == .app
-                        ? "draft.app_name_placeholder" : "draft.browser_name_placeholder"),
-                    text: $newAppName)
-                    .textFieldStyle(.roundedBorder)
-                    .font(.system(size: 12))
-                    .onSubmit { add() }
+                .onChange(of: addMode) { _ in suggestions = [] }
+                nameField
+                Button(action: chooseFile) {
+                    Image(systemName: "folder")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 20, height: 20)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help(L10n.string("draft.choose_app_file"))
                 Picker("", selection: $newPlacement) {
                     ForEach(Slot.allCases, id: \.self) { slot in
                         Text(SlotLabel.text(slot)).tag(Placement.slot(slot))
@@ -382,6 +388,72 @@ struct DraftEditorView: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
+        .background(isDropTarget ? Color.accentColor.opacity(0.08) : Color.clear)
+        .onDrop(of: [.fileURL], isTargeted: $isDropTarget) { providers in
+            AppChooser.acceptDrop(providers) { name in addDropped(name) }
+        }
+    }
+
+    private var nameField: some View {
+        TextField(
+            L10n.string(addMode == .app
+                ? "draft.app_name_placeholder" : "draft.browser_name_placeholder"),
+            text: $newAppName)
+            .textFieldStyle(.roundedBorder)
+            .font(.system(size: 12))
+            .onSubmit { add() }
+            .onChange(of: newAppName) { typed in
+                suggestions = AppChooser.suggestions(for: typed, browsersOnly: addMode == .web)
+            }
+            .popover(
+                isPresented: Binding(
+                    get: { !suggestions.isEmpty },
+                    set: { shown in if !shown { suggestions = [] } }),
+                attachmentAnchor: .rect(.bounds), arrowEdge: .top
+            ) {
+                suggestionList
+            }
+    }
+
+    private var suggestionList: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(suggestions, id: \.bundleID) { app in
+                Button {
+                    newAppName = app.name
+                    suggestions = []
+                    addError = nil
+                } label: {
+                    Text(app.name)
+                        .font(.system(size: 12))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.vertical, 4)
+        .frame(width: 220)
+    }
+
+    private func chooseFile() {
+        guard let name = AppChooser.chooseFile() else { return }
+        newAppName = name
+        suggestions = []
+        addError = nil
+    }
+
+    private func addDropped(_ name: String) {
+        switch newPlacement {
+        case .slot(let slot):
+            editor.add(.app(name, slot: slot))
+        case .fullscreen:
+            editor.add(.app(name, slot: .full, fullscreen: true))
+        case .keepSize:
+            editor.add(.app(name, slot: .full))
+        }
+        addError = nil
     }
 
     private var canAdd: Bool {
@@ -426,6 +498,7 @@ struct DraftEditorView: View {
                 newURLs = ""
             }
             newAppName = ""
+            suggestions = []
             addError = nil
         } catch {
             addError = "\(error)"
