@@ -308,7 +308,10 @@
 "draft.add_mode.web" = "웹";
 "draft.no_urls" = "주소를 하나 이상 넣으세요";
 "draft.tabs_help" = "누르면 이 창이 열 주소를 고칩니다";
-"draft.tabs_hint" = "한 줄에 주소 하나";
+"draft.add_url" = "주소 추가";
+"draft.remove_url" = "이 주소를 뺍니다";
+"draft.url_invalid" = "주소 형식이 아닙니다";
+"draft.tabs_hint" = "이 창이 열 주소";
 "draft.reveal_help" = "누르면 이 창이 앞으로 옵니다";
 
 /* 권한과 잠금 */

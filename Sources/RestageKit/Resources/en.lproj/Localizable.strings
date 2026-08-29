@@ -308,7 +308,10 @@
 "draft.add_mode.web" = "Web";
 "draft.no_urls" = "Enter at least one address";
 "draft.tabs_help" = "Click to edit the addresses this window opens";
-"draft.tabs_hint" = "One address per line";
+"draft.add_url" = "Add address";
+"draft.remove_url" = "Remove this address";
+"draft.url_invalid" = "Not an address";
+"draft.tabs_hint" = "The addresses this window opens";
 "draft.reveal_help" = "Click to bring this window to the front";
 
 /* 권한과 잠금 */

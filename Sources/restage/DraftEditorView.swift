@@ -57,6 +57,15 @@ final class DraftEditor: ObservableObject {
         added.remove(at: offset)
     }
 
+    func addedTabs(at offset: Int) -> [String] {
+        added.indices.contains(offset) ? added[offset].tabs : []
+    }
+
+    func setAddedTabs(_ urls: [String], at offset: Int) {
+        guard added.indices.contains(offset) else { return }
+        added[offset].kind = .browser(tabs: urls)
+    }
+
     var result: WorkspaceDraft {
         var slots: [Int: Slot] = [:]
         var fullscreen: [Int: Bool] = [:]
@@ -94,7 +103,7 @@ struct DraftEditorView: View {
     @State private var newPlacement: Placement = .slot(.full)
     @State private var addError: String?
     @State private var tabsPopoverRow: Int?
-    @State private var tabsText = ""
+    @State private var tabsPopoverAdded: Int?
 
     struct Row: Identifiable {
         let id: Int
@@ -235,44 +244,49 @@ struct DraftEditorView: View {
 
     private func tabsButton(_ row: Row) -> some View {
         let tabs = editor.tabs[row.id] ?? row.tabs
-        return Button {
-            tabsText = tabs.joined(separator: "\n")
-            tabsPopoverRow = row.id
-        } label: {
-            Text(tabs.isEmpty
+        return tabsLabel(count: tabs.count) { tabsPopoverRow = row.id }
+            .popover(isPresented: Binding(
+                get: { tabsPopoverRow == row.id },
+                set: { shown in
+                    guard !shown else { return }
+                    editor.tabs[row.id] = DraftTabs.cleaned(editor.tabs[row.id] ?? row.tabs)
+                    tabsPopoverRow = nil
+                })
+            ) {
+                DraftTabsPopover(urls: Binding(
+                    get: { editor.tabs[row.id] ?? row.tabs },
+                    set: { editor.tabs[row.id] = $0 }))
+            }
+    }
+
+    private func addedTabsButton(_ offset: Int) -> some View {
+        tabsLabel(count: editor.addedTabs(at: offset).count) { tabsPopoverAdded = offset }
+            .popover(isPresented: Binding(
+                get: { tabsPopoverAdded == offset },
+                set: { shown in
+                    guard !shown else { return }
+                    editor.setAddedTabs(
+                        DraftTabs.cleaned(editor.addedTabs(at: offset)), at: offset)
+                    tabsPopoverAdded = nil
+                })
+            ) {
+                DraftTabsPopover(urls: Binding(
+                    get: { editor.addedTabs(at: offset) },
+                    set: { editor.setAddedTabs($0, at: offset) }))
+            }
+    }
+
+    private func tabsLabel(count: Int, open: @escaping () -> Void) -> some View {
+        Button(action: open) {
+            Text(count == 0
                 ? L10n.string("summary.no_tabs")
-                : L10n.string("summary.tabs", tabs.count))
+                : L10n.string("summary.tabs", count))
                 .font(.system(size: 10))
-                .foregroundStyle(tabs.isEmpty ? Color.orange : Color.accentColor)
+                .foregroundStyle(count == 0 ? Color.orange : Color.accentColor)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .help(L10n.string("draft.tabs_help"))
-        .popover(isPresented: Binding(
-            get: { tabsPopoverRow == row.id },
-            set: { shown in
-                if !shown { commitTabs(for: row.id) }
-            })
-        ) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(L10n.string("draft.tabs_hint"))
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                TextEditor(text: $tabsText)
-                    .font(.system(size: 12, design: .monospaced))
-                    .frame(width: 340, height: 120)
-            }
-            .padding(10)
-        }
-    }
-
-    private func commitTabs(for id: Int) {
-        editor.tabs[id] = tabsText
-            .split(whereSeparator: \.isNewline)
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
-            .map(URLNormalizer.normalize)
-        tabsPopoverRow = nil
     }
 
     private func picker(for row: Row) -> some View {
@@ -302,11 +316,7 @@ struct DraftEditorView: View {
                 .frame(width: 16)
             Text(item.app)
                 .font(.system(size: 12))
-            if item.isBrowser {
-                Text(L10n.string("summary.tabs", item.tabs.count))
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
-            }
+            if item.isBrowser { addedTabsButton(offset) }
             Spacer(minLength: 0)
             Text(item.fullscreen
                 ? L10n.string("placement.fullscreen")
