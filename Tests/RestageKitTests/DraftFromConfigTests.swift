@@ -92,3 +92,17 @@ private let yaml = """
     let draft = DraftFromConfig.draft(from: config)
     #expect(draft.screens[0].items[0].slot == nil)
 }
+
+@Test func draftCarriesHideOthers() throws {
+    let yaml = """
+    workspace: dev
+    hideOthers: true
+    screens:
+      - id: main
+        items:
+          - {type: app, app: safari}
+    """
+    let draft = DraftFromConfig.draft(from: try WorkspaceConfig.decode(yaml: yaml))
+    #expect(draft.hideOthers)
+    #expect(ConfigWriter.yaml(for: draft).contains("hideOthers: true"))
+}

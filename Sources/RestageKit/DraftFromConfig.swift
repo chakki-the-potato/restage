@@ -3,6 +3,7 @@ public enum DraftFromConfig {
         WorkspaceDraft(
             name: config.workspace,
             hotkey: config.hotkey,
+            hideOthers: config.hideOthers,
             screens: config.screens.map { screen in
                 ScreenDraft(
                     id: screen.id,

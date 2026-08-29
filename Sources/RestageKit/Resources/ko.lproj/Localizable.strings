@@ -196,6 +196,7 @@
 /* 창 읽기 */
 "error.capture.window_not_in_browser" = "'%@' 창을 브라우저 쪽 목록에서 찾지 못했습니다";
 "outcome.nothing_to_do" = "주소도 자리도 없어 할 일이 없습니다";
+"outcome.hid_others" = "다른 앱 %1$d개를 숨겼습니다: %2$@";
 
 /* 초안 */
 "draft.pick_windows" = "담을 창과 자리를 고르세요.";
@@ -258,7 +259,9 @@
 "new.by_order_windows" = "%1$@ 창 %2$d개는 제목이 같아 순서대로 자리를 잡습니다.";
 "new.browser_no_urls" = "%@는 시작 페이지뿐이라 주소를 담지 않았습니다. 편집에서 넣으세요.";
 "new.tabs_unreadable" = "%1$@의 탭을 읽지 못해 창 위치만 담았습니다: %2$@";
-"new.commands" = "[Enter] 저장   [숫자] 자리 바꾸기   [-숫자] 제외   [+] 앱 추가   [w] 웹 추가   [q] 취소";
+"new.commands" = "[Enter] 저장   [숫자] 자리 바꾸기   [-숫자] 제외   [+] 앱 추가   [w] 웹 추가   [h] 다른 앱 숨기기 켜고 끄기   [q] 취소";
+"new.hide_others_on" = "다른 앱: 실행할 때 숨김";
+"new.hide_others_off" = "다른 앱: 그대로 둠";
 "new.input_closed" = "입력이 끝나 취소했습니다. 저장하려면 빈 줄을 입력하세요";
 "new.removed" = "제외했습니다: %@";
 "new.unknown_input" = "모르는 입력입니다: %@";
@@ -288,6 +291,7 @@
 /* 초안 편집 */
 "draft.added_by_hand" = "직접 추가";
 "draft.keep_count" = "%d개 담기";
+"draft.hide_others" = "다른 앱 숨기기";
 "draft.select_all" = "전체 선택";
 "draft.select_none" = "전체 해제";
 "draft.other_desktop" = "다른 데스크탑";

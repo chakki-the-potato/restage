@@ -29,8 +29,10 @@ enum OpenCommand {
 
         let resolved = WorkspaceResolver.resolve(config, displays: displays)
         let outcomes = await WorkspaceRunner().run(resolved)
+        let hidden = await HideOthers.run(config, resolved)
 
-        print(RunReport.render(workspace: resolved.workspace, outcomes: outcomes))
+        print(RunReport.render(
+            workspace: resolved.workspace, outcomes: outcomes, hidden: hidden))
         return RunReport.hasFailure(outcomes) ? 1 : 0
     }
 }

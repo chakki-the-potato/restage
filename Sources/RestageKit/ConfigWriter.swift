@@ -1,6 +1,9 @@
 public enum ConfigWriter {
     public static func yaml(for draft: WorkspaceDraft) -> String {
         var lines: [String] = ["workspace: \(scalar(draft.name))"]
+        if draft.hideOthers {
+            lines.append("hideOthers: true")
+        }
         if let hotkey = draft.hotkey {
             lines.append("hotkey: \(scalar(hotkey))")
         }

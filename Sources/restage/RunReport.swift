@@ -3,7 +3,9 @@ import Foundation
 import RestageKit
 
 enum RunReport {
-    static func render(workspace: String, outcomes: [ItemOutcome]) -> String {
+    static func render(
+        workspace: String, outcomes: [ItemOutcome], hidden: [String] = []
+    ) -> String {
         let screens = ["SCREEN"] + outcomes.map(\.screenID)
         let apps = ["APP"] + outcomes.map { $0.app?.rawValue ?? "-" }
         let screenWidth = width(of: screens)
@@ -26,6 +28,7 @@ enum RunReport {
 
         lines.append("")
         lines.append(summary(outcomes))
+        if let note = HideOthers.note(hidden) { lines.append(note) }
         return lines.joined(separator: "\n")
     }
 

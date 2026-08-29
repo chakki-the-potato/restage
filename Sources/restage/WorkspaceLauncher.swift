@@ -34,8 +34,10 @@ enum WorkspaceLauncher {
             let config = try ConfigLoader.load(path: path)
             let resolved = WorkspaceResolver.resolve(config, displays: displays)
             let outcomes = await WorkspaceRunner().run(resolved, onProgress: onProgress)
+            let hidden = await HideOthers.run(config, resolved)
             guard let summary = RunFailures.summary(outcomes) else { return .succeeded }
-            return .partial(summary)
+            guard let note = HideOthers.note(hidden) else { return .partial(summary) }
+            return .partial(summary + "\n" + note)
         } catch {
             return .failed("\(error)")
         }

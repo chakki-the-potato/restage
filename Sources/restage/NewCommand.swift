@@ -71,6 +71,8 @@ enum NewCommand {
                 addApp(&draft)
             case "w":
                 addWeb(&draft)
+            case "h":
+                draft.hideOthers.toggle()
             default:
                 apply(command, to: &draft)
             }
@@ -191,10 +193,12 @@ enum NewCommand {
     }
 
     private static func render(_ draft: WorkspaceDraft) -> String {
+        let state = L10n.string(
+            draft.hideOthers ? "new.hide_others_on" : "new.hide_others_off")
         guard draft.itemCount > 0 else {
-            return L10n.string("new.empty_draft")
+            return state + "\n" + L10n.string("new.empty_draft")
         }
-        var lines = DraftSummary.lines(draft, numbered: true)
+        var lines = [state, ""] + DraftSummary.lines(draft, numbered: true)
         if DraftSummary.hasUncertainItem(draft) {
             lines.append("")
             lines.append("  " + L10n.string("new.uncertainty_hint", DraftSummary.uncertaintyNote))

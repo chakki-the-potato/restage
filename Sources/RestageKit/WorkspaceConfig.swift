@@ -4,7 +4,20 @@ import Yams
 public struct WorkspaceConfig: Decodable, Sendable {
     public let workspace: String
     public let hotkey: String?
+    public let hideOthers: Bool
     public let screens: [ScreenConfig]
+
+    private enum Keys: String, CodingKey {
+        case workspace, hotkey, hideOthers, screens
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: Keys.self)
+        workspace = try container.decode(String.self, forKey: .workspace)
+        hotkey = try container.decodeIfPresent(String.self, forKey: .hotkey)
+        hideOthers = try container.decodeIfPresent(Bool.self, forKey: .hideOthers) ?? false
+        screens = try container.decode([ScreenConfig].self, forKey: .screens)
+    }
 
     public static func decode(yaml: String) throws -> WorkspaceConfig {
         do {

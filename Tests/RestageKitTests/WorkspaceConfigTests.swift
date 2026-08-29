@@ -126,3 +126,19 @@ screens:
         #expect("\(error)".contains("slot"))
     }
 }
+
+@Test func hideOthersDefaultsToOff() throws {
+    #expect(try WorkspaceConfig.decode(yaml: sample).hideOthers == false)
+}
+
+@Test func hideOthersIsReadWhenDeclared() throws {
+    let yaml = """
+    workspace: dev
+    hideOthers: true
+    screens:
+      - id: main
+        items:
+          - {type: app, app: safari}
+    """
+    #expect(try WorkspaceConfig.decode(yaml: yaml).hideOthers)
+}

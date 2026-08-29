@@ -51,7 +51,8 @@ moves the second time.
 
 **It doesn't touch what you didn't declare.** Apps missing from the file are
 neither hidden nor quit. Tabs you already have open stay open — only missing
-ones are added.
+ones are added. The one exception is `hideOthers`, which you have to turn on
+yourself.
 
 ## Install
 
@@ -162,6 +163,7 @@ screen, browser tabs, and a dual monitor setup.
 
 ```yaml
 workspace: dev            # required. the workspace name
+hideOthers: false         # optional. hide apps not listed here when this runs
 hotkey: "ctrl+alt+cmd+1"  # optional. only works while the menu bar app runs
 
 screens:
@@ -207,6 +209,12 @@ normal case.
   display: external-1
   whenMissing: fullscreen
 ```
+
+**hideOthers** — off unless you say otherwise. On, every visible app that the
+file does not list is hidden once the workspace has run, so what is left on
+screen is what you declared. Nothing is quit and nothing is closed; the Finder
+and background agents are left alone, and a hidden app comes back the moment you
+click it. The report says how many were hidden and which.
 
 **Full screen** — choosing it sends that app to its own desktop, the same as
 "Enter Full Screen" in the window menu.
@@ -332,7 +340,7 @@ windows then. restage detects this, says so, and stops.
 
 ```bash
 swift build
-swift test        # 226 tests
+swift test        # 237 tests
 ```
 
 Measure placement against the apps you have running:

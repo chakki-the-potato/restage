@@ -160,3 +160,15 @@ private func roundTrip(_ draft: WorkspaceDraft) throws -> WorkspaceConfig {
     #expect(browser.tabs.isEmpty)
     #expect(browser.slot == .leftHalf)
 }
+
+@Test func hideOthersIsWrittenOnlyWhenItIsOn() throws {
+    let screens = [ScreenDraft(id: "main", display: .builtin, items: [.app("Safari", slot: .full)])]
+
+    let off = ConfigWriter.yaml(for: WorkspaceDraft(name: "dev", screens: screens))
+    #expect(!off.contains("hideOthers"))
+    #expect(try roundTrip(WorkspaceDraft(name: "dev", screens: screens)).hideOthers == false)
+
+    let on = WorkspaceDraft(name: "dev", hideOthers: true, screens: screens)
+    #expect(ConfigWriter.yaml(for: on).contains("\nhideOthers: true\n"))
+    #expect(try roundTrip(on).hideOthers)
+}

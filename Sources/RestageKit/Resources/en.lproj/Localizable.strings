@@ -196,6 +196,7 @@
 /* 창 읽기 */
 "error.capture.window_not_in_browser" = "Couldn't find the window '%@' in the browser's own list";
 "outcome.nothing_to_do" = "No addresses and no position, so there was nothing to do";
+"outcome.hid_others" = "Hid %1$d other apps: %2$@";
 
 /* 초안 */
 "draft.pick_windows" = "Choose the windows and where they go.";
@@ -258,7 +259,9 @@
 "new.by_order_windows" = "%2$d %1$@ windows share a title, so they take their positions in order.";
 "new.browser_no_urls" = "%@ has only its start page open, so no addresses were saved. Add them in the editor.";
 "new.tabs_unreadable" = "%1$@'s tabs couldn't be read, so only the window position was saved: %2$@";
-"new.commands" = "[Enter] save   [number] change position   [-number] remove   [+] add an app   [w] add a browser   [q] cancel";
+"new.commands" = "[Enter] save   [number] change position   [-number] remove   [+] add an app   [w] add a browser   [h] hide other apps on/off   [q] cancel";
+"new.hide_others_on" = "Other apps: hidden when this runs";
+"new.hide_others_off" = "Other apps: left alone";
 "new.input_closed" = "Input ended, so nothing was saved. Press Enter on an empty line to save";
 "new.removed" = "Removed: %@";
 "new.unknown_input" = "That input isn't known: %@";
@@ -288,6 +291,7 @@
 /* 초안 편집 */
 "draft.added_by_hand" = "Added by hand";
 "draft.keep_count" = "Keep %d";
+"draft.hide_others" = "Hide other apps";
 "draft.select_all" = "Select All";
 "draft.select_none" = "Deselect All";
 "draft.other_desktop" = "Another desktop";

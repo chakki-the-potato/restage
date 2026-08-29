@@ -23,6 +23,7 @@ final class DraftEditor: ObservableObject {
     @Published var placements: [Int: Placement] = [:]
     @Published var added: [ItemDraft] = []
     @Published var tabs: [Int: [String]] = [:]
+    @Published var hideOthers: Bool
 
     private let draft: WorkspaceDraft
     private let total: Int
@@ -30,6 +31,7 @@ final class DraftEditor: ObservableObject {
     init(draft: WorkspaceDraft) {
         self.draft = draft
         self.total = draft.itemCount
+        self.hideOthers = draft.hideOthers
     }
 
     var keptCount: Int { total - excluded.count + added.count }
@@ -69,9 +71,11 @@ final class DraftEditor: ObservableObject {
                 break
             }
         }
-        return DraftSelection.apply(
+        var result = DraftSelection.apply(
             excluding: excluded, slots: slots, fullscreen: fullscreen, tabs: tabs,
             added: added, to: draft)
+        result.hideOthers = hideOthers
+        return result
     }
 }
 
@@ -144,6 +148,10 @@ struct DraftEditorView: View {
         HStack(spacing: 8) {
             Text(L10n.string("draft.keep_count", editor.keptCount))
                 .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.secondary)
+            Toggle(L10n.string("draft.hide_others"), isOn: $editor.hideOthers)
+                .toggleStyle(.checkbox)
+                .font(.system(size: 11))
                 .foregroundStyle(.secondary)
             Spacer()
             Button(L10n.string("draft.select_all")) { editor.setAll(kept: true) }

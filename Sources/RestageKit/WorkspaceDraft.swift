@@ -3,11 +3,15 @@ import CoreGraphics
 public struct WorkspaceDraft: Sendable, Equatable {
     public var name: String
     public var hotkey: String?
+    public var hideOthers: Bool
     public var screens: [ScreenDraft]
 
-    public init(name: String, hotkey: String? = nil, screens: [ScreenDraft]) {
+    public init(
+        name: String, hotkey: String? = nil, hideOthers: Bool = false, screens: [ScreenDraft]
+    ) {
         self.name = name
         self.hotkey = hotkey
+        self.hideOthers = hideOthers
         self.screens = screens
     }
 
