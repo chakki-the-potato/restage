@@ -7,8 +7,9 @@ enum WorkspaceCapture {
     struct Result {
         let draft: WorkspaceDraft
         let browsersWithoutTabs: [SkippedBrowser]
+        let browsersWithoutURLs: [String]
         let onOtherSpaceCount: Int
-        let indistinguishable: [String: Int]
+        let byOrder: [String: Int]
     }
 
     struct SkippedBrowser {
@@ -29,6 +30,7 @@ enum WorkspaceCapture {
         var itemsByScreen: [String: [ItemDraft]] = [:]
         var order: [DisplaySelector] = []
         var withoutTabs: [String: String] = [:]
+        var withoutURLs: [String] = []
 
         for (position, window) in windows.enumerated() {
             let selector = displays.selector(containing: window.frame)
@@ -43,7 +45,7 @@ enum WorkspaceCapture {
             let item = draft(
                 for: window, slot: match?.slot, overlap: match?.overlap,
                 title: needsTitle.contains(position) ? window.title : nil,
-                tabsByApp: &tabsByApp, withoutTabs: &withoutTabs)
+                tabsByApp: &tabsByApp, withoutTabs: &withoutTabs, withoutURLs: &withoutURLs)
             itemsByScreen[key]?.append(item)
         }
 
@@ -56,19 +58,22 @@ enum WorkspaceCapture {
             draft: WorkspaceDraft(name: name, screens: screens),
             browsersWithoutTabs: withoutTabs.sorted { $0.key < $1.key }
                 .map { SkippedBrowser(app: $0.key, reason: $0.value) },
+            browsersWithoutURLs: Array(Set(withoutURLs)).sorted(),
             onOtherSpaceCount: windows.filter { !$0.isOnCurrentSpace }.count,
-            indistinguishable: selection.droppedByApp)
+            byOrder: selection.byOrderByApp)
     }
 
     private static func draft(
         for window: CapturedWindow, slot: Slot?, overlap: Double?, title: String?,
-        tabsByApp: inout [String: [CapturedBrowserWindow]], withoutTabs: inout [String: String]
+        tabsByApp: inout [String: [CapturedBrowserWindow]], withoutTabs: inout [String: String],
+        withoutURLs: inout [String]
     ) -> ItemDraft {
-        let asApp = ItemDraft.app(
+        var asApp = ItemDraft.app(
             window.appName, slot: slot ?? .full, title: title,
             overlap: window.isFullScreen ? nil : overlap,
             wasOnCurrentSpace: window.isOnCurrentSpace,
             fullscreen: window.isFullScreen)
+        asApp.sourceFrame = window.frame
         guard InstalledApps.isBrowser(bundleID: window.bundleID) else { return asApp }
 
         if tabsByApp[window.appName] == nil {
@@ -88,14 +93,12 @@ enum WorkspaceCapture {
         }
 
         let tabs = entry.tabs.filter(URLNormalizer.isSavable)
-        guard !tabs.isEmpty else {
-            withoutTabs[window.appName] = withoutTabs[window.appName]
-                ?? L10n.string("error.capture.no_urls")
-            return asApp
-        }
-        return .browser(
+        if tabs.isEmpty { withoutURLs.append(window.appName) }
+        var browser = ItemDraft.browser(
             window.appName, slot: slot, tabs: tabs, overlap: overlap,
             wasOnCurrentSpace: window.isOnCurrentSpace)
+        browser.sourceFrame = window.frame
+        return browser
     }
 
     private static func rank(_ selector: DisplaySelector) -> Int {

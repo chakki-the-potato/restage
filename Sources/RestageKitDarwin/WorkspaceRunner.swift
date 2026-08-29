@@ -44,91 +44,85 @@ public struct WorkspaceRunner {
     ) async -> [ItemOutcome] {
         var handles: [AppID: ProcessHandle] = [:]
         var launchFailures: [AppID: String] = [:]
-        var outcomes: [ItemOutcome] = []
+        var results: [Int: ItemOutcome] = [:]
+        var launched = 0
 
         for item in screen.items {
             guard handles[item.app] == nil, launchFailures[item.app] == nil else { continue }
             onProgress?(RunProgress(
-                phase: .launching, app: item.app,
-                completed: completed + outcomes.count, total: total))
+                phase: .launching, app: item.app, completed: completed + launched, total: total))
             do {
                 handles[item.app] = try await engine.launch(item.app)
             } catch {
                 launchFailures[item.app] = String(describing: error)
             }
+            launched += 1
         }
 
-        var pending: [Task<ItemOutcome, Never>?] = []
-        var done = 0
-
-        for item in screen.items {
+        var positionsByApp: [AppID: [Int]] = [:]
+        var appOrder: [AppID] = []
+        for (position, item) in screen.items.enumerated() {
             if let reason = launchFailures[item.app] {
-                outcomes.append(ItemOutcome(
-                    screenID: screen.id, app: item.app, status: .failed, detail: reason))
-                pending.append(nil)
+                results[position] = ItemOutcome(
+                    screenID: screen.id, app: item.app, status: .failed, detail: reason)
                 continue
             }
-            guard let handle = handles[item.app] else {
-                pending.append(nil)
-                continue
-            }
-
-            pending.append(Task { @MainActor in
-                let outcome: ItemOutcome
-                switch item {
-                case .place(let placement):
-                    outcome = await apply(
-                        placement, handle: handle, screen: screen, follow: false)
-                case .tabs(let plan):
-                    outcome = await applyTabs(
-                        plan, handle: handle, screen: screen, follow: false)
-                }
-                done += 1
-                onProgress?(RunProgress(
-                    phase: .placing, app: item.app,
-                    completed: completed + done, total: total))
-                return outcome
-            })
+            guard handles[item.app] != nil else { continue }
+            if positionsByApp[item.app] == nil { appOrder.append(item.app) }
+            positionsByApp[item.app, default: []].append(position)
         }
 
-        var placed: [ItemOutcome] = []
-        for task in pending {
-            guard let task else { continue }
-            placed.append(await task.value)
+        var done = 0
+        let tasks = appOrder.map { app -> Task<[(Int, ItemOutcome)], Never> in
+            let positions = positionsByApp[app, default: []]
+                .sorted { screen.items[$0].hasTitle && !screen.items[$1].hasTitle }
+            let handle = handles[app]!
+            return Task { @MainActor in
+                var placed: [(Int, ItemOutcome)] = []
+                for position in positions {
+                    let outcome = await run(
+                        screen.items[position], handle: handle, screen: screen, follow: false)
+                    done += 1
+                    onProgress?(RunProgress(
+                        phase: .placing, app: app, completed: completed + done, total: total))
+                    placed.append((position, outcome))
+                }
+                return placed
+            }
+        }
+        for task in tasks {
+            for (position, outcome) in await task.value { results[position] = outcome }
         }
 
         for _ in 0..<Self.reachRounds {
             var reached = false
-            var index = 0
-
-            for item in screen.items {
-                guard handles[item.app] != nil, launchFailures[item.app] == nil else { continue }
-                defer { index += 1 }
-                guard placed[index].status == .unreachable,
+            for (position, item) in screen.items.enumerated() {
+                guard results[position]?.status == .unreachable,
                       let handle = handles[item.app] else { continue }
-
-                let retried: ItemOutcome
-                switch item {
-                case .place(let placement):
-                    retried = await apply(
-                        placement, handle: handle, screen: screen, follow: true)
-                case .tabs(let plan):
-                    retried = await applyTabs(
-                        plan, handle: handle, screen: screen, follow: true)
-                }
+                let retried = await run(item, handle: handle, screen: screen, follow: true)
                 if retried.status != .unreachable { reached = true }
-                placed[index] = retried
+                results[position] = retried
             }
-
-            guard reached, placed.contains(where: { $0.status == .unreachable }) else { break }
+            guard reached, results.values.contains(where: { $0.status == .unreachable })
+            else { break }
         }
-        outcomes.append(contentsOf: placed)
 
         if let anchor = screen.anchor, let handle = handles[anchor] {
             AXWindow.setApplicationFrontmost(pid: handle.pid)
         }
 
-        return outcomes
+        return screen.items.indices.compactMap { results[$0] }
+    }
+
+    private func run(
+        _ item: PlannedItem, handle: ProcessHandle, screen: ScreenPlan, follow: Bool
+    ) async -> ItemOutcome {
+        switch item {
+        case .place(let placement):
+            return await apply(placement, handle: handle, screen: screen, follow: follow)
+        case .tabs(let plan):
+            return await applyTabs(plan, handle: handle, screen: screen, follow: follow)
+        }
     }
 
     private func apply(
@@ -144,7 +138,8 @@ public struct WorkspaceRunner {
         let window: WindowHandle
         do {
             window = try await engine.waitForWindow(
-                handle, selector: placement.selector, timeout: Self.windowTimeout, mayFollowOtherSpaces: follow)
+                handle, selector: placement.selector, timeout: Self.windowTimeout,
+                mayFollowOtherSpaces: follow, claim: true)
         } catch {
             return ItemOutcome(
                 screenID: screen.id, app: placement.app,
@@ -181,9 +176,21 @@ public struct WorkspaceRunner {
                 detail: String(describing: error))
         }
 
+        if plan.tabs.isEmpty {
+            guard let target = plan.target, let slot = plan.slot else {
+                return ItemOutcome(
+                    screenID: screen.id, app: plan.app, status: .alreadySatisfied,
+                    detail: L10n.string("outcome.nothing_to_do"))
+            }
+            return await apply(
+                Placement(app: plan.app, slot: slot, target: target),
+                handle: handle, screen: screen, follow: follow)
+        }
+
         do {
             _ = try await engine.waitForWindow(
-                handle, selector: .mostRecentlyActive, timeout: Self.windowTimeout, mayFollowOtherSpaces: follow)
+                handle, selector: .mostRecentlyActive, timeout: Self.windowTimeout,
+                mayFollowOtherSpaces: follow, claim: false)
         } catch {
             let status: OutcomeStatus = CurrentState.windowCount(pid: handle.pid) > 0
                 ? .unreachable : .failed
@@ -221,7 +228,8 @@ public struct WorkspaceRunner {
 
         AXWindow.setApplicationFrontmost(pid: handle.pid)
         guard let window = try? await engine.waitForWindow(
-            handle, selector: .mostRecentlyActive, timeout: Self.windowTimeout, mayFollowOtherSpaces: follow)
+            handle, selector: .mostRecentlyActive, timeout: Self.windowTimeout,
+            mayFollowOtherSpaces: follow, claim: true)
         else {
             return tabOutcome(tabs, plan: plan, screen: screen)
         }

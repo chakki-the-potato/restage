@@ -28,6 +28,13 @@ public struct DisplayList: Sendable {
     }
 }
 
+extension PlannedItem {
+    public var hasTitle: Bool {
+        if case .place(let placement) = self { return placement.selector.titleContains != nil }
+        return false
+    }
+}
+
 public struct Placement: Sendable, Equatable {
     public let app: AppID
     public let slot: Slot

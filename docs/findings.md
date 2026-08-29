@@ -74,6 +74,14 @@ apps that had been scattered. It failed for two: one whose window accessibility
 reported as absent even after activating, and one whose windows were in a full
 screen Space. Neither `AXFrontmost` nor AppleScript `activate` moved them.
 
+**Two windows of one app split across desktops cannot both be reached.**
+Activating the app does not switch desktops when it already has a window on the
+current one, so the other window stays out of accessibility's sight. Within one
+desktop, several windows of one app are told apart by remembering which
+`AXUIElement`s this run has already placed; `AXUIElement` is `Hashable`, so a
+`Set` of them works. Measured: two Safari windows listed twice landed in q1 and
+q2.
+
 **Leaving full screen works while the window is reachable.** Setting
 `AXFullScreen` to false returns the window to the desktop. What cannot be done
 is clearing it from another Space, because accessibility does not see the window
@@ -170,6 +178,12 @@ after setting app.appearance:  app.effective = DarkAqua
 
 The appearance has to be pushed onto open windows as well, or a panel left open
 keeps the old one.
+
+**`ImageRenderer` cannot draw AppKit-backed SwiftUI controls.** A `ScrollView`,
+a segmented `Picker`, a `TextField`, or a `.link` button comes out as a striped
+placeholder. An `NSHostingView` inside an off-screen `NSWindow`, drawn with
+`cacheDisplay(in:to:)`, renders all of them and still needs no screen recording
+permission.
 
 ## Bundles and resources
 

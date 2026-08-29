@@ -38,11 +38,14 @@ enum NewCommand {
         if captured.onOtherSpaceCount > 0 {
             print(L10n.string("new.on_other_space", captured.onOtherSpaceCount))
         }
-        for (app, count) in captured.indistinguishable.sorted(by: { $0.key < $1.key }) {
-            print(L10n.string("new.ambiguous_windows", app, count))
+        for (app, count) in captured.byOrder.sorted(by: { $0.key < $1.key }) {
+            print(L10n.string("new.by_order_windows", app, count))
         }
         for skipped in captured.browsersWithoutTabs {
             print(L10n.string("new.tabs_unreadable", "\(skipped.app)", skipped.reason))
+        }
+        for app in captured.browsersWithoutURLs {
+            print(L10n.string("new.browser_no_urls", app))
         }
     }
 

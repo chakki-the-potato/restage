@@ -5,6 +5,8 @@ import RestageKit
 public struct AXWindowEngine: WindowEngine {
     static let staleRetryTimeout: Duration = .seconds(10)
 
+    private let claims = WindowClaims()
+
     public init() {}
 
     public func launch(_ app: AppID) async throws -> ProcessHandle {
@@ -17,11 +19,11 @@ public struct AXWindowEngine: WindowEngine {
 
     public func waitForWindow(
         _ handle: ProcessHandle, selector: WindowSelector, timeout: Duration,
-        mayFollowOtherSpaces: Bool = false
+        mayFollowOtherSpaces: Bool = false, claim: Bool = true
     ) async throws -> WindowHandle {
         try await WindowWaiter.wait(
             pid: handle.pid, timeout: timeout, selector: selector,
-            mayFollowOtherSpaces: mayFollowOtherSpaces)
+            mayFollowOtherSpaces: mayFollowOtherSpaces, claims: claim ? claims : nil)
     }
 
     public func place(
@@ -36,7 +38,8 @@ public struct AXWindowEngine: WindowEngine {
 
         guard case .failed = result, axWindow.isStale else { return result }
         guard let fresh = try? await WindowWaiter.wait(
-            pid: axWindow.pid, timeout: Self.staleRetryTimeout) else { return result }
+            pid: axWindow.pid, timeout: Self.staleRetryTimeout, claims: claims)
+        else { return result }
         return await placeOnce(fresh, target: target)
     }
 

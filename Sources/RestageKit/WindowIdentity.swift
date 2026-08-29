@@ -12,7 +12,7 @@ public enum WindowIdentity {
     public struct Selection: Sendable, Equatable {
         public let kept: [Int]
         public let needsTitle: Set<Int>
-        public let droppedByApp: [String: Int]
+        public let byOrderByApp: [String: Int]
     }
 
     public static func select(_ candidates: [Candidate]) -> Selection {
@@ -21,16 +21,10 @@ public enum WindowIdentity {
             indicesByApp[candidate.app, default: []].append(index)
         }
 
-        var kept: Set<Int> = []
         var needsTitle: Set<Int> = []
-        var dropped: [String: Int] = [:]
+        var byOrder: [String: Int] = [:]
 
-        for (app, indices) in indicesByApp {
-            guard indices.count > 1 else {
-                kept.formUnion(indices)
-                continue
-            }
-
+        for (app, indices) in indicesByApp where indices.count > 1 {
             var titleCounts: [String: Int] = [:]
             for index in indices {
                 titleCounts[candidates[index].title, default: 0] += 1
@@ -39,23 +33,14 @@ public enum WindowIdentity {
                 let title = candidates[index].title
                 return !title.isEmpty && titleCounts[title] == 1
             }
-
-            if identifiable.count == indices.count {
-                kept.formUnion(indices)
-                needsTitle.formUnion(indices)
-            } else if identifiable.isEmpty {
-                kept.insert(indices[0])
-                dropped[app] = indices.count - 1
-            } else {
-                kept.formUnion(identifiable)
-                needsTitle.formUnion(identifiable)
-                dropped[app] = indices.count - identifiable.count
-            }
+            needsTitle.formUnion(identifiable)
+            let unnamed = indices.count - identifiable.count
+            if unnamed > 0 { byOrder[app] = unnamed }
         }
 
         return Selection(
-            kept: candidates.indices.filter { kept.contains($0) },
+            kept: Array(candidates.indices),
             needsTitle: needsTitle,
-            droppedByApp: dropped)
+            byOrderByApp: byOrder)
     }
 }

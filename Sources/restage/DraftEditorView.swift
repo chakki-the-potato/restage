@@ -22,6 +22,7 @@ final class DraftEditor: ObservableObject {
     @Published var excluded: Set<Int> = []
     @Published var placements: [Int: Placement] = [:]
     @Published var added: [ItemDraft] = []
+    @Published var tabs: [Int: [String]] = [:]
 
     private let draft: WorkspaceDraft
     private let total: Int
@@ -69,7 +70,7 @@ final class DraftEditor: ObservableObject {
             }
         }
         return DraftSelection.apply(
-            excluding: excluded, slots: slots, fullscreen: fullscreen,
+            excluding: excluded, slots: slots, fullscreen: fullscreen, tabs: tabs,
             added: added, to: draft)
     }
 }
@@ -78,16 +79,28 @@ struct DraftEditorView: View {
     let rows: [Row]
     @ObservedObject var editor: DraftEditor
 
+    enum AddMode: Hashable {
+        case app
+        case web
+    }
+
+    @State private var addMode: AddMode = .app
     @State private var newAppName = ""
+    @State private var newURLs = ""
     @State private var newPlacement: Placement = .slot(.full)
     @State private var addError: String?
+    @State private var tabsPopoverRow: Int?
+    @State private var tabsText = ""
 
     struct Row: Identifiable {
         let id: Int
         let screenID: String
         let startsScreen: Bool
         let app: String
-        let tabCount: Int
+        let sourceApp: String
+        let sourceFrame: CGRect?
+        let isBrowser: Bool
+        let tabs: [String]
         let placement: Placement
         let isUncertain: Bool
         let overlap: Double?
@@ -163,16 +176,10 @@ struct DraftEditorView: View {
                 .labelsHidden()
 
             VStack(alignment: .leading, spacing: 1) {
-                Text(row.app)
-                    .font(.system(size: 12))
-                    .lineLimit(1)
-                if row.tabCount > 0 || row.isOnOtherSpace {
+                nameLabel(row)
+                if row.isBrowser || row.isOnOtherSpace {
                     HStack(spacing: 5) {
-                        if row.tabCount > 0 {
-                            Text(L10n.string("summary.tabs", row.tabCount))
-                                .font(.system(size: 10))
-                                .foregroundStyle(.secondary)
-                        }
+                        if row.isBrowser { tabsButton(row) }
                         if row.isOnOtherSpace {
                             Text(L10n.string("draft.other_desktop"))
                                 .font(.system(size: 10))
@@ -196,6 +203,68 @@ struct DraftEditorView: View {
         .opacity(isKept ? 1 : 0.45)
         .padding(.horizontal, 10)
         .padding(.vertical, 3)
+    }
+
+    @ViewBuilder
+    private func nameLabel(_ row: Row) -> some View {
+        if let frame = row.sourceFrame, !row.isOnOtherSpace {
+            Button {
+                WindowReveal.raise(app: row.sourceApp, frame: frame)
+            } label: {
+                Text(row.app)
+                    .font(.system(size: 12))
+                    .lineLimit(1)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help(L10n.string("draft.reveal_help"))
+        } else {
+            Text(row.app)
+                .font(.system(size: 12))
+                .lineLimit(1)
+        }
+    }
+
+    private func tabsButton(_ row: Row) -> some View {
+        let tabs = editor.tabs[row.id] ?? row.tabs
+        return Button {
+            tabsText = tabs.joined(separator: "\n")
+            tabsPopoverRow = row.id
+        } label: {
+            Text(tabs.isEmpty
+                ? L10n.string("summary.no_tabs")
+                : L10n.string("summary.tabs", tabs.count))
+                .font(.system(size: 10))
+                .foregroundStyle(tabs.isEmpty ? Color.orange : Color.accentColor)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(L10n.string("draft.tabs_help"))
+        .popover(isPresented: Binding(
+            get: { tabsPopoverRow == row.id },
+            set: { shown in
+                if !shown { commitTabs(for: row.id) }
+            })
+        ) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(L10n.string("draft.tabs_hint"))
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                TextEditor(text: $tabsText)
+                    .font(.system(size: 12, design: .monospaced))
+                    .frame(width: 340, height: 120)
+            }
+            .padding(10)
+        }
+    }
+
+    private func commitTabs(for id: Int) {
+        editor.tabs[id] = tabsText
+            .split(whereSeparator: \.isNewline)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+            .map(URLNormalizer.normalize)
+        tabsPopoverRow = nil
     }
 
     private func picker(for row: Row) -> some View {
@@ -225,6 +294,11 @@ struct DraftEditorView: View {
                 .frame(width: 16)
             Text(item.app)
                 .font(.system(size: 12))
+            if item.isBrowser {
+                Text(L10n.string("summary.tabs", item.tabs.count))
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+            }
             Spacer(minLength: 0)
             Text(item.fullscreen
                 ? L10n.string("placement.fullscreen")
@@ -247,21 +321,39 @@ struct DraftEditorView: View {
     private var addSection: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
-                TextField(L10n.string("draft.app_name_placeholder"), text: $newAppName)
+                Picker("", selection: $addMode) {
+                    Text(L10n.string("draft.add_mode.app")).tag(AddMode.app)
+                    Text(L10n.string("draft.add_mode.web")).tag(AddMode.web)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 90)
+                TextField(
+                    L10n.string(addMode == .app
+                        ? "draft.app_name_placeholder" : "draft.browser_name_placeholder"),
+                    text: $newAppName)
                     .textFieldStyle(.roundedBorder)
                     .font(.system(size: 12))
-                    .onSubmit { addApp() }
+                    .onSubmit { add() }
                 Picker("", selection: $newPlacement) {
                     ForEach(Slot.allCases, id: \.self) { slot in
                         Text(SlotLabel.text(slot)).tag(Placement.slot(slot))
                     }
-                    Divider()
-                    Text(L10n.string("placement.fullscreen")).tag(Placement.fullscreen)
+                    if addMode == .app {
+                        Divider()
+                        Text(L10n.string("placement.fullscreen")).tag(Placement.fullscreen)
+                    }
                 }
                 .labelsHidden()
                 .frame(width: 120)
-                Button(L10n.string("common.add"), action: addApp)
-                    .disabled(newAppName.trimmingCharacters(in: .whitespaces).isEmpty)
+                Button(L10n.string("common.add"), action: add)
+                    .disabled(!canAdd)
+            }
+            if addMode == .web {
+                TextField(L10n.string("draft.urls_placeholder"), text: $newURLs)
+                    .textFieldStyle(.roundedBorder)
+                    .font(.system(size: 12))
+                    .onSubmit { add() }
             }
             if let addError {
                 Text(addError)
@@ -274,19 +366,46 @@ struct DraftEditorView: View {
         .padding(.vertical, 8)
     }
 
-    private func addApp() {
+    private var canAdd: Bool {
+        let hasName = !newAppName.trimmingCharacters(in: .whitespaces).isEmpty
+        guard addMode == .web else { return hasName }
+        return hasName && !parsedURLs.isEmpty
+    }
+
+    private var parsedURLs: [String] {
+        newURLs
+            .split(whereSeparator: { $0.isWhitespace || $0.isNewline })
+            .map(String.init)
+            .filter { !$0.isEmpty }
+            .map(URLNormalizer.normalize)
+    }
+
+    private func add() {
         let typed = newAppName.trimmingCharacters(in: .whitespaces)
         guard !typed.isEmpty else { return }
         do {
             let bundleID = try InstalledApps.resolve(name: typed)
             let name = InstalledApps.displayName(bundleID: bundleID) ?? typed
-            switch newPlacement {
-            case .slot(let slot):
-                editor.add(.app(name, slot: slot))
-            case .fullscreen:
-                editor.add(.app(name, slot: .full, fullscreen: true))
-            case .keepSize:
-                editor.add(.app(name, slot: .full))
+            switch addMode {
+            case .app:
+                switch newPlacement {
+                case .slot(let slot):
+                    editor.add(.app(name, slot: slot))
+                case .fullscreen:
+                    editor.add(.app(name, slot: .full, fullscreen: true))
+                case .keepSize:
+                    editor.add(.app(name, slot: .full))
+                }
+            case .web:
+                let urls = parsedURLs
+                guard !urls.isEmpty else {
+                    addError = L10n.string("draft.no_urls")
+                    return
+                }
+                let slot: Slot?
+                if case .slot(let chosen) = newPlacement { slot = chosen } else { slot = nil }
+                editor.add(.browser(name, slot: slot, tabs: urls))
+                newURLs = ""
             }
             newAppName = ""
             addError = nil
@@ -303,8 +422,11 @@ extension DraftEditorView {
                 id: entry.index,
                 screenID: entry.screenID,
                 startsScreen: entry.startsScreen,
-                app: label(for: entry.item),
-                tabCount: tabCount(of: entry.item),
+                app: DraftSelection.label(for: entry),
+                sourceApp: entry.item.app,
+                sourceFrame: entry.item.sourceFrame,
+                isBrowser: entry.item.isBrowser,
+                tabs: entry.item.tabs,
                 placement: placement(of: entry.item),
                 isUncertain: !entry.item.isConfident,
                 overlap: entry.item.overlap,
@@ -319,14 +441,4 @@ extension DraftEditorView {
         return .slot(slot)
     }
 
-    private static func label(for item: ItemDraft) -> String {
-        guard let title = item.titleHint, !title.isEmpty else { return item.app }
-        let short = title.count > 24 ? String(title.prefix(24)) + "…" : title
-        return "\(item.app) · \(short)"
-    }
-
-    private static func tabCount(of item: ItemDraft) -> Int {
-        if case .browser(let urls) = item.kind { return urls.count }
-        return 0
-    }
 }

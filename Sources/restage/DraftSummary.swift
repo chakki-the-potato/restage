@@ -5,15 +5,10 @@ enum DraftSummary {
 
     static func lines(_ draft: WorkspaceDraft, numbered: Bool) -> [String] {
         var lines: [String] = []
-        var number = 0
-
-        for screen in draft.screens {
-            lines.append("  \(screen.id)")
-            for item in screen.items {
-                number += 1
-                let prefix = numbered ? "   \(String(format: "%2d", number)). " : "     "
-                lines.append(prefix + describe(item))
-            }
+        for entry in DraftSelection.entries(in: draft) {
+            if entry.startsScreen { lines.append("  \(entry.screenID)") }
+            let prefix = numbered ? "   \(String(format: "%2d", entry.index + 1)). " : "     "
+            lines.append(prefix + describe(entry))
         }
         return lines
     }
@@ -22,28 +17,20 @@ enum DraftSummary {
         draft.screens.contains { $0.items.contains { !$0.isConfident } }
     }
 
-    private static func describe(_ item: ItemDraft) -> String {
+    private static func describe(_ entry: DraftSelection.Entry) -> String {
+        let item = entry.item
         let slot = item.slot.map(SlotLabel.text) ?? L10n.string("placement.keep_size")
         let marker = item.isConfident ? " " : "?"
-        var text = label(for: item).padded(to: 30) + slot + marker
-        if case .browser(let urls) = item.kind, !urls.isEmpty {
-            text += "  " + L10n.string("summary.tabs", urls.count)
+        let label = DraftSelection.label(for: entry, titleLimit: 18)
+        var text = label.padded(to: 30) + slot + marker
+        if item.isBrowser {
+            text += "  " + (item.tabs.isEmpty
+                ? L10n.string("summary.no_tabs")
+                : L10n.string("summary.tabs", item.tabs.count))
         }
         if !item.wasOnCurrentSpace {
             text += "  " + L10n.string("summary.other_desktop")
         }
         return text
-    }
-
-    private static func label(for item: ItemDraft) -> String {
-        guard let title = item.titleHint, !title.isEmpty else { return item.app }
-        return "\(item.app) · \(trimmed(title))"
-    }
-
-    private static let titleLimit = 18
-
-    private static func trimmed(_ title: String) -> String {
-        guard title.count > titleLimit else { return title }
-        return String(title.prefix(titleLimit)) + "…"
     }
 }

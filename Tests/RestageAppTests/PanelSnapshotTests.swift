@@ -75,6 +75,40 @@ func renderPanelForReview() throws {
     try write(empty, to: out + "/empty-dark.png", dark: true)
     try write(filled, to: out + "/panel-light.png", dark: false)
     try write(filled, to: out + "/panel-dark.png", dark: true)
+
+    let draft = WorkspaceDraft(
+        name: "w",
+        screens: [
+            ScreenDraft(
+                id: "main", display: .builtin,
+                items: [
+                    .app("Cursor", slot: .q1, title: "restage"),
+                    .app("Cursor", slot: .q2),
+                    .app("Cursor", slot: .q3),
+                    .browser("Safari", slot: .leftHalf, tabs: []),
+                    .browser("Google Chrome", slot: .rightHalf,
+                             tabs: ["https://github.com/", "https://example.com/"]),
+                ]),
+        ])
+    let editorView = DraftEditorView(
+        rows: DraftEditorView.rows(for: draft), editor: DraftEditor(draft: draft))
+    try writeHosted(editorView, size: NSSize(width: 460, height: 340), to: out + "/editor-light.png")
+}
+
+@MainActor
+private func writeHosted(_ view: some View, size: NSSize, to path: String) throws {
+    let hosting = NSHostingView(rootView: view)
+    hosting.frame = NSRect(origin: .zero, size: size)
+    let window = NSWindow(
+        contentRect: hosting.frame, styleMask: [.borderless], backing: .buffered, defer: false)
+    window.contentView = hosting
+    window.appearance = NSAppearance(named: .aqua)
+    hosting.layoutSubtreeIfNeeded()
+    RunLoop.main.run(until: Date().addingTimeInterval(0.3))
+    let bitmap = try #require(hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds))
+    hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
+    let png = try #require(bitmap.representation(using: NSBitmapImageRep.FileType.png, properties: [:]))
+    try png.write(to: URL(fileURLWithPath: path))
 }
 
 @MainActor

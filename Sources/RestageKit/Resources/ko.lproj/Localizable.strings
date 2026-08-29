@@ -195,7 +195,7 @@
 
 /* 창 읽기 */
 "error.capture.window_not_in_browser" = "'%@' 창을 브라우저 쪽 목록에서 찾지 못했습니다";
-"error.capture.no_urls" = "담을 만한 주소가 없습니다. 시작 페이지나 새 탭만 열려 있습니다";
+"outcome.nothing_to_do" = "주소도 자리도 없어 할 일이 없습니다";
 
 /* 초안 */
 "draft.pick_windows" = "담을 창과 자리를 고르세요.";
@@ -205,6 +205,7 @@
 "draft.nothing_selected.body" = "하나 이상 고른 뒤 저장하세요.";
 "draft.uncertainty_note" = "? 는 자리가 애매하다는 뜻입니다.";
 "summary.tabs" = "탭 %d개";
+"summary.no_tabs" = "주소 없음";
 "summary.other_desktop" = "[다른 데스크탑]";
 
 /* 단축키 기록 */
@@ -249,11 +250,13 @@
 "new.exists.title" = "'%@'이 이미 있습니다";
 "new.exists.body" = "덮어쓰면 기존 내용은 사라집니다.";
 "new.exists.confirm" = "덮어쓰기";
-"new.note.ambiguous_windows" = "창 %1$d개는 제목으로 구분할 수 없어 담지 않았습니다 (%2$@).";
+"new.note.by_order_windows" = "창 %1$d개는 제목이 같아 순서대로 자리를 잡습니다 (%2$@).";
+"new.note.browser_no_urls" = "%@는 시작 페이지뿐입니다. 주소 수를 눌러 넣으세요.";
 "new.note.tabs_unreadable" = "%@의 탭은 읽지 못해 창 위치만 담았습니다.";
 "new.read_layout" = "현재 창 배치를 읽었습니다.";
 "new.on_other_space" = "이 중 %d개는 다른 데스크탑에 있습니다. 앱이 꺼진 상태에서 실행하면 정상 배치되고, 이미 떠 있으면 실패합니다.";
-"new.ambiguous_windows" = "%1$@ 창 %2$d개는 담지 않았습니다. 제목이 같거나 비어 있어 실행할 때 어느 창인지 정할 수 없습니다.";
+"new.by_order_windows" = "%1$@ 창 %2$d개는 제목이 같아 순서대로 자리를 잡습니다.";
+"new.browser_no_urls" = "%@는 시작 페이지뿐이라 주소를 담지 않았습니다. 편집에서 넣으세요.";
 "new.tabs_unreadable" = "%1$@의 탭을 읽지 못해 창 위치만 담았습니다: %2$@";
 "new.commands" = "[Enter] 저장   [숫자] 자리 바꾸기   [-숫자] 제외   [+] 앱 추가   [w] 웹 추가   [q] 취소";
 "new.input_closed" = "입력이 끝나 취소했습니다. 저장하려면 빈 줄을 입력하세요";
@@ -292,6 +295,14 @@
 "draft.overlap_poor" = "잘 맞지 않습니다";
 "draft.placement_help" = "실행할 때 이 창을 놓을 자리입니다. 고른 대로 정확히 배치됩니다.";
 "draft.app_name_placeholder" = "앱 이름 (예: Figma)";
+"draft.browser_name_placeholder" = "브라우저 (Safari, Chrome…)";
+"draft.urls_placeholder" = "주소. 여러 개면 공백으로 구분";
+"draft.add_mode.app" = "앱";
+"draft.add_mode.web" = "웹";
+"draft.no_urls" = "주소를 하나 이상 넣으세요";
+"draft.tabs_help" = "누르면 이 창이 열 주소를 고칩니다";
+"draft.tabs_hint" = "한 줄에 주소 하나";
+"draft.reveal_help" = "누르면 이 창이 앞으로 옵니다";
 
 /* 권한과 잠금 */
 "permission.onboarding" = "접근성 권한이 필요합니다.\n\n시스템 설정 > 개인정보 보호 및 보안 > 손쉬운 사용에서 이 명령을 실행한 앱(터미널, iTerm, restage)을 추가하고 켜 주세요.\n\n%@";

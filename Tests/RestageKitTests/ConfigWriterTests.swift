@@ -141,3 +141,22 @@ private func roundTrip(_ draft: WorkspaceDraft) throws -> WorkspaceConfig {
         ])
     #expect(!ConfigWriter.yaml(for: draft).contains("whenMissing"))
 }
+
+/// 시작 페이지뿐이던 브라우저는 주소 없이 브라우저로 남는다. 앱으로 격하되면 나중에
+/// 주소를 넣을 자리가 사라진다.
+@Test func aBrowserWithoutAddressesStaysABrowser() throws {
+    let draft = WorkspaceDraft(
+        name: "w",
+        screens: [
+            ScreenDraft(
+                id: "main", display: .builtin,
+                items: [.browser("Safari", slot: .leftHalf, tabs: [])]),
+        ])
+    let config = try roundTrip(draft)
+    guard case .browser(let browser) = config.screens[0].items[0] else {
+        Issue.record("브라우저가 아니다")
+        return
+    }
+    #expect(browser.tabs.isEmpty)
+    #expect(browser.slot == .leftHalf)
+}

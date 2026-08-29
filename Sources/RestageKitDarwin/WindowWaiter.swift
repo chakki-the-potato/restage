@@ -10,7 +10,7 @@ public enum WindowWaiter {
 
     public static func wait(
         pid: Int32, timeout: Duration, selector: WindowSelector = .mostRecentlyActive,
-        mayFollowOtherSpaces: Bool = false
+        mayFollowOtherSpaces: Bool = false, claims: WindowClaims? = nil
     ) async throws -> AXWindow {
         var lastError: Error?
         var fixedSizeCandidate: AXWindow?
@@ -25,8 +25,11 @@ public enum WindowWaiter {
                 let all = try AXWindow.windows(ofPID: pid)
                 let titles = all.filter(isRealWindow).compactMap { $0.title }
                 if !titles.isEmpty { seenTitles = titles }
-                let windows = matching(all, selector)
-                if let window = windows.first(where: isPlaceable) { return window }
+                let windows = matching(all, selector).filter { !(claims?.contains($0) ?? false) }
+                if let window = windows.first(where: isPlaceable) {
+                    claims?.claim(window)
+                    return window
+                }
 
                 if let candidate = windows.first(where: isRealWindow) {
                     if fixedSizeCandidate == nil {
@@ -35,6 +38,7 @@ public enum WindowWaiter {
                     }
                     if let seenAt = fixedSizeSeenAt,
                        clock.now >= seenAt.advanced(by: splashGrace) {
+                        claims?.claim(candidate)
                         return candidate
                     }
                 }
@@ -53,14 +57,18 @@ public enum WindowWaiter {
                 } else if WindowInventory.offDisplayWindowCount(pid: pid) == anywhere {
                     throw EngineError.windowOffDisplay(pid: pid, windowCount: anywhere)
                 } else {
-                    throw EngineError.windowOnOtherSpace(pid: pid, windowCount: anywhere)
+                    throw EngineError.windowOnOtherSpace(
+                        pid: pid, windowCount: anywhere - onScreen)
                 }
             }
             return nil
         }
 
         if let found { return found }
-        if let fixedSizeCandidate { return fixedSizeCandidate }
+        if let fixedSizeCandidate {
+            claims?.claim(fixedSizeCandidate)
+            return fixedSizeCandidate
+        }
         if let lastError { throw lastError }
 
         if let wanted = selector.titleContains {
@@ -73,8 +81,12 @@ public enum WindowWaiter {
         if existing > 0, offDisplay == existing {
             throw EngineError.windowOffDisplay(pid: pid, windowCount: offDisplay)
         }
+        let elsewhere = existing - WindowInventory.onScreenWindowCount(pid: pid)
+        if elsewhere > 0 {
+            throw EngineError.windowOnOtherSpace(pid: pid, windowCount: elsewhere)
+        }
         if existing > 0 {
-            throw EngineError.windowOnOtherSpace(pid: pid, windowCount: existing)
+            throw EngineError.windowTimeout(pid: pid, seconds: seconds(of: timeout))
         }
         throw EngineError.windowTimeout(pid: pid, seconds: seconds(of: timeout))
     }

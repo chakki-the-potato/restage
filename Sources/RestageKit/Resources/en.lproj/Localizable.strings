@@ -195,7 +195,7 @@
 
 /* 창 읽기 */
 "error.capture.window_not_in_browser" = "Couldn't find the window '%@' in the browser's own list";
-"error.capture.no_urls" = "There is no address worth saving. Only the start page or a new tab is open";
+"outcome.nothing_to_do" = "No addresses and no position, so there was nothing to do";
 
 /* 초안 */
 "draft.pick_windows" = "Choose the windows and where they go.";
@@ -205,6 +205,7 @@
 "draft.nothing_selected.body" = "Choose at least one, then save.";
 "draft.uncertainty_note" = "? means the position is ambiguous.";
 "summary.tabs" = "%d tabs";
+"summary.no_tabs" = "no addresses";
 "summary.other_desktop" = "[another desktop]";
 
 /* 단축키 기록 */
@@ -249,11 +250,13 @@
 "new.exists.title" = "'%@' already exists";
 "new.exists.body" = "Overwriting removes what is in it now.";
 "new.exists.confirm" = "Overwrite";
-"new.note.ambiguous_windows" = "%1$d windows weren't saved because their titles can't tell them apart (%2$@).";
+"new.note.by_order_windows" = "%1$d windows share a title and take their positions in order (%2$@).";
+"new.note.browser_no_urls" = "%@ has only its start page open. Click the address count to add some.";
 "new.note.tabs_unreadable" = "%@'s tabs couldn't be read, so only the window position was saved.";
 "new.read_layout" = "Read the current window layout.";
 "new.on_other_space" = "%d of these are on another desktop. They are placed correctly if the app starts fresh, and fail if it's already running.";
-"new.ambiguous_windows" = "%2$d %1$@ windows weren't saved. Their titles are identical or empty, so there is no way to tell which window to use.";
+"new.by_order_windows" = "%2$d %1$@ windows share a title, so they take their positions in order.";
+"new.browser_no_urls" = "%@ has only its start page open, so no addresses were saved. Add them in the editor.";
 "new.tabs_unreadable" = "%1$@'s tabs couldn't be read, so only the window position was saved: %2$@";
 "new.commands" = "[Enter] save   [number] change position   [-number] remove   [+] add an app   [w] add a browser   [q] cancel";
 "new.input_closed" = "Input ended, so nothing was saved. Press Enter on an empty line to save";
@@ -292,6 +295,14 @@
 "draft.overlap_poor" = "doesn't line up well";
 "draft.placement_help" = "Where this window goes when the workspace runs. It is placed exactly as chosen.";
 "draft.app_name_placeholder" = "App name (for example: Figma)";
+"draft.browser_name_placeholder" = "Browser (Safari, Chrome…)";
+"draft.urls_placeholder" = "Addresses, separated by spaces";
+"draft.add_mode.app" = "App";
+"draft.add_mode.web" = "Web";
+"draft.no_urls" = "Enter at least one address";
+"draft.tabs_help" = "Click to edit the addresses this window opens";
+"draft.tabs_hint" = "One address per line";
+"draft.reveal_help" = "Click to bring this window to the front";
 
 /* 권한과 잠금 */
 "permission.onboarding" = "restage needs Accessibility permission.\n\nOpen System Settings > Privacy & Security > Accessibility, add the app that runs this (Terminal, iTerm, or restage), and turn it on.\n\n%@";

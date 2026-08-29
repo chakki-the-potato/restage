@@ -78,15 +78,19 @@ enum NewWorkspaceDialog {
     private static func notes(for captured: WorkspaceCapture.Result) -> [String] {
         var notes: [String] = []
 
-        let dropped = captured.indistinguishable
-        if !dropped.isEmpty {
-            let total = dropped.values.reduce(0, +)
-            let apps = dropped.keys.sorted().joined(separator: ", ")
-            notes.append(L10n.string("new.note.ambiguous_windows", total, apps))
+        let byOrder = captured.byOrder
+        if !byOrder.isEmpty {
+            let total = byOrder.values.reduce(0, +)
+            let apps = byOrder.keys.sorted().joined(separator: ", ")
+            notes.append(L10n.string("new.note.by_order_windows", total, apps))
         }
         if !captured.browsersWithoutTabs.isEmpty {
             let apps = captured.browsersWithoutTabs.map(\.app).joined(separator: ", ")
             notes.append(L10n.string("new.note.tabs_unreadable", apps))
+        }
+        if !captured.browsersWithoutURLs.isEmpty {
+            let apps = captured.browsersWithoutURLs.joined(separator: ", ")
+            notes.append(L10n.string("new.note.browser_no_urls", apps))
         }
         return notes
     }

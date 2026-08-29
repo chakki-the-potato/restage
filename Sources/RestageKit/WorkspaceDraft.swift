@@ -1,3 +1,5 @@
+import CoreGraphics
+
 public struct WorkspaceDraft: Sendable, Equatable {
     public var name: String
     public var hotkey: String?
@@ -37,6 +39,7 @@ public struct ItemDraft: Sendable, Equatable {
     public var kind: Kind
     public var overlap: Double?
     public var wasOnCurrentSpace = true
+    public var sourceFrame: CGRect?
 
     public init(
         app: String, slot: Slot?, kind: Kind, overlap: Double? = nil,
@@ -76,5 +79,22 @@ public struct ItemDraft: Sendable, Equatable {
     public var titleHint: String? {
         if case .app(let title) = kind { return title }
         return nil
+    }
+
+    public var tabs: [String] {
+        if case .browser(let tabs) = kind { return tabs }
+        return []
+    }
+
+    public var isBrowser: Bool {
+        if case .browser = kind { return true }
+        return false
+    }
+
+    public var hasIdentity: Bool {
+        switch kind {
+        case .app(let title): return !(title ?? "").isEmpty
+        case .browser(let tabs): return !tabs.isEmpty
+        }
     }
 }

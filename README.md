@@ -106,13 +106,21 @@ Read the current window layout.
 ```
 
 Press Enter and `~/.config/restage/dev.yaml` is written. The menu bar's **New
-from Current Layout** does the same thing with checkboxes and dropdowns.
+from Current Layout** does the same thing with checkboxes and dropdowns. There,
+clicking a window's name brings it to the front so you can tell which is which,
+and **Web** adds a browser with the addresses you paste.
 
 - Browsers are saved **with the tabs they have open** — start pages and new tabs
   are skipped
 - An ambiguous position gets a `?`. It **doesn't guess quietly**
-- Windows that can't be told apart by title aren't saved, and it says so
+- Several windows of one app are all saved. Those with a distinct title are
+  matched by title; the rest take their positions in order and show as
+  `Cursor 1`, `Cursor 2`
+- A browser sitting on its start page is saved with no addresses. Click the
+  address count in the editor to add some
 - Add an app that isn't running with `+`, a URL that isn't open with `w`
+
+<img src="docs/images/editor-light.png" width="460" alt="The editor listing windows, with duplicates numbered and a browser without addresses">
 
 ## The menu bar
 
@@ -208,7 +216,9 @@ normal case.
 ```
 
 **Several windows of one app** — `title` says which one to move. Part of the
-title is enough. Without it, the most recently active window is used.
+title is enough. Without it, the most recently active window that no other item
+has taken yet is used, so listing the same app twice places two different
+windows.
 
 ```yaml
 items:
@@ -322,7 +332,7 @@ windows then. restage detects this, says so, and stops.
 
 ```bash
 swift build
-swift test        # 222 tests
+swift test        # 226 tests
 ```
 
 Measure placement against the apps you have running:
