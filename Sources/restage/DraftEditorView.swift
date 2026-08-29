@@ -379,43 +379,23 @@ struct DraftEditorView: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
-        .background(isDropTarget ? Color.accentColor.opacity(0.08) : Color.clear)
-        .onDrop(of: [.fileURL], isTargeted: $isDropTarget) { providers in
+        .onDrop(of: [.fileURL], isTargeted: nil) { providers in
             AppChooser.acceptDrop(providers) { name in addResolved(name) }
         }
     }
 
     private var nameField: some View {
-        HStack(spacing: 0) {
-            TextField(
-                L10n.string(addMode == .app
-                    ? "draft.app_name_placeholder" : "draft.browser_name_placeholder"),
-                text: $newAppName)
-                .textFieldStyle(.plain)
-                .font(.system(size: 12))
-            Button(action: chooseFile) {
-                Image(systemName: "folder")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .frame(width: Self.fieldButtonWidth, height: 18)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .help(L10n.string("draft.choose_app_file"))
-        }
-        .padding(.leading, 5)
-        .padding(.vertical, 3)
-        .background(
-            RoundedRectangle(cornerRadius: 5, style: .continuous)
-                .fill(Color(nsColor: .textBackgroundColor))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 5, style: .continuous)
-                        .strokeBorder(Color(nsColor: .separatorColor))))
+        AppNameField(
+            text: $newAppName,
+            placeholder: L10n.string(addMode == .app
+                ? "draft.app_name_placeholder" : "draft.browser_name_placeholder"),
+            isDropTarget: isDropTarget,
+            onChooseFile: chooseFile)
             .onSubmit { add() }
             .onChange(of: newAppName) { typed in
                 suggestions = AppChooser.suggestions(for: typed, browsersOnly: addMode == .web)
             }
-            .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+            .onDrop(of: [.fileURL], isTargeted: $isDropTarget) { providers in
                 AppChooser.acceptDrop(providers) { name in addResolved(name) }
             }
             .popover(
@@ -490,8 +470,6 @@ struct DraftEditorView: View {
             .filter { !$0.isEmpty }
             .map(URLNormalizer.normalize)
     }
-
-    private static let fieldButtonWidth: CGFloat = 24
 
     private func add() {
         let typed = newAppName.trimmingCharacters(in: .whitespaces)
