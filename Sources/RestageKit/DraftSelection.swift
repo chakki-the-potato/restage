@@ -2,6 +2,7 @@ public enum DraftSelection {
     public struct Entry: Sendable, Equatable {
         public let index: Int
         public let screenID: String
+        public let display: DisplaySelector
         public let startsScreen: Bool
         public let item: ItemDraft
         public let ordinal: Int?
@@ -27,7 +28,7 @@ public enum DraftSelection {
                 }
                 result.append(
                     Entry(
-                        index: index, screenID: screen.id,
+                        index: index, screenID: screen.id, display: screen.display,
                         startsScreen: position == 0, item: item, ordinal: ordinal))
                 index += 1
             }

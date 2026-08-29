@@ -344,7 +344,7 @@ windows then. restage detects this, says so, and stops.
 
 ```bash
 swift build
-swift test        # 241 tests
+swift test        # 252 tests
 ```
 
 Measure placement against the apps you have running:

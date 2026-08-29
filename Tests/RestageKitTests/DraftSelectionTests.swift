@@ -22,6 +22,7 @@ private let draft = WorkspaceDraft(
     let entries = DraftSelection.entries(in: draft)
     #expect(entries.map(\.index) == [0, 1, 2, 3])
     #expect(entries.map(\.screenID) == ["main", "main", "external-1", "external-1"])
+    #expect(entries.map(\.display) == [.builtin, .builtin, .external(index: 1), .external(index: 1)])
     #expect(entries.map(\.startsScreen) == [true, false, true, false])
     #expect(entries.map(\.item.app) == ["Safari", "Notion", "iTerm", "Google Chrome"])
 }

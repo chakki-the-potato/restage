@@ -6,7 +6,7 @@ enum DraftSummary {
     static func lines(_ draft: WorkspaceDraft, numbered: Bool) -> [String] {
         var lines: [String] = []
         for entry in DraftSelection.entries(in: draft) {
-            if entry.startsScreen { lines.append("  \(entry.screenID)") }
+            if entry.startsScreen { lines.append("  " + ScreenLabel.text(entry.display)) }
             let prefix = numbered ? "   \(String(format: "%2d", entry.index + 1)). " : "     "
             lines.append(prefix + describe(entry))
         }

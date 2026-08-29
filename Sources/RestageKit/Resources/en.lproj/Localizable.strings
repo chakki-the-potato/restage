@@ -293,6 +293,8 @@
 
 /* 초안 편집 */
 "draft.added_by_hand" = "Added by hand";
+"screen.primary" = "Main monitor";
+"screen.monitor" = "Monitor %d";
 "draft.keep_count" = "Keep %d";
 "draft.hide_others" = "Hide other apps";
 "draft.select_all" = "Select All";

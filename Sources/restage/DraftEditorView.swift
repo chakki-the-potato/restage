@@ -109,7 +109,7 @@ struct DraftEditorView: View {
 
     struct Row: Identifiable {
         let id: Int
-        let screenID: String
+        let screenName: String
         let startsScreen: Bool
         let app: String
         let sourceApp: String
@@ -137,7 +137,7 @@ struct DraftEditorView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(rows) { row in
-                        if row.startsScreen { screenLabel(row.screenID) }
+                        if row.startsScreen { screenLabel(row.screenName) }
                         line(row)
                     }
                     if !editor.added.isEmpty {
@@ -511,7 +511,7 @@ extension DraftEditorView {
         DraftSelection.entries(in: draft).map { entry in
             Row(
                 id: entry.index,
-                screenID: entry.screenID,
+                screenName: ScreenLabel.text(entry.display),
                 startsScreen: entry.startsScreen,
                 app: DraftSelection.label(for: entry),
                 sourceApp: entry.item.app,

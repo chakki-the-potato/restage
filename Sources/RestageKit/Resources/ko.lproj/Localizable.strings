@@ -293,6 +293,8 @@
 
 /* 초안 편집 */
 "draft.added_by_hand" = "직접 추가";
+"screen.primary" = "주 모니터";
+"screen.monitor" = "모니터 %d";
 "draft.keep_count" = "%d개 담기";
 "draft.hide_others" = "다른 앱 숨기기";
 "draft.select_all" = "전체 선택";
