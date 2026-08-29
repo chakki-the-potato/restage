@@ -16,6 +16,8 @@
   <img src="docs/images/panel-light.png" width="360" alt="워크스페이스 셋이 담긴 restage 패널">
 </picture>
 
+<img src="docs/images/demo.gif" width="720" alt="클릭 한 번에 앱 넷이 열리고 4분할로 자리를 잡는다">
+
 </div>
 
 ---
