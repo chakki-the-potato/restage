@@ -16,8 +16,6 @@ English · [한국어](README.ko.md)
   <img src="docs/images/panel-light.png" width="360" alt="The restage panel listing three workspaces">
 </picture>
 
-<img src="docs/images/demo.gif" width="720" alt="One click: four apps open and settle into a four-way split">
-
 </div>
 
 ---
