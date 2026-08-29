@@ -137,8 +137,12 @@ name.
 | **On failure** | the reason and a Retry, right in the card |
 | **Missing app** | drawn as a dashed placeholder with the reason underneath |
 
-The gear holds Open at Login, Appearance, Check for Updates, Open Config
-Folder, and Quit.
+The gear holds Open at Login, Appearance, Cycle Shortcut, Check for Updates,
+Open Config Folder, and Quit.
+
+**Cycle Shortcut** moves to the next workspace on one key, in the order the list
+shows. Which one you opened last is remembered by the app, not written to any
+config file, and the card you are on carries a dot.
 
 ### Language and appearance
 
@@ -340,7 +344,7 @@ windows then. restage detects this, says so, and stops.
 
 ```bash
 swift build
-swift test        # 237 tests
+swift test        # 241 tests
 ```
 
 Measure placement against the apps you have running:

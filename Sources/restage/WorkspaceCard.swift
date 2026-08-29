@@ -58,9 +58,17 @@ struct WorkspaceCard: View {
                 .frame(height: 21)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(item.name)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(item.isRunnable ? .primary : .secondary)
+                HStack(spacing: 5) {
+                    if item.isLastOpened {
+                        Circle()
+                            .fill(Color.accentColor)
+                            .frame(width: 6, height: 6)
+                            .help(L10n.string("card.last_opened"))
+                    }
+                    Text(item.name)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(item.isRunnable ? .primary : .secondary)
+                }
                 if isRunning {
                     running
                 } else {

@@ -27,6 +27,7 @@ enum OpenCommand {
             return 2
         }
 
+        CycleSettings.lastOpened = target
         let resolved = WorkspaceResolver.resolve(config, displays: displays)
         let outcomes = await WorkspaceRunner().run(resolved)
         let hidden = await HideOthers.run(config, resolved)

@@ -74,6 +74,13 @@ struct WorkspacePanel: View {
         items.append(PanelMenu.separator())
         items.append(
             PanelMenu.Item(
+                title: L10n.string("options.cycle_hotkey"),
+                symbol: "arrow.triangle.2.circlepath"
+            ) {
+                act { setCycleHotkey() }
+            })
+        items.append(
+            PanelMenu.Item(
                 title: L10n.string("options.check_updates"), symbol: "arrow.down.circle"
             ) {
                 checkForUpdate()
@@ -121,6 +128,7 @@ struct WorkspacePanel: View {
     private var content: some View {
         VStack(alignment: .leading, spacing: 6) {
             if !store.accessibilityGranted { permissionBanner }
+            if let cycleWarning = store.cycleWarning { notice(cycleWarning) }
             if let listError = store.listError {
                 notice(listError)
             } else if store.items.isEmpty {
@@ -347,6 +355,20 @@ struct WorkspacePanel: View {
         case .cancelled:
             return nil
         }
+    }
+
+    private func setCycleHotkey() -> String? {
+        switch HotkeyRecorder.record(
+            workspace: L10n.string("options.cycle_hotkey_title"), current: CycleSettings.spec
+        ) {
+        case .set(let spec):
+            CycleSettings.hotkey = spec.configString
+        case .cleared:
+            CycleSettings.hotkey = nil
+        case .cancelled:
+            break
+        }
+        return nil
     }
 
     private func delete(_ name: String) -> String? {

@@ -23,6 +23,7 @@
 "card.menu.edit" = "Edit";
 "card.menu.more" = "More";
 "card.menu.rename" = "Rename";
+"card.last_opened" = "The one you opened last. The cycle shortcut goes to the next one.";
 "card.menu.change_shortcut" = "Change Shortcut";
 "card.menu.reveal" = "Reveal in Finder";
 "card.menu.delete" = "Delete";
@@ -34,6 +35,8 @@
 "options.appearance.light" = "Light";
 "options.appearance.dark" = "Dark";
 "options.check_updates" = "Check for Updates";
+"options.cycle_hotkey" = "Cycle Shortcut…";
+"options.cycle_hotkey_title" = "Next workspace";
 "options.open_config_folder" = "Open Config Folder";
 "options.quit" = "Quit";
 

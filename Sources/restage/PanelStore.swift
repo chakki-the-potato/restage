@@ -13,6 +13,7 @@ final class PanelStore: ObservableObject {
         let hotkey: String?
         let hotkeySpec: HotkeySpec?
         let hotkeyWarning: String?
+        var isLastOpened = false
 
         var isRunnable: Bool { error == nil }
 
@@ -34,6 +35,7 @@ final class PanelStore: ObservableObject {
     @Published private(set) var accessibilityGranted = true
     @Published private(set) var listError: String?
     @Published private(set) var loginItemEnabled = false
+    @Published private(set) var cycleWarning: String?
 
     let loginItemSupported = LoginItem.isSupported
 
@@ -46,11 +48,21 @@ final class PanelStore: ObservableObject {
     private let hotkeys = HotkeyRegistry()
     private var registrations: [String: HotkeyRegistry.Registration] = [:]
 
+    static let cycleIdentifier = "restage/cycle"
+
     func installHotkeys() {
-        hotkeys.install { [weak self] workspace in
-            self?.run(workspace)
+        hotkeys.install { [weak self] identifier in
+            guard let self else { return }
+            if identifier == Self.cycleIdentifier { runNext() } else { run(identifier) }
         }
         reload()
+    }
+
+    func runNext() {
+        let names = items.filter(\.isRunnable).map(\.name).sorted()
+        guard let next = WorkspaceCycle.next(after: CycleSettings.lastOpened, in: names)
+        else { return }
+        run(next)
     }
 
     func reload() {
@@ -66,8 +78,12 @@ final class PanelStore: ObservableObject {
             listError = "\(error)".split(separator: "\n").first.map(String.init) ?? "\(error)"
         }
 
-        let declared = declaredHotkeys(in: entries)
+        var declared = declaredHotkeys(in: entries)
+        if let cycle = CycleSettings.hotkey {
+            declared.append((Self.cycleIdentifier, cycle))
+        }
         registrations = hotkeys.reload(declared)
+        cycleWarning = hotkeyWarning(for: Self.cycleIdentifier)
         let specs = Dictionary(
             uniqueKeysWithValues: declared.compactMap { entry -> (String, HotkeySpec)? in
                 guard let spec = try? HotkeySpec.parse(entry.raw) else { return nil }
@@ -80,13 +96,15 @@ final class PanelStore: ObservableObject {
                 error: entry.error,
                 hotkey: hotkeyLabel(for: entry.name),
                 hotkeySpec: specs[entry.name],
-                hotkeyWarning: hotkeyWarning(for: entry.name))
+                hotkeyWarning: hotkeyWarning(for: entry.name),
+                isLastOpened: entry.name == CycleSettings.lastOpened)
         }
         messages = messages.filter { key, _ in entries.contains { $0.name == key } }
     }
 
     func run(_ name: String) {
         guard runningName == nil else { return }
+        CycleSettings.lastOpened = name
         runningName = name
         messages[name] = nil
 

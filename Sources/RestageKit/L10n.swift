@@ -17,12 +17,7 @@ public enum L10n {
 
     private static let bundleName = "restage_RestageKit.bundle"
 
-    private static let identifier = "com.chakki.restage"
-
-    private static var defaults: UserDefaults {
-        if Bundle.main.bundleIdentifier == identifier { return .standard }
-        return UserDefaults(suiteName: identifier) ?? .standard
-    }
+    private static var defaults: UserDefaults { AppDefaults.shared }
 
     private static let resources: Bundle? = {
         var roots: [URL] = []

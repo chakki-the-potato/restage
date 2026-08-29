@@ -23,6 +23,7 @@
 "card.menu.edit" = "편집";
 "card.menu.more" = "더보기";
 "card.menu.rename" = "이름 변경";
+"card.last_opened" = "마지막으로 연 워크스페이스. 순환 단축키는 다음 것으로 넘어갑니다.";
 "card.menu.change_shortcut" = "단축키 변경";
 "card.menu.reveal" = "파일로 열기";
 "card.menu.delete" = "삭제";
@@ -34,6 +35,8 @@
 "options.appearance.light" = "라이트";
 "options.appearance.dark" = "다크";
 "options.check_updates" = "업데이트 확인";
+"options.cycle_hotkey" = "순환 단축키…";
+"options.cycle_hotkey_title" = "다음 워크스페이스";
 "options.open_config_folder" = "config 폴더 열기";
 "options.quit" = "종료";
 
