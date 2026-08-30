@@ -296,6 +296,11 @@ accessibility cannot see it at all — so there is nothing to clear. restage
 follows the window to its Space first, and when that fails the window has to be
 brought out by hand with `ctrl+cmd+F`.
 
+**Some windows can't go full screen at all.** TextEdit's document window is one:
+accessibility reports the attribute as unsettable, exposes no window buttons, and
+leaves its own View > Enter Full Screen menu item disabled. `fullscreen: true` on
+such a window is reported as `constrained` and the window is left as it is.
+
 **Windows on another desktop are reached by sending the view there.** Moving a
 window to another desktop works through neither the public nor the private API —
 the window server's private functions were called directly to check, and they're

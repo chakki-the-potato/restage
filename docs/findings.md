@@ -118,13 +118,24 @@ q2.
 is clearing it from another Space, because accessibility does not see the window
 there at all.
 
-**A window can refuse full screen through accessibility.** TextEdit's document
-window on macOS 26 lists `AXFullScreen` but reports it as not settable, and
-exposes no buttons at all — `AXFullScreenButton` and `AXZoomButton` both answer
-`-25212`, and the window's only action is `AXRaise`. Its menu still carries
-View > Enter Full Screen, but that item's shortcut is Fn+F
-(`AXMenuItemCmdModifiers` 24), not a command combination, so the trick used to
-find ⌘N does not find it.
+**A window can be closed to full screen on every route.** TextEdit's document
+window on macOS 26 says no three times over:
+
+```
+AXFullScreen           present, settable = false
+AXFullScreenButton     -25212, and AXZoomButton the same — no buttons at all
+View > Enter Full Screen   AXEnabled = false
+```
+
+The window's only action is `AXRaise`. The menu item was found by its shortcut
+(Fn+F, `AXMenuItemCmdModifiers` 24) and pressed; `AXPress` returned success and
+nothing happened, because pressing a disabled item does nothing. Opening the
+parent menu first made no difference, and neither did shrinking the window to a
+half so it was not already filling the screen.
+
+So `constrained` with "this window doesn't support full screen" is the correct
+report, not a misjudgement — it is repeating what macOS says. A menu fallback was
+written and measured before being thrown away: there is nothing for it to press.
 
 ## Browsers
 
