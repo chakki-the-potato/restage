@@ -54,6 +54,10 @@ public struct AXWindow: WindowHandle {
     var isFullScreen: Bool { bool(AXAttributes.fullScreen) ?? false }
     var hasFullScreenButton: Bool { rawAttribute(AXAttributes.fullScreenButton) != nil }
 
+    var supportsFullScreen: Bool {
+        isSettable(AXAttributes.fullScreen) || hasFullScreenButton
+    }
+
     var isSizeSettable: Bool { isSettable(AXAttributes.size) }
 
     private func isSettable(_ attribute: String) -> Bool {

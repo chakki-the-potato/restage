@@ -15,7 +15,7 @@ enum FullScreenController {
             return .ok(actual: before ?? .zero, attempts: 0, elapsed: .zero, warnings: [])
         }
 
-        guard window.hasFullScreenButton else {
+        guard window.supportsFullScreen else {
             return .constrained(
                 actual: before ?? .zero,
                 expected: before ?? .zero,
