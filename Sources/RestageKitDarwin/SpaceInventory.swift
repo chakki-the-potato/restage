@@ -9,6 +9,7 @@ public struct DisplaySpaces: Sendable, Equatable {
     public struct Space: Sendable, Equatable {
         public let id: Int
         public let isFullScreen: Bool
+        public let tileWindows: [Int]
     }
 }
 
@@ -21,6 +22,9 @@ enum SpaceInventory {
 
     private static let fullScreenType = 4
     private static let allSpacesMask: Int32 = 7
+    private static let tileManagerKey = "TileLayoutManager"
+    private static let tilesKey = "TileSpaces"
+    private static let tileWindowKey = "TileWindowID"
 
     private static func symbol<T>(_ name: String, as type: T.Type) -> T? {
         guard let handle = dlsym(UnsafeMutableRawPointer(bitPattern: -2), name) else { return nil }
@@ -46,10 +50,17 @@ enum SpaceInventory {
             let all = (entry["Spaces"] as? [[String: Any]] ?? []).compactMap { space -> DisplaySpaces.Space? in
                 guard let id = space["ManagedSpaceID"] as? Int else { return nil }
                 return DisplaySpaces.Space(
-                    id: id, isFullScreen: space["type"] as? Int == fullScreenType)
+                    id: id, isFullScreen: space["type"] as? Int == fullScreenType,
+                    tileWindows: tileWindows(in: space))
             }
             return DisplaySpaces(display: display, current: current ?? -1, all: all)
         }
+    }
+
+    private static func tileWindows(in space: [String: Any]) -> [Int] {
+        let manager = space[tileManagerKey] as? [String: Any] ?? [:]
+        let tiles = manager[tilesKey] as? [[String: Any]] ?? []
+        return tiles.compactMap { $0[tileWindowKey] as? Int }
     }
 
     static func spaces(ofWindow number: Int) -> [Int]? {
@@ -78,10 +89,8 @@ enum SpaceInventory {
         displays()?.first { entry in entry.all.contains { $0.id == space } }?.display
     }
 
-    static func isFullScreen(space: Int) -> Bool {
-        displays()?
-            .flatMap(\.all)
-            .first { $0.id == space }?
-            .isFullScreen ?? false
+    static func map() -> SpaceMap? {
+        guard let displays = displays() else { return nil }
+        return SpaceMap(displays: displays)
     }
 }

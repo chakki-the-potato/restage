@@ -47,6 +47,9 @@ enum NewCommand {
         for app in captured.browsersWithoutURLs {
             print(L10n.string("new.browser_no_urls", app))
         }
+        if captured.hasSharedFullScreen {
+            print(L10n.string("new.split_view_note"))
+        }
     }
 
     private static func edit(_ draft: inout WorkspaceDraft) -> Int32 {

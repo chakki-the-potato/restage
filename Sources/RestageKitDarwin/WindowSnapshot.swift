@@ -9,10 +9,11 @@ public struct CapturedWindow: Sendable, Equatable {
     public let frame: CGRect
     public let isOnCurrentSpace: Bool
     public let isFullScreen: Bool
+    public let isSharedFullScreen: Bool
 
     public init(
         appName: String, bundleID: String, title: String, frame: CGRect,
-        isOnCurrentSpace: Bool, isFullScreen: Bool = false
+        isOnCurrentSpace: Bool, isFullScreen: Bool = false, isSharedFullScreen: Bool = false
     ) {
         self.appName = appName
         self.bundleID = bundleID
@@ -20,6 +21,7 @@ public struct CapturedWindow: Sendable, Equatable {
         self.frame = frame
         self.isOnCurrentSpace = isOnCurrentSpace
         self.isFullScreen = isFullScreen
+        self.isSharedFullScreen = isSharedFullScreen
     }
 }
 
@@ -31,6 +33,8 @@ public enum WindowSnapshot {
         let apps = regularApps()
         let visible = onScreenWindowIDs()
         let displays = NSScreen.screens.map(\.frame)
+        let bounds = WindowInventory.displayBounds()
+        let map = SpaceInventory.map()
 
         let all = CGWindowListCopyWindowInfo(
             [.optionAll, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] ?? []
@@ -43,14 +47,28 @@ public enum WindowSnapshot {
                   frame.width >= minimumSide, frame.height >= minimumSide else { return nil }
 
             let id = window[kCGWindowNumber as String] as? Int ?? -1
-            let onCurrentSpace = visible.contains(id)
+            guard let map else {
+                let onCurrentSpace = visible.contains(id)
+                return CapturedWindow(
+                    appName: app.name, bundleID: app.bundleID,
+                    title: (window[kCGWindowName as String] as? String) ?? "",
+                    frame: frame, isOnCurrentSpace: onCurrentSpace,
+                    isFullScreen: !onCurrentSpace && coversWholeDisplay(frame, displays))
+            }
+
+            let spaces = SpaceInventory.spaces(ofWindow: id) ?? []
+            guard !spaces.isEmpty,
+                  bounds.contains(where: { $0.intersects(frame) }),
+                  map.holdsAllOf(spaces, window: id) else { return nil }
+
             return CapturedWindow(
                 appName: app.name,
                 bundleID: app.bundleID,
                 title: (window[kCGWindowName as String] as? String) ?? "",
                 frame: frame,
-                isOnCurrentSpace: onCurrentSpace,
-                isFullScreen: !onCurrentSpace && coversWholeDisplay(frame, displays))
+                isOnCurrentSpace: map.isCurrent(spaces),
+                isFullScreen: map.isFullScreen(spaces),
+                isSharedFullScreen: map.isSharedFullScreen(spaces))
         }
         .sorted { lhs, rhs in
             if lhs.isOnCurrentSpace != rhs.isOnCurrentSpace { return lhs.isOnCurrentSpace }

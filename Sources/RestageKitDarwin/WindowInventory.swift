@@ -93,7 +93,7 @@ enum WindowInventory {
         return CGRect(x: x, y: y, width: width, height: height)
     }
 
-    private static func displayBounds() -> [CGRect] {
+    static func displayBounds() -> [CGRect] {
         var count: UInt32 = 0
         guard CGGetActiveDisplayList(0, nil, &count) == .success, count > 0 else { return [] }
         var ids = [CGDirectDisplayID](repeating: 0, count: Int(count))

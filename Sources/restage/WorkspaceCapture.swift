@@ -9,6 +9,7 @@ enum WorkspaceCapture {
         let browsersWithoutTabs: [SkippedBrowser]
         let browsersWithoutURLs: [String]
         let onOtherSpaceCount: Int
+        let hasSharedFullScreen: Bool
         let byOrder: [String: Int]
     }
 
@@ -60,6 +61,7 @@ enum WorkspaceCapture {
                 .map { SkippedBrowser(app: $0.key, reason: $0.value) },
             browsersWithoutURLs: Array(Set(withoutURLs)).sorted(),
             onOtherSpaceCount: windows.filter { !$0.isOnCurrentSpace }.count,
+            hasSharedFullScreen: windows.contains { $0.isSharedFullScreen },
             byOrder: selection.byOrderByApp)
     }
 
