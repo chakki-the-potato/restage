@@ -49,10 +49,9 @@ holds.
 **It leaves things alone when they're already right.** Run it twice and nothing
 moves the second time.
 
-**It doesn't touch what you didn't declare.** Apps missing from the file are
-neither hidden nor quit. Tabs you already have open stay open — only missing
-ones are added. The one exception is `hideOthers`, which you have to turn on
-yourself.
+**It doesn't touch what you didn't declare.** Apps the file doesn't list are
+neither hidden nor quit; tabs you already have open stay open and only missing
+ones are added. The one exception is `hideOthers`, which you turn on yourself.
 
 ## Install
 
@@ -106,20 +105,9 @@ Read the current window layout.
 [Enter] save   [number] change position   [-number] remove   [+] add an app   [w] add a browser   [q] cancel
 ```
 
-Press Enter and `~/.config/restage/dev.yaml` is written. The menu bar's **New
-from Current Layout** does the same thing with checkboxes and dropdowns. There,
-clicking a window's name brings it to the front so you can tell which is which,
-and **Web** adds a browser with the addresses you paste.
-
-- Browsers are saved **with the tabs they have open** — start pages and new tabs
-  are skipped
-- An ambiguous position gets a `?`. It **doesn't guess quietly**
-- Several windows of one app are all saved. Those with a distinct title are
-  matched by title; the rest take their positions in order and show as
-  `Cursor 1`, `Cursor 2`
-- A browser sitting on its start page is saved with no addresses. Click the
-  address count in the editor to add some
-- Add an app that isn't running with `+`, a URL that isn't open with `w`
+Press Enter and `~/.config/restage/dev.yaml` is written. From then on `restage
+open dev` brings it back. The menu bar's **New from Current Layout** does the
+same thing with checkboxes and dropdowns.
 
 <img src="docs/images/editor-light.png" width="460" alt="The editor listing windows, with duplicates numbered and a browser without addresses">
 
@@ -127,35 +115,11 @@ and **Web** adds a browser with the addresses you paste.
 
 Click a card to run it. A card shows what's inside: up to three real app icons,
 counted as `+2` beyond that, and the shape of the arrangement drawn under the
-name.
-
-| | |
-|---|---|
-| **Hover** | the shortcut chip gives way to Edit and More |
-| **Shortcut** | press the combination you want; only the `hotkey` line changes |
-| **While running** | the card says which app it's opening and how far along |
-| **On failure** | the reason and a Retry, right in the card |
-| **Missing app** | drawn as a dashed placeholder with the reason underneath |
+name. Hover a card for Edit and More, or press a key combination to give it a
+shortcut.
 
 The gear holds Open at Login, Appearance, Cycle Shortcut, Check for Updates,
 Open Config Folder, and Quit.
-
-**Cycle Shortcut** moves to the next workspace on one key, in the order the list
-shows. Which one you opened last is remembered by the app, not written to any
-config file, and the card you are on carries a dot.
-
-### Language and appearance
-
-Both follow the system by default. **한국어 · English** sits under the list;
-**Appearance** offers Match System · Light · Dark under the gear. Either change
-lands immediately — no restart, even with the panel open.
-
-### Updates
-
-It asks GitHub only when you press **Check for Updates**. Never on a schedule —
-using this tool shouldn't need a network. When there's a newer version it tells
-you how to get it, the Homebrew command or the release page depending on how you
-installed it.
 
 ## Reference
 
@@ -247,6 +211,50 @@ items:
 matter and short names are understood: `chrome` means Google Chrome, `edge`
 means Microsoft Edge. An exact match always wins. Ambiguous names stop with the
 candidates listed; unknown ones suggest something close.
+
+</details>
+
+<details>
+<summary><b>Saving: what gets picked up</b></summary>
+
+- Browsers are saved **with the tabs they have open** — start pages and new tabs
+  are skipped
+- An ambiguous position gets a `?`. It **doesn't guess quietly**
+- Several windows of one app are all saved. Those with a distinct title are
+  matched by title; the rest take their positions in order and show as
+  `Cursor 1`, `Cursor 2`
+- A browser sitting on its start page is saved with no addresses. Click the
+  address count in the editor to add some
+- Add an app that isn't running with `+`, a URL that isn't open with `w`
+
+In the menu bar editor, clicking a window's name brings it to the front so you
+can tell which is which, and **Web** adds a browser with the addresses you paste.
+
+</details>
+
+<details>
+<summary><b>The menu bar in detail</b></summary>
+
+| | |
+|---|---|
+| **Hover** | the shortcut chip gives way to Edit and More |
+| **Shortcut** | press the combination you want; only the `hotkey` line changes |
+| **While running** | the card says which app it's opening and how far along |
+| **On failure** | the reason and a Retry, right in the card |
+| **Missing app** | drawn as a dashed placeholder with the reason underneath |
+
+**Cycle Shortcut** moves to the next workspace on one key, in the order the list
+shows. Which one you opened last is remembered by the app, not written to any
+config file, and the card you are on carries a dot.
+
+**Language and appearance** follow the system by default. **한국어 · English**
+sits under the list; **Appearance** offers Match System · Light · Dark under the
+gear. Either change lands immediately — no restart, even with the panel open.
+
+**Updates** are checked only when you press **Check for Updates**. Never on a
+schedule — using this tool shouldn't need a network. When there's a newer
+version it tells you how to get it, the Homebrew command or the release page
+depending on how you installed it.
 
 </details>
 
@@ -344,7 +352,7 @@ windows then. restage detects this, says so, and stops.
 
 ```bash
 swift build
-swift test        # 256 tests
+swift test        # 273 tests
 ```
 
 Measure placement against the apps you have running:
