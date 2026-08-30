@@ -26,6 +26,15 @@ public struct AXWindowEngine: WindowEngine {
             mayFollowOtherSpaces: mayFollowOtherSpaces, claims: claim ? claims : nil)
     }
 
+    public func claim(pid: Int32, matching target: CGRect) {
+        guard let windows = try? AXWindow.windows(ofPID: pid) else { return }
+        guard let window = windows.first(where: { window in
+            guard let frame = window.currentFrame else { return false }
+            return CurrentState.matches(frame, target)
+        }) else { return }
+        claims.claim(window)
+    }
+
     public func place(
         _ window: WindowHandle, slot: Slot, display: DisplayInfo
     ) async -> PlacementResult {

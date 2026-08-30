@@ -130,6 +130,7 @@ public struct WorkspaceRunner {
     ) async -> ItemOutcome {
         if placement.selector.titleContains == nil,
            isSatisfied(placement, handle: handle, screen: screen) {
+            engine.claim(pid: handle.pid, matching: placement.target)
             return ItemOutcome(
                 screenID: screen.id, app: placement.app, status: .alreadySatisfied,
                 expected: placement.target, detail: L10n.string("outcome.already_satisfied"))
