@@ -90,6 +90,38 @@ frame twice, took a ten-app workspace from 50.8s to 2.8s warm and from about 48s
 to 5.7s cold. The rule that replaced it answers the same question from the Space
 list rather than by subtraction.
 
+**A Space says which windows are its tiles.**
+`CGSCopyManagedDisplaySpaces` carries `TileLayoutManager > TileSpaces`, one entry
+per tile, each with a `TileWindowID` that is the window number `CGWindowList`
+uses. One entry means an ordinary full screen; two means Split View. Everything
+else the Space holds — the divider, the browser's toolbar strip — is not a tile,
+which is how those get left out of a capture.
+
+Measured on a real Split View (Chrome and Notion sharing one Space):
+
+```
+space 4719 type=4 tiles=2  Google Chrome#69921  Notion#69937
+  #69921 at 0,155   862x962    the left tile
+  #69937 at 874,33  854x1084   the right tile
+  #69959 at 0,33    862x158    Chrome's toolbar strip, not a tile
+  #69954, #69968    13x1117    the divider, not a tile
+```
+
+Capture kept the two tiles, dropped the rest, and said so. The saved config was
+not what the note promises, though:
+
+```yaml
+- {type: app, app: Notion, slot: right-half, fullscreen: true}
+- type: browser
+  app: Google Chrome
+  slot: left-half
+```
+
+A browser item cannot carry `fullscreen` at any layer — `ItemDraft.browser` has
+no such parameter, `ConfigWriter` never writes the key for a browser, and
+`ItemConfig` never reads it. So a browser in Split View, or in full screen at
+all, is saved as an ordinary half-width browser window.
+
 **The setting is not what makes following work.** The note that used to stand
 here credited `com.apple.dock workspaces-auto-swoosh`. On the machine where
 following was measured that key was 1 while the one that governs it,
