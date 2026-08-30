@@ -159,6 +159,7 @@
 
 /* 실행 결과 */
 "outcome.already_satisfied" = "Already where it should be";
+"outcome.opened_new_window" = "Opened a new window";
 "outcome.tabs_and_placement_satisfied" = "All %d tabs and the window position were already right";
 "outcome.tabs_added_with_placement" = "Added %1$d tabs. %2$@";
 "outcome.tabs_all_open" = "All %d tabs were already open";

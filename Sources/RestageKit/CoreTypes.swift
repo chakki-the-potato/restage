@@ -36,4 +36,5 @@ public struct DisplayInfo: Sendable {
 public protocol WindowHandle {
     var currentFrame: CGRect? { get }
     var isOnActiveSpace: Bool { get }
+    var wasOpened: Bool { get }
 }

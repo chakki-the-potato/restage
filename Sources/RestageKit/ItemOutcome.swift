@@ -36,3 +36,11 @@ public struct ItemOutcome: Sendable {
         self.detail = detail
     }
 }
+
+extension ItemOutcome {
+    public func noting(_ note: String) -> ItemOutcome {
+        ItemOutcome(
+            screenID: screenID, app: app, status: status, expected: expected, actual: actual,
+            detail: detail.isEmpty ? note : note + ". " + detail)
+    }
+}

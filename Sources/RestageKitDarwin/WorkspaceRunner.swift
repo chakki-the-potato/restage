@@ -158,11 +158,18 @@ public struct WorkspaceRunner {
         let result = await engine.place(window, slot: placement.slot, display: screen.display)
         let wantsFullScreen = screen.mode == .fullscreen || placement.fullscreen
         guard wantsFullScreen, result.isPass else {
-            return outcome(from: result, placement: placement, screen: screen)
+            return noting(
+                outcome(from: result, placement: placement, screen: screen), window: window)
         }
 
         let fullScreenResult = await engine.fullscreen(window)
-        return outcome(from: fullScreenResult, placement: placement, screen: screen)
+        return noting(
+            outcome(from: fullScreenResult, placement: placement, screen: screen), window: window)
+    }
+
+    private func noting(_ outcome: ItemOutcome, window: WindowHandle) -> ItemOutcome {
+        guard window.wasOpened else { return outcome }
+        return outcome.noting(L10n.string("outcome.opened_new_window"))
     }
 
     private func applyTabs(

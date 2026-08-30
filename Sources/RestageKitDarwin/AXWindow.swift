@@ -6,6 +6,7 @@ import RestageKit
 public struct AXWindow: WindowHandle {
     let element: AXUIElement
     public let pid: Int32
+    public var wasOpened = false
 
     init(element: AXUIElement, pid: Int32) {
         self.element = element

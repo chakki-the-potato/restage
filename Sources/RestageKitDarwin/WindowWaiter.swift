@@ -17,6 +17,9 @@ public enum WindowWaiter {
         var fixedSizeSeenAt: ContinuousClock.Instant?
         var seenTitles: [String] = []
         var exhaustedSeenAt: ContinuousClock.Instant?
+        var newWindowDeadline: ContinuousClock.Instant?
+        var triedNewWindow = false
+        var openedNewWindow = false
         var taken = 0
         var activated = false
         let clock = ContinuousClock()
@@ -29,8 +32,9 @@ public enum WindowWaiter {
                 if !titles.isEmpty { seenTitles = titles }
                 let matched = matching(all, selector)
                 let windows = matched.filter { !(claims?.contains($0) ?? false) }
-                if let window = windows.first(where: isPlaceable) {
+                if var window = windows.first(where: isPlaceable) {
                     claims?.claim(window)
+                    window.wasOpened = openedNewWindow
                     return window
                 }
 
@@ -57,6 +61,15 @@ public enum WindowWaiter {
                 let seenAt = exhaustedSeenAt ?? clock.now
                 exhaustedSeenAt = seenAt
                 if clock.now >= seenAt.advanced(by: layoutSettleTimeout) {
+                    if !triedNewWindow {
+                        triedNewWindow = true
+                        if NewWindowOpener.open(pid: pid) {
+                            openedNewWindow = true
+                            newWindowDeadline = clock.now.advanced(
+                                by: NewWindowOpener.appearTimeout)
+                        }
+                    }
+                    if let newWindowDeadline, clock.now < newWindowDeadline { return nil }
                     throw EngineError.windowsExhausted(pid: pid, have: taken)
                 }
             } else {
