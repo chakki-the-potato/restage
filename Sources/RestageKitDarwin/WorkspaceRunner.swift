@@ -134,6 +134,16 @@ public struct WorkspaceRunner {
                 expected: placement.target, detail: L10n.string("outcome.already_satisfied"))
         }
 
+        let onOtherSpace = isOnlyElsewhere(pid: handle.pid)
+
+        if placement.selector.titleContains == nil,
+           satisfiedElsewhere(placement, handle: handle, screen: screen) {
+            return ItemOutcome(
+                screenID: screen.id, app: placement.app, status: .alreadySatisfied,
+                expected: placement.target, detail: L10n.string("outcome.already_satisfied")
+            ).noting(L10n.string("outcome.placed_on_other_space"))
+        }
+
         let window: WindowHandle
         do {
             window = try await engine.waitForWindow(
@@ -157,17 +167,37 @@ public struct WorkspaceRunner {
         let wantsFullScreen = screen.mode == .fullscreen || placement.fullscreen
         guard wantsFullScreen, result.isPass else {
             return noting(
-                outcome(from: result, placement: placement, screen: screen), window: window)
+                outcome(from: result, placement: placement, screen: screen),
+                window: window, onOtherSpace: onOtherSpace)
         }
 
         let fullScreenResult = await engine.fullscreen(window)
         return noting(
-            outcome(from: fullScreenResult, placement: placement, screen: screen), window: window)
+            outcome(from: fullScreenResult, placement: placement, screen: screen),
+            window: window, onOtherSpace: onOtherSpace)
     }
 
-    private func noting(_ outcome: ItemOutcome, window: WindowHandle) -> ItemOutcome {
-        guard window.wasOpened else { return outcome }
-        return outcome.noting(L10n.string("outcome.opened_new_window"))
+    private func noting(
+        _ outcome: ItemOutcome, window: WindowHandle, onOtherSpace: Bool
+    ) -> ItemOutcome {
+        var result = outcome
+        if window.wasOpened { result = result.noting(L10n.string("outcome.opened_new_window")) }
+        guard onOtherSpace, result.status.isSuccess else { return result }
+        return result.noting(L10n.string("outcome.placed_on_other_space"))
+    }
+
+    private func isOnlyElsewhere(pid: Int32) -> Bool {
+        guard let census = WindowInventory.census(pid: pid) else { return false }
+        return census.here.isEmpty && !census.elsewhere.isEmpty
+    }
+
+    private func satisfiedElsewhere(
+        _ placement: Placement, handle: ProcessHandle, screen: ScreenPlan
+    ) -> Bool {
+        if screen.mode == .fullscreen || placement.fullscreen {
+            return CurrentState.isFullScreenElsewhere(pid: handle.pid)
+        }
+        return CurrentState.isPlacedElsewhere(pid: handle.pid, target: placement.target)
     }
 
     private func applyTabs(

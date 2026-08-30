@@ -160,6 +160,7 @@
 /* 실행 결과 */
 "outcome.already_satisfied" = "이미 목표 상태";
 "outcome.opened_new_window" = "새 창을 열었습니다";
+"outcome.placed_on_other_space" = "다른 데스크탑에 있어 그곳에 배치했습니다";
 "outcome.tabs_and_placement_satisfied" = "탭 %d개와 창 위치 모두 이미 목표 상태";
 "outcome.tabs_added_with_placement" = "탭 %1$d개 추가. %2$@";
 "outcome.tabs_all_open" = "탭 %d개 모두 이미 열려 있음";
