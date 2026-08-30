@@ -303,7 +303,7 @@ public struct WorkspaceRunner {
     private func isSatisfied(
         _ placement: Placement, handle: ProcessHandle, screen: ScreenPlan
     ) -> Bool {
-        if screen.mode == .fullscreen {
+        if screen.mode == .fullscreen || placement.fullscreen {
             return CurrentState.isFullScreen(pid: handle.pid, on: screen.display)
         }
         return CurrentState.isPlaced(pid: handle.pid, target: placement.target)

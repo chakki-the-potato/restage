@@ -28,7 +28,8 @@ enum FullScreenController {
         await raiseAndWait(pid: window.pid)
         window.setMain(true)
 
-        if window.setFullScreen(true), await confirmed(window, changedFrom: before) {
+        let accepted = window.setFullScreen(true)
+        if accepted, await confirmed(window, changedFrom: before) {
             return success(window, start: start, attempts: 1)
         }
 
@@ -44,7 +45,8 @@ enum FullScreenController {
         return .failed(
             expected: before ?? .zero,
             actual: window.currentFrame,
-            reason: L10n.string("error.fullscreen.not_completed"))
+            reason: L10n.string(
+                accepted ? "error.fullscreen.rejected" : "error.fullscreen.not_completed"))
     }
 
     @discardableResult

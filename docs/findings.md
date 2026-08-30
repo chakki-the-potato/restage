@@ -137,6 +137,14 @@ So `constrained` with "this window doesn't support full screen" is the correct
 report, not a misjudgement — it is repeating what macOS says. A menu fallback was
 written and measured before being thrown away: there is nothing for it to press.
 
+**Setting `AXFullScreen` can succeed and do nothing.** Dictionary went full
+screen through a direct `AXUIElementSetAttributeValue` earlier in the same
+session; later the identical call still returned `.success` while no Space
+appeared and the window kept its frame. It started refusing once the main display
+already held three Spaces, but the cause was not established. The two outcomes
+are reported apart: the write failing is "the switch didn't finish", the write
+succeeding with nothing happening is "macOS did not accept the switch".
+
 ## Browsers
 
 **Brave silently ignores the loop form.** Walking windows with `repeat` and

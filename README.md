@@ -227,6 +227,11 @@ click it. The report says how many were hidden and which.
 - {type: app, app: Cursor, slot: full, fullscreen: true}
 ```
 
+Split View — two apps sharing one full screen Space — is saved as two full screen
+items, because the config has no way to say "these two share a Space". Opening
+the workspace puts each of them in a full screen of its own. Saving tells you
+when it happens.
+
 **Several windows of one app** — `title` says which one to move. Part of the
 title is enough. Without it, the most recently active window that no other item
 has taken yet is used, so listing the same app twice places two different

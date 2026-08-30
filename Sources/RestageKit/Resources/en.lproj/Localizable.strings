@@ -146,6 +146,7 @@
 "error.tabs.window_not_found" = "Couldn't find the window";
 "error.fullscreen.unsupported" = "This window doesn't support full screen";
 "error.fullscreen.not_completed" = "The switch to full screen didn't finish";
+"error.fullscreen.rejected" = "macOS did not accept the switch to full screen";
 "error.place.no_frame" = "Couldn't read the window's position";
 "error.place.fullscreen_blocked" = "The window is full screen and can't be placed (accessibility can't leave full screen; press ctrl+cmd+F)";
 "error.place.not_resizable" = "This window can't be resized";

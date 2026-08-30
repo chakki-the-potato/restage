@@ -146,6 +146,7 @@
 "error.tabs.window_not_found" = "창을 찾을 수 없습니다";
 "error.fullscreen.unsupported" = "전체화면을 지원하지 않는 창입니다";
 "error.fullscreen.not_completed" = "전체화면 전환이 완료되지 않았습니다";
+"error.fullscreen.rejected" = "macOS가 전체화면 전환을 받아들이지 않았습니다";
 "error.place.no_frame" = "창 좌표를 조회할 수 없습니다";
 "error.place.fullscreen_blocked" = "전체화면 상태라 배치할 수 없습니다 (AX로 해제 불가, ctrl+cmd+F로 직접 해제)";
 "error.place.not_resizable" = "크기를 바꿀 수 없는 창입니다";
