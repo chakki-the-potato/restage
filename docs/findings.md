@@ -169,13 +169,17 @@ So `constrained` with "this window doesn't support full screen" is the correct
 report, not a misjudgement — it is repeating what macOS says. A menu fallback was
 written and measured before being thrown away: there is nothing for it to press.
 
-**Setting `AXFullScreen` can succeed and do nothing.** Dictionary went full
-screen through a direct `AXUIElementSetAttributeValue` earlier in the same
-session; later the identical call still returned `.success` while no Space
-appeared and the window kept its frame. It started refusing once the main display
-already held three Spaces, but the cause was not established. The two outcomes
-are reported apart: the write failing is "the switch didn't finish", the write
-succeeding with nothing happening is "macOS did not accept the switch".
+**Setting `AXFullScreen` succeeds before accessibility can prove it.** Dictionary
+measured after a reboot: the write returns `.success`, `AXFullScreen` reads true
+within 500 ms, but `CGSCopySpacesForWindows` lists no Space for the window until
+about a second later, when a new Space of type 4 appears with the window in its
+`TileWindowID`. In that gap the frame reads unchanged, so a check that trusts
+the flag and then waits for the frame to move concludes that nothing happened
+and reports "macOS did not accept the switch" for a switch that did go through.
+The window number comes from `_AXUIElementGetWindow`; the switch is confirmed
+the moment that number sits in a full-screen Space, and the frame check is only
+the fallback when the Space never shows up. Measured: `placed`, and the next run
+`alreadySatisfied`.
 
 ## Browsers
 

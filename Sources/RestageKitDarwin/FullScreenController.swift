@@ -11,7 +11,7 @@ enum FullScreenController {
 
     static func enter(_ window: AXWindow) async -> PlacementResult {
         let before = window.currentFrame
-        if window.isFullScreen {
+        if isFullScreen(window) {
             return .ok(actual: before ?? .zero, attempts: 0, elapsed: .zero, warnings: [])
         }
 
@@ -51,7 +51,7 @@ enum FullScreenController {
 
     @discardableResult
     static func exit(_ window: AXWindow) async -> Bool {
-        guard window.isFullScreen else { return true }
+        guard isFullScreen(window) else { return true }
         let before = window.currentFrame
 
         await raiseAndWait(pid: window.pid)
@@ -59,7 +59,7 @@ enum FullScreenController {
         window.setFullScreen(false)
 
         let cleared = await Polling.poll(timeout: transitionTimeout) {
-            window.isFullScreen ? nil : true
+            isFullScreen(window) ? nil : true
         }
         guard cleared == true else { return false }
 
@@ -69,7 +69,14 @@ enum FullScreenController {
             }
         }
         _ = await Polling.settle(timeout: transitionTimeout) { window.currentFrame }
-        return !window.isFullScreen
+        return !isFullScreen(window)
+    }
+
+    static func isFullScreen(_ window: AXWindow) -> Bool {
+        if let number = window.windowNumber, SpaceInventory.isOnFullScreenSpace(window: number) {
+            return true
+        }
+        return window.isFullScreen
     }
 
     private static func raiseAndWait(pid: Int32) async {
@@ -80,6 +87,12 @@ enum FullScreenController {
     }
 
     private static func confirmed(_ window: AXWindow, changedFrom before: CGRect?) async -> Bool {
+        if let number = window.windowNumber {
+            let onSpace = await Polling.poll(timeout: transitionTimeout) {
+                SpaceInventory.isOnFullScreenSpace(window: number) ? true : nil
+            }
+            if onSpace == true { return true }
+        }
         let flagged = await Polling.poll(timeout: transitionTimeout) {
             window.isFullScreen ? true : nil
         }

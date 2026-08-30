@@ -2,6 +2,9 @@ import ApplicationServices
 import CoreGraphics
 import RestageKit
 
+@_silgen_name("_AXUIElementGetWindow")
+private func AXUIElementGetWindow(_ element: AXUIElement, _ identifier: inout CGWindowID) -> AXError
+
 @MainActor
 public struct AXWindow: WindowHandle {
     let element: AXUIElement
@@ -42,6 +45,12 @@ public struct AXWindow: WindowHandle {
     }
 
     public var isStale: Bool { currentFrame == nil }
+
+    var windowNumber: Int? {
+        var identifier: CGWindowID = 0
+        guard AXUIElementGetWindow(element, &identifier) == .success, identifier != 0 else { return nil }
+        return Int(identifier)
+    }
 
     public var isOnActiveSpace: Bool {
         currentFrame != nil

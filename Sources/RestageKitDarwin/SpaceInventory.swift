@@ -71,6 +71,11 @@ enum SpaceInventory {
         return raw
     }
 
+    static func isOnFullScreenSpace(window number: Int) -> Bool {
+        guard let spaces = spaces(ofWindow: number), let map = map() else { return false }
+        return map.isFullScreen(spaces)
+    }
+
     static func currentSpaceIDs() -> Set<Int>? {
         guard let displays = displays() else { return nil }
         return Set(displays.map(\.current))
