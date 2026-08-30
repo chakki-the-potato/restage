@@ -181,6 +181,27 @@ the moment that number sits in a full-screen Space, and the frame check is only
 the fallback when the Space never shows up. Measured: `placed`, and the next run
 `alreadySatisfied`.
 
+**Window titles are readable across every desktop without accessibility.**
+`CGWindowListCopyWindowInfo` returns `kCGWindowName` for windows on other
+Spaces, full screen ones included, as long as the process has Screen Recording
+permission; accessibility only ever sees the current Space. Measured: Cursor
+windows on four full screen Spaces all listed with their titles. That is what
+lets an item say "a window named X already exists somewhere" and leave it be,
+which the AX route could not do for one app split across desktops.
+
+**Cursor opens a new window straight into full screen.** With its last window
+full screen, `open -a Cursor <folder>` produced a window that never appeared on
+the current desktop: within two seconds it sat in a new Space of type 4 with
+its own tile. Accessibility never listed it, so a wait for it timed out at 15 s
+with "Open windows: <the other one>". The fix is to poll the Space read after
+opening the folder and to call it done when the titled window is a tile in a
+full screen Space. Measured: `placed` in 1.9 s, the next run `alreadySatisfied`.
+
+**A folder name is a good enough title.** Cursor titles are "file — folder";
+the folder is the last segment, and the file changes. Saving keeps the last
+segment after " — ", " – " or " - " as the `title`, so a saved workspace still
+matches after the user opens another file.
+
 ## Browsers
 
 **Brave silently ignores the loop form.** Walking windows with `repeat` and

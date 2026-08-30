@@ -90,6 +90,8 @@
 "error.engine.app_not_found" = "There is no app installed named '%@'.";
 "error.engine.app_not_found.suggestion" = " Did you mean: %@";
 "error.engine.ambiguous_app" = "More than one app matches '%1$@': %2$@";
+"error.engine.open_path_missing" = "The folder to open doesn't exist: %@";
+"error.engine.open_path_failed" = "Couldn't open %1$@: %2$@";
 "error.engine.application_not_found" = "That app is not installed: %@";
 "error.engine.launch_failed" = "Couldn't launch %1$@ — %2$@";
 "error.engine.window_timeout" = "No window appeared within %g seconds";
@@ -160,6 +162,7 @@
 
 /* 실행 결과 */
 "outcome.already_satisfied" = "Already where it should be";
+"outcome.opened_path" = "Opened %@";
 "outcome.opened_new_window" = "Opened a new window";
 "outcome.placed_on_other_space" = "It is on another desktop";
 "outcome.tabs_and_placement_satisfied" = "All %d tabs and the window position were already right";
@@ -244,6 +247,7 @@
 /* 공통 */
 "common.next" = "Next";
 "common.add" = "Add";
+"common.choose" = "Choose";
 
 /* 새로 만들기 */
 "new.title" = "New Workspace";
@@ -309,6 +313,9 @@
 "draft.overlap_poor" = "doesn't line up well";
 "draft.placement_help" = "Where this window goes when the workspace runs. It is placed exactly as chosen.";
 "draft.app_name_placeholder" = "App name (for example: Figma)";
+"draft.choose_folder" = "Choose a folder to open in this app";
+"draft.folder_none" = "Folder";
+"draft.clear_folder" = "Forget the folder";
 "draft.choose_app_file" = "Choose an installed app";
 "draft.browser_name_placeholder" = "Browser (Safari, Chrome…)";
 "draft.url_placeholder" = "Address (for example: https://github.com)";

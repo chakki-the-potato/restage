@@ -119,7 +119,7 @@ private func firstPlacement(_ screen: ScreenPlan) -> Placement? {
         return
     }
     #expect(plan.app == AppID("chrome"))
-    #expect(plan.window == .separate)
+    #expect(plan.window == .existing)
     #expect(plan.slot == nil)
     #expect(plan.target == nil)
     #expect(plan.tabs == ["https://example.com/a", "https://example.com/b"])
@@ -198,4 +198,23 @@ private func firstPlacement(_ screen: ScreenPlan) -> Placement? {
     """, singleDisplay)
     #expect(result.screens.count == 2)
     #expect(result.skipped.isEmpty)
+}
+
+@Test func openFolderBecomesTheTitleSelector() throws {
+    let result = try resolve("""
+    workspace: dev
+    screens:
+      - id: main
+        items:
+          - {type: app, app: safari, slot: full, open: ~/work/alpha}
+          - {type: app, app: safari, slot: full, open: ~/work/beta, title: custom}
+    """, singleDisplay)
+    guard case .place(let first) = result.screens[0].items[0],
+          case .place(let second) = result.screens[0].items[1] else {
+        Issue.record("place 항목이 아님")
+        return
+    }
+    #expect(first.selector.titleContains == "alpha")
+    #expect(first.open == "~/work/alpha")
+    #expect(second.selector.titleContains == "custom")
 }

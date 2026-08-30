@@ -23,6 +23,7 @@ final class DraftEditor: ObservableObject {
     @Published var placements: [Int: Placement] = [:]
     @Published var added: [ItemDraft] = []
     @Published var tabs: [Int: [String]] = [:]
+    @Published var folders: [Int: String?] = [:]
     @Published var hideOthers: Bool
 
     private let draft: WorkspaceDraft
@@ -66,6 +67,15 @@ final class DraftEditor: ObservableObject {
         added[offset].kind = .browser(tabs: urls)
     }
 
+    func setFolder(_ path: String?, at index: Int) {
+        folders[index] = .some(path)
+    }
+
+    func setAddedFolder(_ path: String?, at offset: Int) {
+        guard added.indices.contains(offset) else { return }
+        added[offset].open = path
+    }
+
     var result: WorkspaceDraft {
         var slots: [Int: Slot] = [:]
         var fullscreen: [Int: Bool] = [:]
@@ -82,7 +92,7 @@ final class DraftEditor: ObservableObject {
         }
         var result = DraftSelection.apply(
             excluding: excluded, slots: slots, fullscreen: fullscreen, tabs: tabs,
-            added: added, to: draft)
+            folders: folders, added: added, to: draft)
         result.hideOthers = hideOthers
         return result
     }
@@ -116,6 +126,7 @@ struct DraftEditorView: View {
         let sourceFrame: CGRect?
         let isBrowser: Bool
         let tabs: [String]
+        let open: String?
         let placement: Placement
         let isUncertain: Bool
         let overlap: Double?
@@ -196,14 +207,12 @@ struct DraftEditorView: View {
 
             VStack(alignment: .leading, spacing: 1) {
                 nameLabel(row)
-                if row.isBrowser || row.isOnOtherSpace {
-                    HStack(spacing: 5) {
-                        if row.isBrowser { tabsButton(row) }
-                        if row.isOnOtherSpace {
+                HStack(spacing: 5) {
+                    if row.isBrowser { tabsButton(row) } else { folderButton(row) }
+                    if row.isOnOtherSpace {
                             Text(L10n.string("draft.other_desktop"))
                                 .font(.system(size: 10))
                                 .foregroundStyle(.secondary)
-                        }
                     }
                 }
             }
@@ -259,6 +268,46 @@ struct DraftEditorView: View {
                     get: { editor.tabs[row.id] ?? row.tabs },
                     set: { editor.tabs[row.id] = $0 }))
             }
+    }
+
+    private func folderButton(_ row: Row) -> some View {
+        let current = editor.folders[row.id] ?? row.open
+        return folderLabel(current) { path in editor.setFolder(path, at: row.id) }
+    }
+
+    private func addedFolderButton(_ offset: Int, _ item: ItemDraft) -> some View {
+        folderLabel(item.open) { path in editor.setAddedFolder(path, at: offset) }
+    }
+
+    private func folderLabel(_ current: String?, set: @escaping (String?) -> Void) -> some View {
+        HStack(spacing: 3) {
+            Button {
+                if let chosen = FolderChooser.choose(startingAt: current) { set(chosen) }
+            } label: {
+                HStack(spacing: 3) {
+                    Image(systemName: "folder")
+                        .font(.system(size: 9))
+                    Text(FolderChooser.label(current))
+                        .font(.system(size: 10))
+                        .lineLimit(1)
+                }
+                .foregroundStyle(current == nil ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help(current ?? L10n.string("draft.choose_folder"))
+            if current != nil {
+                Button {
+                    set(nil)
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help(L10n.string("draft.clear_folder"))
+            }
+        }
     }
 
     private func addedTabsButton(_ offset: Int) -> some View {
@@ -318,7 +367,7 @@ struct DraftEditorView: View {
                 .frame(width: 16)
             Text(item.app)
                 .font(.system(size: 12))
-            if item.isBrowser { addedTabsButton(offset) }
+            if item.isBrowser { addedTabsButton(offset) } else { addedFolderButton(offset, item) }
             Spacer(minLength: 0)
             Text(item.fullscreen
                 ? L10n.string("placement.fullscreen")
@@ -530,6 +579,7 @@ extension DraftEditorView {
                 sourceFrame: entry.item.sourceFrame,
                 isBrowser: entry.item.isBrowser,
                 tabs: entry.item.tabs,
+                open: entry.item.open,
                 placement: placement(of: entry.item),
                 isUncertain: !entry.item.isConfident,
                 overlap: entry.item.overlap,

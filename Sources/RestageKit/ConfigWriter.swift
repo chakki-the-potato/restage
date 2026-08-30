@@ -29,6 +29,7 @@ public enum ConfigWriter {
             var fields = ["type: app", "app: \(scalar(item.app))"]
             if let slot = item.slot { fields.append("slot: \(slot.rawValue)") }
             if let title { fields.append("title: \(scalar(title))") }
+            if let open = item.open { fields.append("open: \(scalar(open))") }
             if item.fullscreen { fields.append("fullscreen: true") }
             return ["      - {\(fields.joined(separator: ", "))}"]
 

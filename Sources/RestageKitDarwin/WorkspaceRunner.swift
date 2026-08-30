@@ -134,6 +134,45 @@ public struct WorkspaceRunner {
                 expected: placement.target, detail: L10n.string("outcome.already_satisfied"))
         }
 
+        var opened = false
+        if let wanted = placement.selector.titleContains {
+            let wantsFullScreen = screen.mode == .fullscreen || placement.fullscreen
+            switch TitledWindowLocator.check(
+                pid: handle.pid, titleContains: wanted, fullscreen: wantsFullScreen,
+                target: placement.target)
+            {
+            case .satisfied:
+                return ItemOutcome(
+                    screenID: screen.id, app: placement.app, status: .alreadySatisfied,
+                    expected: placement.target, detail: L10n.string("outcome.already_satisfied"))
+            case .absent:
+                guard let path = placement.open else { break }
+                do {
+                    try await ProjectOpener.open(path, in: placement.app)
+                    opened = true
+                } catch {
+                    return ItemOutcome(
+                        screenID: screen.id, app: placement.app, status: .failed,
+                        expected: placement.target, detail: String(describing: error))
+                }
+                let appeared = await Polling.poll(timeout: Self.windowTimeout) {
+                    let verdict = TitledWindowLocator.check(
+                        pid: handle.pid, titleContains: wanted, fullscreen: wantsFullScreen,
+                        target: placement.target)
+                    return verdict == .absent ? nil : verdict
+                }
+                if appeared == .satisfied {
+                    return ItemOutcome(
+                        screenID: screen.id, app: placement.app, status: .placed,
+                        expected: placement.target,
+                        detail: L10n.string(
+                            "outcome.opened_path", (path as NSString).lastPathComponent))
+                }
+            case .present:
+                break
+            }
+        }
+
         let onOtherSpace = isOnlyElsewhere(pid: handle.pid)
 
         if placement.selector.titleContains == nil,
@@ -157,6 +196,7 @@ public struct WorkspaceRunner {
         }
 
         if placement.selector.titleContains != nil, screen.mode != .fullscreen,
+           !placement.fullscreen,
            let frame = window.currentFrame, CurrentState.matches(frame, placement.target) {
             return ItemOutcome(
                 screenID: screen.id, app: placement.app, status: .alreadySatisfied,
@@ -168,20 +208,25 @@ public struct WorkspaceRunner {
         guard wantsFullScreen, result.isPass else {
             return noting(
                 outcome(from: result, placement: placement, screen: screen),
-                window: window, onOtherSpace: onOtherSpace)
+                window: window, onOtherSpace: onOtherSpace, openedPath: opened ? placement.open : nil)
         }
 
         let fullScreenResult = await engine.fullscreen(window)
         return noting(
             outcome(from: fullScreenResult, placement: placement, screen: screen),
-            window: window, onOtherSpace: onOtherSpace)
+            window: window, onOtherSpace: onOtherSpace, openedPath: opened ? placement.open : nil)
     }
 
     private func noting(
-        _ outcome: ItemOutcome, window: WindowHandle, onOtherSpace: Bool
+        _ outcome: ItemOutcome, window: WindowHandle, onOtherSpace: Bool, openedPath: String? = nil
     ) -> ItemOutcome {
         var result = outcome
-        if window.wasOpened { result = result.noting(L10n.string("outcome.opened_new_window")) }
+        if let openedPath {
+            result = result.noting(
+                L10n.string("outcome.opened_path", (openedPath as NSString).lastPathComponent))
+        } else if window.wasOpened {
+            result = result.noting(L10n.string("outcome.opened_new_window"))
+        }
         guard onOtherSpace, result.status.isSuccess else { return result }
         return result.noting(L10n.string("outcome.placed_on_other_space"))
     }
@@ -238,7 +283,8 @@ public struct WorkspaceRunner {
 
         let tabs: TabController.Result
         do {
-            tabs = try await TabController.apply(plan, dialect: dialect)
+            tabs = try await TabController.apply(
+                plan.resolvingWindowMode(wasLaunched: handle.wasLaunched), dialect: dialect)
         } catch {
             return ItemOutcome(
                 screenID: screen.id, app: plan.app, status: .failed,

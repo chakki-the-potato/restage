@@ -4,6 +4,8 @@ public enum EngineError: Error, CustomStringConvertible {
     case ambiguousApp(name: String, candidates: [String])
     case applicationNotFound(bundleID: String)
     case launchFailed(bundleID: String, underlying: String)
+    case openPathMissing(path: String)
+    case openPathFailed(path: String, underlying: String)
     case windowTimeout(pid: Int32, seconds: Double)
     case windowOnOtherSpace(pid: Int32, windowCount: Int)
     case windowOffDisplay(pid: Int32, windowCount: Int)
@@ -31,6 +33,10 @@ public enum EngineError: Error, CustomStringConvertible {
             return L10n.string("error.engine.application_not_found", bundleID)
         case .launchFailed(let bundleID, let underlying):
             return L10n.string("error.engine.launch_failed", bundleID, underlying)
+        case .openPathMissing(let path):
+            return L10n.string("error.engine.open_path_missing", path)
+        case .openPathFailed(let path, let underlying):
+            return L10n.string("error.engine.open_path_failed", path, underlying)
         case .windowTimeout(let pid, let seconds):
             return L10n.string("error.engine.window_timeout", seconds)
         case .noWindowMatchingTitle(_, let wanted, let available):

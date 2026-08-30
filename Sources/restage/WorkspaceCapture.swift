@@ -45,7 +45,7 @@ enum WorkspaceCapture {
             let match = SlotClassifier.classify(frame: window.frame, in: display)
             let item = draft(
                 for: window, slot: match?.slot, overlap: match?.overlap,
-                title: needsTitle.contains(position) ? window.title : nil,
+                title: needsTitle.contains(position) ? WindowIdentity.stableTitle(window.title) : nil,
                 tabsByApp: &tabsByApp, withoutTabs: &withoutTabs, withoutURLs: &withoutURLs)
             itemsByScreen[key]?.append(item)
         }

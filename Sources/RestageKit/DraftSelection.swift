@@ -48,6 +48,7 @@ public enum DraftSelection {
     public static func apply(
         excluding excluded: Set<Int>, slots: [Int: Slot] = [:],
         fullscreen: [Int: Bool] = [:], tabs: [Int: [String]] = [:],
+        folders: [Int: String?] = [:],
         added: [ItemDraft] = [], to draft: WorkspaceDraft
     ) -> WorkspaceDraft {
         var index = 0
@@ -69,6 +70,9 @@ public enum DraftSelection {
                 }
                 if let urls = tabs[index], updated.isBrowser {
                     updated.kind = .browser(tabs: urls)
+                }
+                if let folder = folders[index], !updated.isBrowser {
+                    updated.open = folder
                 }
                 kept.append(updated)
             }

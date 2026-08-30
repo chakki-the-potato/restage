@@ -103,12 +103,19 @@ public struct AppItem: Sendable, Equatable {
     public let app: AppID
     public let slot: Slot
     public let title: String?
+    public let open: String?
     public let fullscreen: Bool
+
+    public var windowTitleHint: String? {
+        if let title, !title.isEmpty { return title }
+        return open.map { ($0 as NSString).lastPathComponent }
+    }
 }
 
 public enum BrowserWindowMode: String, Decodable, Sendable {
     case separate
     case shared
+    case existing
 }
 
 public struct BrowserItem: Sendable, Equatable {
@@ -121,7 +128,7 @@ public struct BrowserItem: Sendable, Equatable {
 
 extension ItemConfig: Decodable {
     private enum Keys: String, CodingKey {
-        case type, app, slot, tabs, window, title, fullscreen
+        case type, app, slot, tabs, window, title, open, fullscreen
     }
 
     public init(from decoder: Decoder) throws {
@@ -133,12 +140,13 @@ extension ItemConfig: Decodable {
         case "app":
             let slot = try container.decodeIfPresent(Slot.self, forKey: .slot) ?? .full
             let title = try container.decodeIfPresent(String.self, forKey: .title)
+            let open = try container.decodeIfPresent(String.self, forKey: .open)
             let fullscreen = try container.decodeIfPresent(Bool.self, forKey: .fullscreen) ?? false
-            self = .app(AppItem(app: app, slot: slot, title: title, fullscreen: fullscreen))
+            self = .app(AppItem(app: app, slot: slot, title: title, open: open, fullscreen: fullscreen))
         case "browser":
             let tabs = try container.decodeIfPresent([String].self, forKey: .tabs) ?? []
             let window = try container.decodeIfPresent(
-                BrowserWindowMode.self, forKey: .window) ?? .separate
+                BrowserWindowMode.self, forKey: .window) ?? .existing
             let slot = try container.decodeIfPresent(Slot.self, forKey: .slot)
             let fullscreen = try container.decodeIfPresent(Bool.self, forKey: .fullscreen) ?? false
             self = .browser(

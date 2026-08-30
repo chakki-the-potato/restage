@@ -40,17 +40,20 @@ public struct Placement: Sendable, Equatable {
     public let slot: Slot
     public let target: CGRect
     public let selector: WindowSelector
+    public let open: String?
     public let fullscreen: Bool
 
     public init(
         app: AppID, slot: Slot, target: CGRect,
         selector: WindowSelector = .mostRecentlyActive,
+        open: String? = nil,
         fullscreen: Bool = false
     ) {
         self.app = app
         self.slot = slot
         self.target = target
         self.selector = selector
+        self.open = open
         self.fullscreen = fullscreen
     }
 }
@@ -83,6 +86,15 @@ public struct TabPlan: Sendable, Equatable {
         self.target = target
         self.tabs = tabs
         self.fullscreen = fullscreen
+    }
+}
+
+extension TabPlan {
+    public func resolvingWindowMode(wasLaunched: Bool) -> TabPlan {
+        guard window == .existing else { return self }
+        return TabPlan(
+            app: app, window: wasLaunched ? .separate : .shared, slot: slot, target: target,
+            tabs: tabs, fullscreen: fullscreen)
     }
 }
 

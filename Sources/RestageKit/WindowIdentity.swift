@@ -15,6 +15,18 @@ public enum WindowIdentity {
         public let byOrderByApp: [String: Int]
     }
 
+    private static let titleSeparators = [" — ", " – ", " - "]
+
+    public static func stableTitle(_ title: String) -> String {
+        for separator in titleSeparators {
+            if let range = title.range(of: separator, options: .backwards) {
+                let tail = title[range.upperBound...].trimmingCharacters(in: .whitespaces)
+                if !tail.isEmpty { return tail }
+            }
+        }
+        return title
+    }
+
     public static func select(_ candidates: [Candidate]) -> Selection {
         var indicesByApp: [String: [Int]] = [:]
         for (index, candidate) in candidates.enumerated() {

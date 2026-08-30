@@ -17,7 +17,7 @@ public enum DraftFromConfig {
         case .app(let app):
             return ItemDraft(
                 app: app.app.rawValue, slot: app.slot, kind: .app(title: app.title),
-                fullscreen: app.fullscreen)
+                fullscreen: app.fullscreen, open: app.open)
         case .browser(let browser):
             return ItemDraft(
                 app: browser.app.rawValue, slot: browser.slot,

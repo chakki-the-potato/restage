@@ -142,7 +142,7 @@ screens:
     items:
       - type: browser
         app: safari
-        window: separate  # separate | shared. 기본값 separate
+        window: existing  # existing | separate | shared. 기본값 existing
         slot: full        # 선택. 없으면 창 크기를 건드리지 않는다
         tabs:
           - https://example.com
@@ -192,6 +192,23 @@ items:
   - {type: app, app: safari, slot: left-half,  title: 시작 페이지}
   - {type: app, app: safari, slot: right-half, title: 작업}
 ```
+
+**창마다 프로젝트 하나** — `open`에 앱으로 열 폴더를 적으면 폴더 이름이 찾을 제목이 된다.
+그 이름이 붙은 창이 어느 데스크탑에든, 전체화면이든 아니든 이미 있으면 그대로 쓰고, 없으면
+폴더를 열어 새 창을 배치한다. 워크스페이스를 두 번 열어도 창이 하나 더 생기지 않는다.
+Cursor 같은 편집기는 마지막 창이 전체화면이면 새 창도 바로 전체화면으로 여는데, 그 경우도
+알아보고 완료로 친다. 다른 데스크탑의 창 제목을 읽으려면 restage에 화면 기록 권한이 필요하다.
+없으면 폴더는 열리지만 다른 데스크탑에 이미 있는 창은 알아보지 못한다.
+
+```yaml
+items:
+  - {type: app, app: Cursor, open: ~/code/api,  fullscreen: true}
+  - {type: app, app: Cursor, open: ~/code/web,  fullscreen: true}
+```
+
+**브라우저 창** — 기본값 `window: existing`은 브라우저가 이미 떠 있었으면 앞 창에 탭을
+추가하고, restage가 브라우저를 새로 띄운 경우에만 새 창을 연다. `separate`는 항목마다 전용
+창을 주되 첫 탭이 같은 창이 있으면 재사용하고, `shared`는 항상 앞 창을 쓴다.
 
 **앱 이름** — 설치된 앱이면 무엇이든 되고, Finder에 보이는 이름을 그대로 적는다. 대소문자를
 가리지 않고 짧은 이름도 알아듣는다. `chrome`은 Google Chrome을, `edge`는 Microsoft Edge를

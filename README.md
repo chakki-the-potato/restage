@@ -148,7 +148,7 @@ screens:
     items:
       - type: browser
         app: safari
-        window: separate  # separate | shared. defaults to separate
+        window: existing  # existing | separate | shared. defaults to existing
         slot: full        # optional. without it the window size is left alone
         tabs:
           - https://example.com
@@ -206,6 +206,27 @@ items:
   - {type: app, app: safari, slot: left-half,  title: Start Page}
   - {type: app, app: safari, slot: right-half, title: Work}
 ```
+
+**A project per window** — `open` names a folder for the app to open, and the
+folder's name doubles as the title to look for. If a window with that name
+already exists on any desktop, full screen or not, it is used as it is; if not,
+the folder is opened and the new window placed. Running the workspace twice
+never opens a second copy. Editors like Cursor open a new window straight into
+full screen when the last one was full screen; that is detected and counts as
+done. Reading window titles across desktops needs Screen Recording permission
+for restage; without it the folder is still opened, but an existing window on
+another desktop is not recognised.
+
+```yaml
+items:
+  - {type: app, app: Cursor, open: ~/code/api,  fullscreen: true}
+  - {type: app, app: Cursor, open: ~/code/web,  fullscreen: true}
+```
+
+**Browser windows** — `window: existing`, the default, adds the tabs to the
+front window when the browser was already running, and opens a fresh window
+when restage had to launch it. `separate` always gives the item a window of its
+own, reusing one whose first tab matches; `shared` always uses the front window.
 
 **App names** — any installed app, written as Finder shows it. Case doesn't
 matter and short names are understood: `chrome` means Google Chrome, `edge`

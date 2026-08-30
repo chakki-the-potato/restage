@@ -197,3 +197,19 @@ private func roundTrip(_ draft: WorkspaceDraft) throws -> WorkspaceConfig {
     #expect(safari.fullscreen)
     #expect(!chrome.fullscreen)
 }
+
+@Test func openFolderSurvivesRoundTrip() throws {
+    var item = ItemDraft.app("Cursor", slot: .full, fullscreen: true)
+    item.open = "~/Desktop/project one"
+    let draft = WorkspaceDraft(
+        name: "dev",
+        screens: [ScreenDraft(id: "main", display: .builtin, items: [item])])
+
+    let config = try roundTrip(draft)
+    guard case .app(let parsed) = config.screens[0].items[0] else {
+        Issue.record("app 항목이 아닙니다")
+        return
+    }
+    #expect(parsed.open == "~/Desktop/project one")
+    #expect(parsed.windowTitleHint == "project one")
+}

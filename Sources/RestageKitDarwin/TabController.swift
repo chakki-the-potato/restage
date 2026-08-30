@@ -24,7 +24,7 @@ enum TabController {
         switch plan.window {
         case .separate:
             windowID = try await resolveDedicatedWindow(firstURL: first, dialect: dialect)
-        case .shared:
+        case .shared, .existing:
             windowID = try resolveFrontWindow(firstURL: first, dialect: dialect)
         }
 

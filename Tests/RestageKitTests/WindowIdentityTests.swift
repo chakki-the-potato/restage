@@ -65,3 +65,10 @@ private func candidates(_ pairs: [(String, String)]) -> [WindowIdentity.Candidat
     #expect(result.kept.isEmpty)
     #expect(result.byOrderByApp.isEmpty)
 }
+
+@Test func stableTitleKeepsTheTrailingProjectName() {
+    #expect(WindowIdentity.stableTitle("main.swift — restage") == "restage")
+    #expect(WindowIdentity.stableTitle("a — b — c") == "c")
+    #expect(WindowIdentity.stableTitle("Untitled") == "Untitled")
+    #expect(WindowIdentity.stableTitle("ends with — ") == "ends with — ")
+}

@@ -37,6 +37,7 @@ public struct ItemDraft: Sendable, Equatable {
     }
 
     public var fullscreen = false
+    public var open: String?
 
     public var app: String
     public var slot: Slot?
@@ -47,7 +48,7 @@ public struct ItemDraft: Sendable, Equatable {
 
     public init(
         app: String, slot: Slot?, kind: Kind, overlap: Double? = nil,
-        wasOnCurrentSpace: Bool = true, fullscreen: Bool = false
+        wasOnCurrentSpace: Bool = true, fullscreen: Bool = false, open: String? = nil
     ) {
         self.app = app
         self.slot = slot
@@ -55,6 +56,7 @@ public struct ItemDraft: Sendable, Equatable {
         self.overlap = overlap
         self.wasOnCurrentSpace = wasOnCurrentSpace
         self.fullscreen = fullscreen
+        self.open = open
     }
 
     public var isConfident: Bool {
@@ -97,7 +99,7 @@ public struct ItemDraft: Sendable, Equatable {
 
     public var hasIdentity: Bool {
         switch kind {
-        case .app(let title): return !(title ?? "").isEmpty
+        case .app(let title): return !(title ?? "").isEmpty || !(open ?? "").isEmpty
         case .browser(let tabs): return !tabs.isEmpty
         }
     }
