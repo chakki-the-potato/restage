@@ -16,6 +16,8 @@ public enum WindowWaiter {
         var fixedSizeCandidate: AXWindow?
         var fixedSizeSeenAt: ContinuousClock.Instant?
         var seenTitles: [String] = []
+        var exhaustedSeenAt: ContinuousClock.Instant?
+        var taken = 0
         var activated = false
         let clock = ContinuousClock()
         let activationDeadline = clock.now.advanced(by: activationGrace)
@@ -25,7 +27,8 @@ public enum WindowWaiter {
                 let all = try AXWindow.windows(ofPID: pid)
                 let titles = all.filter(isRealWindow).compactMap { $0.title }
                 if !titles.isEmpty { seenTitles = titles }
-                let windows = matching(all, selector).filter { !(claims?.contains($0) ?? false) }
+                let matched = matching(all, selector)
+                let windows = matched.filter { !(claims?.contains($0) ?? false) }
                 if let window = windows.first(where: isPlaceable) {
                     claims?.claim(window)
                     return window
@@ -42,9 +45,22 @@ public enum WindowWaiter {
                         return candidate
                     }
                 }
+
+                taken = windows.isEmpty ? matched.filter(isRealWindow).count : 0
             } catch {
                 lastError = error
                 return nil
+            }
+
+            if claims != nil, taken > 0, clock.now >= activationDeadline,
+               WindowInventory.onScreenWindowCount(pid: pid) > 0 {
+                let seenAt = exhaustedSeenAt ?? clock.now
+                exhaustedSeenAt = seenAt
+                if clock.now >= seenAt.advanced(by: layoutSettleTimeout) {
+                    throw EngineError.windowsExhausted(pid: pid, have: taken)
+                }
+            } else {
+                exhaustedSeenAt = nil
             }
 
             if !activated, clock.now >= activationDeadline {

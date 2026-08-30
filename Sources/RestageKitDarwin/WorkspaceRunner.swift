@@ -74,8 +74,8 @@ public struct WorkspaceRunner {
 
         var done = 0
         let tasks = appOrder.map { app -> Task<[(Int, ItemOutcome)], Never> in
-            let positions = positionsByApp[app, default: []]
-                .sorted { screen.items[$0].hasTitle && !screen.items[$1].hasTitle }
+            let positions = PlacementOrder.sorted(
+                positionsByApp[app, default: []], in: screen.items)
             let handle = handles[app]!
             return Task { @MainActor in
                 var placed: [(Int, ItemOutcome)] = []
@@ -260,6 +260,7 @@ public struct WorkspaceRunner {
 
     private func status(for error: Error, pid: Int32) -> OutcomeStatus {
         if case EngineError.noWindowMatchingTitle = error { return .failed }
+        if case EngineError.windowsExhausted = error { return .failed }
         return CurrentState.windowCount(pid: pid) > 0 ? .unreachable : .failed
     }
 

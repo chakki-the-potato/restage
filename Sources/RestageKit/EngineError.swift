@@ -8,6 +8,7 @@ public enum EngineError: Error, CustomStringConvertible {
     case windowOnOtherSpace(pid: Int32, windowCount: Int)
     case windowOffDisplay(pid: Int32, windowCount: Int)
     case noWindowMatchingTitle(pid: Int32, wanted: String, available: [String])
+    case windowsExhausted(pid: Int32, have: Int)
     case axDisabled
     case browserWithoutTabControl(name: String)
     case notABrowser(name: String)
@@ -41,6 +42,8 @@ public enum EngineError: Error, CustomStringConvertible {
             return L10n.string("error.engine.window_on_other_space", count)
         case .windowOffDisplay(_, let count):
             return L10n.string("error.engine.window_off_display", count)
+        case .windowsExhausted(_, let have):
+            return L10n.string("error.engine.windows_exhausted", have)
         case .axDisabled:
             return L10n.string("error.engine.ax_disabled")
         case .browserWithoutTabControl(let name):
