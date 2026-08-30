@@ -11,10 +11,14 @@ enum NewWindowOpener {
     private static let children = "AXChildren"
     private static let cmdChar = "AXMenuItemCmdChar"
     private static let cmdModifiers = "AXMenuItemCmdModifiers"
+    private static let enabled = "AXEnabled"
     private static let newWindowKey = "N"
     private static let commandOnly = 0
 
-    static func isNewWindowItem(cmdChar: String?, cmdModifiers: Int?) -> Bool {
+    static func isNewWindowItem(
+        cmdChar: String?, cmdModifiers: Int?, isEnabled: Bool?
+    ) -> Bool {
+        guard isEnabled != false else { return false }
         guard let cmdChar, cmdChar.uppercased() == newWindowKey else { return false }
         return cmdModifiers == commandOnly
     }
@@ -68,7 +72,8 @@ enum NewWindowOpener {
 
     private static func matches(_ item: AXUIElement) -> Bool {
         isNewWindowItem(
-            cmdChar: string(item, cmdChar), cmdModifiers: integer(item, cmdModifiers))
+            cmdChar: string(item, cmdChar), cmdModifiers: integer(item, cmdModifiers),
+            isEnabled: bool(item, enabled))
     }
 
     private static func list(_ element: AXUIElement, _ attribute: String) -> [AXUIElement] {
@@ -92,6 +97,13 @@ enum NewWindowOpener {
         guard AXUIElementCopyAttributeValue(
             element, attribute as CFString, &raw) == .success else { return nil }
         return raw as? String
+    }
+
+    private static func bool(_ element: AXUIElement, _ attribute: String) -> Bool? {
+        var raw: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(
+            element, attribute as CFString, &raw) == .success else { return nil }
+        return raw as? Bool
     }
 
     private static func integer(_ element: AXUIElement, _ attribute: String) -> Int? {
