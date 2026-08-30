@@ -31,9 +31,7 @@ public struct WorkspaceRunner {
                 screenID: skipped.id, app: nil, status: .skipped, detail: skipped.reason))
         }
 
-        if let home, WindowInventory.onScreenWindowCount(pid: home) == 0 {
-            HomeSpace.returnTo(home)
-        }
+        home.restore()
         focusFirstAnchor(resolved)
         return outcomes
     }
@@ -308,7 +306,7 @@ public struct WorkspaceRunner {
               let app = AppLauncher.runningApplication(bundleID: bundleID) else { return }
 
         let pid = app.processIdentifier
-        guard WindowInventory.onScreenWindowCount(pid: pid) > 0 else { return }
+        guard WindowInventory.hereCount(pid: pid) > 0 else { return }
 
         AXWindow.setApplicationFrontmost(pid: pid)
         (try? AXWindow.windows(ofPID: pid))?.first { $0.currentFrame != nil }?.raise()

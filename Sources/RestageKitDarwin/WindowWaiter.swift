@@ -57,7 +57,7 @@ public enum WindowWaiter {
             }
 
             if claims != nil, taken > 0, clock.now >= activationDeadline,
-               WindowInventory.onScreenWindowCount(pid: pid) > 0 {
+               WindowInventory.hereCount(pid: pid) > 0 {
                 let seenAt = exhaustedSeenAt ?? clock.now
                 exhaustedSeenAt = seenAt
                 if clock.now >= seenAt.advanced(by: layoutSettleTimeout) {
@@ -78,17 +78,7 @@ public enum WindowWaiter {
 
             if !activated, clock.now >= activationDeadline {
                 activated = true
-                let onScreen = WindowInventory.onScreenWindowCount(pid: pid)
-                let anywhere = WindowInventory.windowCount(pid: pid)
-                if shouldActivate(onScreen: onScreen, anywhere: anywhere)
-                    || mayFollowOtherSpaces {
-                    AXWindow.setApplicationFrontmost(pid: pid)
-                } else if WindowInventory.offDisplayWindowCount(pid: pid) == anywhere {
-                    throw EngineError.windowOffDisplay(pid: pid, windowCount: anywhere)
-                } else {
-                    throw EngineError.windowOnOtherSpace(
-                        pid: pid, windowCount: anywhere - onScreen)
-                }
+                try reach(pid: pid, mayFollowOtherSpaces: mayFollowOtherSpaces)
             }
             return nil
         }
@@ -105,6 +95,18 @@ public enum WindowWaiter {
                 pid: pid, wanted: wanted, available: seenTitles)
         }
 
+        if let census = WindowInventory.census(pid: pid) {
+            if census.here.isEmpty, !census.elsewhere.isEmpty {
+                throw EngineError.windowOnOtherSpace(
+                    pid: pid, windowCount: census.elsewhere.count)
+            }
+            if census.here.isEmpty, census.elsewhere.isEmpty, !census.offDisplay.isEmpty {
+                throw EngineError.windowOffDisplay(
+                    pid: pid, windowCount: census.offDisplay.count)
+            }
+            throw EngineError.windowTimeout(pid: pid, seconds: seconds(of: timeout))
+        }
+
         let existing = WindowInventory.windowCount(pid: pid)
         let offDisplay = WindowInventory.offDisplayWindowCount(pid: pid)
         if existing > 0, offDisplay == existing {
@@ -114,10 +116,44 @@ public enum WindowWaiter {
         if elsewhere > 0 {
             throw EngineError.windowOnOtherSpace(pid: pid, windowCount: elsewhere)
         }
-        if existing > 0 {
-            throw EngineError.windowTimeout(pid: pid, seconds: seconds(of: timeout))
-        }
         throw EngineError.windowTimeout(pid: pid, seconds: seconds(of: timeout))
+    }
+
+    private static func reach(pid: Int32, mayFollowOtherSpaces: Bool) throws {
+        guard let census = WindowInventory.census(pid: pid) else {
+            let onScreen = WindowInventory.onScreenWindowCount(pid: pid)
+            let anywhere = WindowInventory.windowCount(pid: pid)
+            if shouldActivate(onScreen: onScreen, anywhere: anywhere) || mayFollowOtherSpaces {
+                WindowInventory.unhide(pid: pid)
+                AXWindow.setApplicationFrontmost(pid: pid)
+                return
+            }
+            if WindowInventory.offDisplayWindowCount(pid: pid) == anywhere {
+                throw EngineError.windowOffDisplay(pid: pid, windowCount: anywhere)
+            }
+            throw EngineError.windowOnOtherSpace(pid: pid, windowCount: anywhere - onScreen)
+        }
+
+        if shouldActivate(onScreen: census.here.count, anywhere: census.real) {
+            WindowInventory.unhide(pid: pid)
+            AXWindow.setApplicationFrontmost(pid: pid)
+            return
+        }
+        guard !census.elsewhere.isEmpty else {
+            throw EngineError.windowOffDisplay(pid: pid, windowCount: census.offDisplay.count)
+        }
+        guard mayFollowOtherSpaces, follow(pid: pid) else {
+            throw EngineError.windowOnOtherSpace(pid: pid, windowCount: census.elsewhere.count)
+        }
+        WindowInventory.unhide(pid: pid)
+        AXWindow.setApplicationFrontmost(pid: pid)
+    }
+
+    @discardableResult
+    static func follow(pid: Int32) -> Bool {
+        guard let space = WindowInventory.spaceOfWindowElsewhere(pid: pid),
+              let display = SpaceInventory.display(of: space) else { return false }
+        return SpaceInventory.show(space: space, on: display)
     }
 
     public static func shouldActivate(onScreen: Int, anywhere: Int) -> Bool {

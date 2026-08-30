@@ -8,6 +8,36 @@ enum WindowInventory {
         rects(pid: pid, options: [.optionAll, .excludeDesktopElements]).count
     }
 
+    static func census(pid: Int32) -> WindowCensus.Result? {
+        guard let currentSpaces = SpaceInventory.currentSpaceIDs() else { return nil }
+        var windows: [WindowCensus.Window] = []
+        for window in entries(pid: pid, options: [.optionAll, .excludeDesktopElements]) {
+            guard let number = window[kCGWindowNumber as String] as? Int,
+                  let frame = bounds(of: window) else { continue }
+            windows.append(
+                WindowCensus.Window(
+                    number: number, frame: frame,
+                    spaces: SpaceInventory.spaces(ofWindow: number) ?? []))
+        }
+        return WindowCensus.classify(
+            windows, currentSpaces: currentSpaces, displays: displayBounds())
+    }
+
+    static func spaceOfWindowElsewhere(pid: Int32) -> Int? {
+        guard let census = census(pid: pid), let number = census.elsewhere.first else { return nil }
+        return SpaceInventory.spaces(ofWindow: number)?.first
+    }
+
+    static func hereCount(pid: Int32) -> Int {
+        census(pid: pid)?.here.count ?? onScreenWindowCount(pid: pid)
+    }
+
+    static func unhide(pid: Int32) {
+        guard let running = NSRunningApplication(processIdentifier: pid), running.isHidden
+        else { return }
+        running.unhide()
+    }
+
     static func onScreenWindowCount(pid: Int32) -> Int {
         rects(pid: pid, options: [.optionOnScreenOnly, .excludeDesktopElements]).count
     }
@@ -35,11 +65,15 @@ enum WindowInventory {
     }
 
     private static func rects(pid: Int32, options: CGWindowListOption) -> [CGRect] {
+        entries(pid: pid, options: options).compactMap(bounds(of:))
+    }
+
+    private static func entries(
+        pid: Int32, options: CGWindowListOption
+    ) -> [[String: Any]] {
         let list = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] ?? []
-        return list.compactMap { window in
-            guard window[kCGWindowOwnerPID as String] as? Int32 == pid,
-                  isRealWindow(window) else { return nil }
-            return bounds(of: window)
+        return list.filter {
+            $0[kCGWindowOwnerPID as String] as? Int32 == pid && isRealWindow($0)
         }
     }
 
