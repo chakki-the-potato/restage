@@ -8,6 +8,8 @@ public enum WindowWaiter {
 
     static let splashGrace: Duration = .seconds(4)
 
+    static let spaceReturnTimeout: Duration = .seconds(3)
+
     public static func wait(
         pid: Int32, timeout: Duration, selector: WindowSelector = .mostRecentlyActive,
         mayFollowOtherSpaces: Bool = false, claims: WindowClaims? = nil
@@ -149,6 +151,13 @@ public enum WindowWaiter {
         AXWindow.setApplicationFrontmost(pid: pid)
     }
 
+    private static func followBack(_ window: AXWindow) async {
+        guard window.isStale, follow(pid: window.pid) else { return }
+        _ = await Polling.poll(timeout: spaceReturnTimeout) {
+            window.isStale ? nil : true
+        }
+    }
+
     @discardableResult
     static func follow(pid: Int32) -> Bool {
         guard let space = WindowInventory.spaceOfWindowElsewhere(pid: pid),
@@ -169,6 +178,7 @@ public enum WindowWaiter {
         if window.isFullScreen {
             window.setFullScreen(false)
             _ = await Polling.settle(timeout: .seconds(3)) { window.currentFrame }
+            await followBack(window)
         }
         _ = await Polling.settle(timeout: layoutSettleTimeout) { window.currentFrame }
     }
