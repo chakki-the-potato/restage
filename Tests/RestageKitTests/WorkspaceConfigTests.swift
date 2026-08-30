@@ -142,3 +142,21 @@ screens:
     """
     #expect(try WorkspaceConfig.decode(yaml: yaml).hideOthers)
 }
+
+@Test func aBrowserCanAskForFullScreen() throws {
+    let yaml = """
+    workspace: web
+    screens:
+      - id: main
+        items:
+          - {type: browser, app: safari, fullscreen: true}
+          - {type: browser, app: chrome}
+    """
+    let items = try WorkspaceConfig.decode(yaml: yaml).screens[0].items
+    guard case .browser(let safari) = items[0], case .browser(let chrome) = items[1] else {
+        Issue.record("브라우저 항목이 아닙니다")
+        return
+    }
+    #expect(safari.fullscreen)
+    #expect(!chrome.fullscreen)
+}

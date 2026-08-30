@@ -43,7 +43,8 @@ public enum WorkspaceResolver {
                 }
                 return .tabs(TabPlan(
                     app: browser.app, window: browser.window, slot: browser.slot,
-                    target: target, tabs: browser.tabs.map(URLNormalizer.normalize)))
+                    target: target, tabs: browser.tabs.map(URLNormalizer.normalize),
+                    fullscreen: browser.fullscreen))
             }
         }
 

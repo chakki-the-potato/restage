@@ -219,7 +219,8 @@ public struct WorkspaceRunner {
                     detail: L10n.string("outcome.nothing_to_do"))
             }
             return await apply(
-                Placement(app: plan.app, slot: slot, target: target),
+                Placement(
+                    app: plan.app, slot: slot, target: target, fullscreen: plan.fullscreen),
                 handle: handle, screen: screen, follow: follow)
         }
 
@@ -245,7 +246,7 @@ public struct WorkspaceRunner {
         }
 
         guard let target = plan.target, let slot = plan.slot else {
-            return tabOutcome(tabs, plan: plan, screen: screen)
+            return await fullScreenOnly(plan, handle: handle, screen: screen, tabs: tabs)
         }
         return await placeBrowserWindow(
             target, slot: slot, plan: plan, handle: handle, screen: screen, tabs: tabs,
@@ -256,7 +257,8 @@ public struct WorkspaceRunner {
         _ target: CGRect, slot: Slot, plan: TabPlan, handle: ProcessHandle,
         screen: ScreenPlan, tabs: TabController.Result, follow: Bool
     ) async -> ItemOutcome {
-        if tabs.openedCount == 0, CurrentState.isPlaced(pid: handle.pid, target: target) {
+        if tabs.openedCount == 0, isBrowserSatisfied(plan, target: target, handle: handle,
+                                                     screen: screen) {
             return ItemOutcome(
                 screenID: screen.id, app: plan.app, status: .alreadySatisfied,
                 expected: target, detail: L10n.string("outcome.tabs_and_placement_satisfied", plan.tabs.count))
@@ -269,7 +271,10 @@ public struct WorkspaceRunner {
         else {
             return tabOutcome(tabs, plan: plan, screen: screen)
         }
-        let result = await engine.place(window, slot: slot, display: screen.display)
+        var result = await engine.place(window, slot: slot, display: screen.display)
+        if wantsFullScreen(plan, screen: screen), result.isPass {
+            result = await engine.fullscreen(window)
+        }
         let placed = outcome(
             from: result,
             placement: Placement(app: plan.app, slot: slot, target: target),
@@ -279,6 +284,39 @@ public struct WorkspaceRunner {
             screenID: placed.screenID, app: placed.app, status: placed.status,
             expected: placed.expected, actual: placed.actual,
             detail: L10n.string("outcome.tabs_added_with_placement", tabs.openedCount, placed.detail))
+    }
+
+    private func wantsFullScreen(_ plan: TabPlan, screen: ScreenPlan) -> Bool {
+        plan.fullscreen || screen.mode == .fullscreen
+    }
+
+    private func isBrowserSatisfied(
+        _ plan: TabPlan, target: CGRect, handle: ProcessHandle, screen: ScreenPlan
+    ) -> Bool {
+        if wantsFullScreen(plan, screen: screen) {
+            return CurrentState.isFullScreen(pid: handle.pid, on: screen.display)
+        }
+        return CurrentState.isPlaced(pid: handle.pid, target: target)
+    }
+
+    private func fullScreenOnly(
+        _ plan: TabPlan, handle: ProcessHandle, screen: ScreenPlan, tabs: TabController.Result
+    ) async -> ItemOutcome {
+        guard wantsFullScreen(plan, screen: screen) else {
+            return tabOutcome(tabs, plan: plan, screen: screen)
+        }
+        if CurrentState.isFullScreen(pid: handle.pid, on: screen.display) {
+            return tabOutcome(tabs, plan: plan, screen: screen)
+        }
+        guard let window = try? await engine.waitForWindow(
+            handle, selector: .mostRecentlyActive, timeout: Self.windowTimeout,
+            mayFollowOtherSpaces: false, claim: true)
+        else { return tabOutcome(tabs, plan: plan, screen: screen) }
+        let result = await engine.fullscreen(window)
+        return outcome(
+            from: result,
+            placement: Placement(app: plan.app, slot: .full, target: .zero),
+            screen: screen)
     }
 
     private func tabOutcome(

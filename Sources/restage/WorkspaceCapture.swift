@@ -98,7 +98,7 @@ enum WorkspaceCapture {
         if tabs.isEmpty { withoutURLs.append(window.appName) }
         var browser = ItemDraft.browser(
             window.appName, slot: slot, tabs: tabs, overlap: overlap,
-            wasOnCurrentSpace: window.isOnCurrentSpace)
+            wasOnCurrentSpace: window.isOnCurrentSpace, fullscreen: window.isFullScreen)
         browser.sourceFrame = window.frame
         return browser
     }

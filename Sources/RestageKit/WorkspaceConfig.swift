@@ -116,6 +116,7 @@ public struct BrowserItem: Sendable, Equatable {
     public let window: BrowserWindowMode
     public let slot: Slot?
     public let tabs: [String]
+    public let fullscreen: Bool
 }
 
 extension ItemConfig: Decodable {
@@ -139,7 +140,10 @@ extension ItemConfig: Decodable {
             let window = try container.decodeIfPresent(
                 BrowserWindowMode.self, forKey: .window) ?? .separate
             let slot = try container.decodeIfPresent(Slot.self, forKey: .slot)
-            self = .browser(BrowserItem(app: app, window: window, slot: slot, tabs: tabs))
+            let fullscreen = try container.decodeIfPresent(Bool.self, forKey: .fullscreen) ?? false
+            self = .browser(
+                BrowserItem(
+                    app: app, window: window, slot: slot, tabs: tabs, fullscreen: fullscreen))
         default:
             throw ConfigError.unknownItemType(type)
         }

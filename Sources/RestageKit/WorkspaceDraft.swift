@@ -73,11 +73,11 @@ public struct ItemDraft: Sendable, Equatable {
 
     public static func browser(
         _ name: String, slot: Slot?, tabs: [String], overlap: Double? = nil,
-        wasOnCurrentSpace: Bool = true
+        wasOnCurrentSpace: Bool = true, fullscreen: Bool = false
     ) -> ItemDraft {
         ItemDraft(
             app: name, slot: slot, kind: .browser(tabs: tabs), overlap: overlap,
-            wasOnCurrentSpace: wasOnCurrentSpace)
+            wasOnCurrentSpace: wasOnCurrentSpace, fullscreen: fullscreen)
     }
 
     public var titleHint: String? {

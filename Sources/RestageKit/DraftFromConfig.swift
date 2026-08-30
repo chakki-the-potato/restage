@@ -21,7 +21,7 @@ public enum DraftFromConfig {
         case .browser(let browser):
             return ItemDraft(
                 app: browser.app.rawValue, slot: browser.slot,
-                kind: .browser(tabs: browser.tabs))
+                kind: .browser(tabs: browser.tabs), fullscreen: browser.fullscreen)
         }
     }
 }

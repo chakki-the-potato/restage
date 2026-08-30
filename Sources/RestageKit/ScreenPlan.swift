@@ -71,15 +71,18 @@ public struct TabPlan: Sendable, Equatable {
     public let slot: Slot?
     public let target: CGRect?
     public let tabs: [String]
+    public let fullscreen: Bool
 
     public init(
-        app: AppID, window: BrowserWindowMode, slot: Slot?, target: CGRect?, tabs: [String]
+        app: AppID, window: BrowserWindowMode, slot: Slot?, target: CGRect?, tabs: [String],
+        fullscreen: Bool = false
     ) {
         self.app = app
         self.window = window
         self.slot = slot
         self.target = target
         self.tabs = tabs
+        self.fullscreen = fullscreen
     }
 }
 

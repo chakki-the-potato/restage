@@ -106,3 +106,16 @@ private let yaml = """
     #expect(draft.hideOthers)
     #expect(ConfigWriter.yaml(for: draft).contains("hideOthers: true"))
 }
+
+@Test func draftKeepsAFullScreenBrowser() throws {
+    let yaml = """
+    workspace: web
+    screens:
+      - id: main
+        items:
+          - {type: browser, app: safari, fullscreen: true}
+    """
+    let draft = DraftFromConfig.draft(from: try WorkspaceConfig.decode(yaml: yaml))
+    #expect(draft.screens[0].items[0].fullscreen)
+    #expect(ConfigWriter.yaml(for: draft).contains("fullscreen: true"))
+}

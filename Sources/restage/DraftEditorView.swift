@@ -357,10 +357,8 @@ struct DraftEditorView: View {
                     ForEach(Slot.allCases, id: \.self) { slot in
                         Text(SlotLabel.text(slot)).tag(Placement.slot(slot))
                     }
-                    if addMode == .app {
-                        Divider()
-                        Text(L10n.string("placement.fullscreen")).tag(Placement.fullscreen)
-                    }
+                    Divider()
+                    Text(L10n.string("placement.fullscreen")).tag(Placement.fullscreen)
                 }
                 .labelsHidden()
                 .frame(width: 120)
@@ -498,7 +496,9 @@ struct DraftEditorView: View {
             }
             let slot: Slot?
             if case .slot(let chosen) = newPlacement { slot = chosen } else { slot = nil }
-            editor.add(.browser(name, slot: slot, tabs: urls))
+            editor.add(
+                .browser(
+                    name, slot: slot, tabs: urls, fullscreen: newPlacement == .fullscreen))
             newURLRows = [""]
         }
         newAppName = ""

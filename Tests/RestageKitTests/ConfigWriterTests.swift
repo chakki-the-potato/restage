@@ -172,3 +172,28 @@ private func roundTrip(_ draft: WorkspaceDraft) throws -> WorkspaceConfig {
     #expect(ConfigWriter.yaml(for: on).contains("\nhideOthers: true\n"))
     #expect(try roundTrip(on).hideOthers)
 }
+
+@Test func aFullScreenBrowserSurvivesTheRoundTrip() throws {
+    let draft = WorkspaceDraft(
+        name: "web",
+        screens: [
+            ScreenDraft(
+                id: "main", display: .builtin,
+                items: [
+                    .browser("Safari", slot: .leftHalf, tabs: ["https://example.com"],
+                             fullscreen: true),
+                    .browser("Google Chrome", slot: .rightHalf, tabs: []),
+                ]),
+        ])
+
+    let yaml = ConfigWriter.yaml(for: draft)
+    #expect(yaml.contains("        fullscreen: true"))
+
+    let items = try roundTrip(draft).screens[0].items
+    guard case .browser(let safari) = items[0], case .browser(let chrome) = items[1] else {
+        Issue.record("브라우저 항목이 아닙니다")
+        return
+    }
+    #expect(safari.fullscreen)
+    #expect(!chrome.fullscreen)
+}

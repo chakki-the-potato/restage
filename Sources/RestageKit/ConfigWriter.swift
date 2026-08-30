@@ -38,6 +38,7 @@ public enum ConfigWriter {
                 "        app: \(scalar(item.app))",
             ]
             if let slot = item.slot { lines.append("        slot: \(slot.rawValue)") }
+            if item.fullscreen { lines.append("        fullscreen: true") }
             if !tabs.isEmpty {
                 lines.append("        tabs:")
                 lines.append(contentsOf: tabs.map { "          - \(scalar($0))" })
