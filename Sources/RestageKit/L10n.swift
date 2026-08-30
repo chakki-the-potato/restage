@@ -51,12 +51,43 @@ public enum L10n {
             } else {
                 defaults.set(newValue.rawValue, forKey: defaultsKey)
             }
+            invalidate()
         }
     }
 
+    private struct Resolved {
+        let language: AppLanguage
+        let selected: Bundle?
+        let english: Bundle?
+    }
+
+    private static let cacheLock = NSLock()
+
+    nonisolated(unsafe) private static var cache: Resolved?
+
+    private static var resolved: Resolved {
+        cacheLock.lock()
+        defer { cacheLock.unlock() }
+        if let cache { return cache }
+        let language = read()
+        let value = Resolved(
+            language: language,
+            selected: lproj(language.rawValue) ?? resources,
+            english: lproj(AppLanguage.english.rawValue))
+        cache = value
+        return value
+    }
+
+    public static func invalidate() {
+        cacheLock.lock()
+        cache = nil
+        cacheLock.unlock()
+    }
+
     public static func string(_ key: String) -> String {
-        let english = Self.english?.localizedString(forKey: key, value: key, table: nil) ?? key
-        guard let selected = Self.selected else { return english }
+        let current = resolved
+        let english = current.english?.localizedString(forKey: key, value: key, table: nil) ?? key
+        guard let selected = current.selected else { return english }
         return selected.localizedString(forKey: key, value: english, table: nil)
     }
 
@@ -68,7 +99,9 @@ public enum L10n {
         Locale(identifier: effective.rawValue)
     }
 
-    public static var effective: AppLanguage {
+    public static var effective: AppLanguage { resolved.language }
+
+    private static func read() -> AppLanguage {
         if language != .system { return language }
         guard let resources else { return .english }
         let preferred = Bundle.preferredLocalizations(
@@ -77,14 +110,6 @@ public enum L10n {
     }
 
     static var resourcesForTesting: Bundle? { resources }
-
-    private static var selected: Bundle? {
-        lproj(effective.rawValue) ?? resources
-    }
-
-    private static var english: Bundle? {
-        lproj(AppLanguage.english.rawValue)
-    }
 
     private static func lproj(_ code: String) -> Bundle? {
         guard let path = resources?.path(forResource: code, ofType: "lproj") else { return nil }

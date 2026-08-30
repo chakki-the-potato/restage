@@ -62,9 +62,11 @@ struct LanguageSelectionTests {
         defer { L10n.language = original }
 
         L10n.language = .english
+        #expect(L10n.effective == .english)
         #expect(L10n.string("panel.retry") == "Retry")
 
         L10n.language = .korean
+        #expect(L10n.effective == .korean)
         #expect(L10n.string("panel.retry") == "다시 시도")
     }
 
