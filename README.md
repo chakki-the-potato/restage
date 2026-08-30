@@ -296,29 +296,19 @@ accessibility cannot see it at all — so there is nothing to clear. restage
 follows the window to its Space first, and when that fails the window has to be
 brought out by hand with `ctrl+cmd+F`.
 
-**Handling windows on another desktop needs one setting.** Left alone they're
-reported as `unreachable`. Moving a window to another desktop works through
-neither the public nor the private API — the window server's private functions
-were called directly to check, and they're silently ignored for other apps'
-windows. That's why tools like yabai ask you to partially disable SIP. The
-measurements are in
-[space-placement-results](docs/superpowers/plans/2026-08-25-space-placement-results.md).
+**Windows on another desktop are reached by sending the view there.** Moving a
+window to another desktop works through neither the public nor the private API —
+the window server's private functions were called directly to check, and they're
+silently ignored for other apps' windows. That's why tools like yabai ask you to
+partially disable SIP. What does work is sending the *view* to the Space the
+window is on. restage does that, places the window, and puts the view back where
+it started. No system setting is needed: none of the public ways of activating an
+app move the view at all, measured one by one in
+[findings](docs/findings.md#spaces).
 
-The way around it is to go to that desktop instead. Turn on System Settings →
-Desktop & Dock → *"When switching to an application, switch to a Space with open
-windows for the application"*. With it on, restage activates the app, follows it
-to that desktop, and places the window. Measured:
-
-```
-0 AX windows before activating  →  set AXFrontmost  →  2 after
-```
-
-The cost is that ordinary app switching also jumps between desktops. It's a
-matter of taste. To undo it:
-
-```bash
-defaults delete com.apple.dock workspaces-auto-swoosh && killall Dock
-```
+Sending the view uses a private window server call. If a macOS update takes it
+away, restage says why it couldn't reach the window and leaves it alone rather
+than guessing.
 
 **Some apps enforce a minimum size.** Xcode won't go under 940 wide, KakaoTalk
 under 640 tall. Those are reported as `constrained`.

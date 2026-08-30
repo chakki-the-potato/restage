@@ -39,40 +39,71 @@ silently ignored for other apps' windows. That is why tools like yabai ask for
 SIP to be partially disabled. Full measurements are in
 [2026-08-25-space-placement-results](superpowers/plans/2026-08-25-space-placement-results.md).
 
-The way around it is to make macOS go to that Space instead. With System
-Settings → Desktop & Dock → "When switching to an application, switch to a Space
-with open windows for the application" turned on:
+**Sending the view to a Space does work.** `CGSManagedDisplaySetCurrentSpace` is
+a different private call from the one that moves windows, and it is not refused.
+It takes a connection, a display identifier and a Space id, all of which
+`CGSCopyManagedDisplaySpaces` hands over. Measured 2026-08-30 with Dictionary's
+only window in a full screen Space of the main display, the view on the desktop:
+
+| what was tried | view moved | AX windows after |
+|---|---|---|
+| `AXFrontmost` | no | 0 |
+| `NSRunningApplication.activate()` | no (returned true) | 0 |
+| `NSWorkspace.openApplication(activates: true)` | no (no error) | 0 |
+| `AXRaise` | nothing to raise | 0 |
+| `CGSManagedDisplaySetCurrentSpace` | **yes** | **2** |
+
+None of the public calls move the view, so restage sends it with the private
+one and puts it back at the end of the run. If the symbol ever goes missing,
+`dlsym` returns nothing and the old behaviour — report the reason and stop — is
+what happens.
+
+**"On another desktop" was mostly wrong.** The count came from subtracting the
+on-screen window count from the total, which counts anything `CGWindowList`
+reports and is not on screen. Most of those belong to no Space at all. Measured
+on an ordinary session, every window the old rule called "another desktop":
 
 ```
-0 AX windows before activating  →  set AXFrontmost  →  2 after
+Google Chrome                spaces=[]  at -283,-1501
+Open and Save Panel Service  spaces=[]  at 0,617
+OpenUsage                    spaces=[]  at 0,617
+UserNotificationCenter       spaces=[]  at 0,617
+loginwindow                  spaces=[]  at 0,617
+메모                          spaces=[]  at 0,617
+자동 완성                     spaces=[]  at 0,822 / 0,880 / 1234,708
+Shottr                       spaces=[1] at 446,310   the current Space, app hidden
 ```
 
-**Activating an app drags the view to its Space.** When an app's windows live on
-another Space, AX sees none of them, and the fallback of activating the app to
-make them appear takes the whole screen to that Space. Measured on a ten-app
-workspace: the view jumped away at 12s and came back at 24s.
+Not one of them was on another desktop. Save panels, autocomplete popups, the
+notification centre and `loginwindow` have no Space, and no amount of switching
+makes them appear. `CGSCopySpacesForWindows` answers the question directly, so
+that is what decides now: no Space or off every display means it is not a window
+to place, the current Space means here, anything else means another Space.
 
-The two cases have to be told apart, and `CGWindowList` does it:
+**Failing fast is most of the speed.** Before the Space read went in, the
+three cases were told apart with `CGWindowList` alone: on screen but invisible
+to AX meant the window was here and the app needed activating (Safari), nothing
+on screen with windows somewhere meant another Space, nothing at all meant the
+app was still starting. Reporting the middle case at once instead of waiting out
+the 15s timeout, and stopping placement retries once a window holds the same
+frame twice, took a ten-app workspace from 50.8s to 2.8s warm and from about 48s
+to 5.7s cold. The rule that replaced it answers the same question from the Space
+list rather than by subtraction.
 
-```
-onScreen > 0, AX empty   the window is here but AX cannot see it   activate (Safari)
-onScreen = 0, total > 0  the windows are on another Space          do not activate
-onScreen = 0, total = 0  the app is still starting                 activate
-```
+**The setting is not what makes following work.** The note that used to stand
+here credited `com.apple.dock workspaces-auto-swoosh`. On the machine where
+following was measured that key was 1 while the one that governs it,
+`AppleSpacesSwitchOnActivate` in `NSGlobalDomain`, was 0. Turning the latter on
+with `defaults write` changed nothing for `AXFrontmost` or `activate` — though
+that was without logging out, so the setting cannot be ruled out entirely.
 
-Failing fast on the middle case, and stopping placement retries once a window
-holds the same frame twice, took the same workspace from 50.8s to 2.8s warm and
-from about 48s to 5.7s cold.
+The ten-app run that gathered eight apps was on a day when the main display had
+three Spaces; the display had one when this was re-measured. What that run
+actually followed was never established, and given the paragraph above some of
+its "other desktop" items were likely the miscount rather than real Spaces.
 
 **Focus needs the AX path.** `NSRunningApplication.activate()` is ignored by
 macOS when the caller is not a GUI app. Only setting `AXFrontmost` works.
-
-**Following does not always work.** With
-`com.apple.dock workspaces-auto-swoosh` on, setting `AXFrontmost` usually takes
-the view to the app's Space. Measured on a ten-app workspace it gathered eight
-apps that had been scattered. It failed for two: one whose window accessibility
-reported as absent even after activating, and one whose windows were in a full
-screen Space. Neither `AXFrontmost` nor AppleScript `activate` moved them.
 
 **Two windows of one app split across desktops cannot both be reached.**
 Activating the app does not switch desktops when it already has a window on the
@@ -86,6 +117,14 @@ q2.
 `AXFullScreen` to false returns the window to the desktop. What cannot be done
 is clearing it from another Space, because accessibility does not see the window
 there at all.
+
+**A window can refuse full screen through accessibility.** TextEdit's document
+window on macOS 26 lists `AXFullScreen` but reports it as not settable, and
+exposes no buttons at all — `AXFullScreenButton` and `AXZoomButton` both answer
+`-25212`, and the window's only action is `AXRaise`. Its menu still carries
+View > Enter Full Screen, but that item's shortcut is Fn+F
+(`AXMenuItemCmdModifiers` 24), not a command combination, so the trick used to
+find ⌘N does not find it.
 
 ## Browsers
 
