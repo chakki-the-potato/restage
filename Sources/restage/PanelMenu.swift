@@ -6,6 +6,7 @@ final class PanelMenu: NSObject, NSMenuDelegate {
         let title: String
         let symbol: String
         var isChecked = false
+        var isEnabled = true
         var isDestructive = false
         var isHeader = false
         var keepsPanelOpen = false
@@ -50,6 +51,7 @@ final class PanelMenu: NSObject, NSMenuDelegate {
         entry.target = self
         entry.representedObject = Payload(item: item)
         entry.state = item.isChecked ? .on : .off
+        entry.isEnabled = item.isEnabled
         if !item.symbol.isEmpty {
             entry.image = NSImage(systemSymbolName: item.symbol, accessibilityDescription: nil)
         }

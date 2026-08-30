@@ -66,7 +66,8 @@ struct WorkspacePanel: View {
             items.append(
                 PanelMenu.Item(
                     title: L10n.string(appearance.titleKey), symbol: appearance.symbol,
-                    isChecked: AppearanceSetting.current == appearance, keepsPanelOpen: true
+                    isChecked: AppearanceSetting.current == appearance, isEnabled: !isBusy,
+                    keepsPanelOpen: true
                 ) {
                     AppearanceSetting.current = appearance
                 })
@@ -75,7 +76,7 @@ struct WorkspacePanel: View {
         items.append(
             PanelMenu.Item(
                 title: L10n.string("options.cycle_hotkey"),
-                symbol: "arrow.triangle.2.circlepath"
+                symbol: "arrow.triangle.2.circlepath", isEnabled: !isBusy
             ) {
                 act { setCycleHotkey() }
             })
@@ -242,6 +243,7 @@ struct WorkspacePanel: View {
         HStack {
             Spacer()
             LanguagePill(setting: language)
+                .disabled(isBusy)
         }
         .padding(.top, 2)
     }
