@@ -228,6 +228,11 @@ front window when the browser was already running, and opens a fresh window
 when restage had to launch it. `separate` always gives the item a window of its
 own, reusing one whose first tab matches; `shared` always uses the front window.
 
+**Backups** — before a workspace file is overwritten, given a new hotkey, or
+deleted, the previous version is copied to `~/.config/restage/.backups/`, and
+the newest ten copies per workspace are kept. Deleting from the panel also
+moves the file to the Trash as before.
+
 **App names** — any installed app, written as Finder shows it. Case doesn't
 matter and short names are understood: `chrome` means Google Chrome, `edge`
 means Microsoft Edge. An exact match always wins. Ambiguous names stop with the

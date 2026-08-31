@@ -13,6 +13,7 @@ enum WorkspaceFiles {
         guard let path = path(for: name) else {
             return L10n.string("error.file.not_found", name)
         }
+        WorkspaceBackups.snapshot(path: path)
         do {
             try FileManager.default.trashItem(
                 at: URL(fileURLWithPath: path), resultingItemURL: nil)
@@ -68,6 +69,7 @@ enum WorkspaceFiles {
             let original = try String(contentsOfFile: path, encoding: .utf8)
             let updated = HotkeyLine.apply(hotkey, to: original)
             guard updated != original else { return nil }
+            WorkspaceBackups.snapshot(path: path)
             try updated.write(toFile: path, atomically: true, encoding: .utf8)
             return nil
         } catch {
@@ -82,6 +84,7 @@ enum WorkspaceFiles {
     static func save(_ draft: WorkspaceDraft) -> Failure {
         let directory = WorkspaceRegistry.defaultDirectory
         let path = "\(directory)/\(draft.name).yaml"
+        WorkspaceBackups.snapshot(path: path)
         do {
             try FileManager.default.createDirectory(
                 atPath: directory, withIntermediateDirectories: true)
