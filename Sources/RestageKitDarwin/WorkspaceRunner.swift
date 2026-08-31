@@ -135,7 +135,12 @@ public struct WorkspaceRunner {
         }
 
         var opened = false
+        var titlesBlind = false
         if let wanted = placement.selector.titleContains {
+            if !TitledWindowLocator.canReadTitles {
+                titlesBlind = true
+                TitledWindowLocator.requestTitleAccess()
+            }
             let wantsFullScreen = screen.mode == .fullscreen || placement.fullscreen
             switch TitledWindowLocator.check(
                 pid: handle.pid, titleContains: wanted, fullscreen: wantsFullScreen,
@@ -189,10 +194,14 @@ public struct WorkspaceRunner {
                 handle, selector: placement.selector, timeout: Self.windowTimeout,
                 mayFollowOtherSpaces: follow, claim: true)
         } catch {
-            return ItemOutcome(
+            var failure = ItemOutcome(
                 screenID: screen.id, app: placement.app,
                 status: status(for: error, pid: handle.pid),
                 expected: placement.target, detail: String(describing: error))
+            if titlesBlind {
+                failure = failure.noting(L10n.string("error.titles.unreadable"))
+            }
+            return failure
         }
 
         if placement.selector.titleContains != nil, screen.mode != .fullscreen,

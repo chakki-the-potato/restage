@@ -301,7 +301,14 @@ struct WorkspacePanel: View {
         guard case .saved(let edited) = DraftDialog.edit(
             existing, title: L10n.string("dialog.edit.title", name), notes: [])
         else { return nil }
-        return WorkspaceFiles.save(edited)
+
+        guard edited.name != name else { return WorkspaceFiles.save(edited) }
+        if let reason = WorkspaceName.validate(edited.name) { return reason }
+        guard !WorkspaceFiles.exists(edited.name) else {
+            return L10n.string("error.file.name_taken", edited.name)
+        }
+        if let reason = WorkspaceFiles.save(edited) { return reason }
+        return WorkspaceFiles.moveToTrash(name)
     }
 
     private func checkForUpdate() {

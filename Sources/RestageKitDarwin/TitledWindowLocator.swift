@@ -4,6 +4,12 @@ import RestageKit
 
 @MainActor
 enum TitledWindowLocator {
+    static var canReadTitles: Bool { CGPreflightScreenCaptureAccess() }
+
+    static func requestTitleAccess() {
+        CGRequestScreenCaptureAccess()
+    }
+
     enum Verdict {
         case absent
         case present

@@ -19,6 +19,7 @@ enum Placement: Hashable {
 
 @MainActor
 final class DraftEditor: ObservableObject {
+    @Published var name: String
     @Published var excluded: Set<Int> = []
     @Published var placements: [Int: Placement] = [:]
     @Published var added: [ItemDraft] = []
@@ -30,6 +31,7 @@ final class DraftEditor: ObservableObject {
     private let total: Int
 
     init(draft: WorkspaceDraft) {
+        self.name = draft.name
         self.draft = draft
         self.total = draft.itemCount
         self.hideOthers = draft.hideOthers
@@ -94,6 +96,8 @@ final class DraftEditor: ObservableObject {
             excluding: excluded, slots: slots, fullscreen: fullscreen, tabs: tabs,
             folders: folders, added: added, to: draft)
         result.hideOthers = hideOthers
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        if !trimmed.isEmpty { result.name = WorkspaceName.normalize(trimmed) }
         return result
     }
 }
@@ -168,6 +172,10 @@ struct DraftEditorView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
+            TextField(L10n.string("draft.name_placeholder"), text: $editor.name)
+                .textFieldStyle(.roundedBorder)
+                .font(.system(size: 11))
+                .frame(width: 110)
             Text(L10n.string("draft.keep_count", editor.keptCount))
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.secondary)

@@ -181,6 +181,7 @@
 /* 파일 */
 "error.file.not_found" = "Couldn't find the file for '%@'";
 "error.file.trash_failed" = "Couldn't move it to the Trash: %@";
+"error.titles.unreadable" = "restage can't read window titles on other desktops without Screen Recording permission. Turn it on: System Settings > Privacy & Security > Screen Recording, then run again";
 "error.file.name_taken" = "A workspace named '%@' already exists";
 "error.file.rename_failed" = "Couldn't rename it: %@";
 "error.file.hotkey_save_failed" = "Couldn't save the shortcut: %@";
@@ -308,6 +309,7 @@
 "draft.hide_others" = "Hide other apps";
 "draft.select_all" = "Select All";
 "draft.select_none" = "Deselect All";
+"draft.name_placeholder" = "Name";
 "draft.other_desktop" = "Another desktop";
 "draft.overlap_percent" = "only overlaps %d%%";
 "draft.overlap_poor" = "doesn't line up well";
