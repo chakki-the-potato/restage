@@ -202,6 +202,18 @@ the folder is the last segment, and the file changes. Saving keeps the last
 segment after " — ", " – " or " - " as the `title`, so a saved workspace still
 matches after the user opens another file.
 
+**Split View cannot be assembled programmatically.** The Window menu's
+"Full Screen Tile > Left of Screen" item can be pressed through accessibility
+and does put the window into the left half. What cannot be controlled is the
+other half: macOS then shows its window picker, which is drawn by the Dock as
+a bare overlay with no accessibility tree, so there is nothing to press; arrow
+keys and Return do not drive it either — Return just abandons the picker. Once,
+macOS auto-paired the window with an unrelated browser window and the
+condition for that was not reproducible. Tearing a pair apart does work:
+setting `AXFullScreen` to false on either side dissolves the Space. So a saved
+Split View is restored as two separate full screen Spaces, and the note shown
+when saving stays.
+
 **New full screen Spaces append in creation order.** `CGSCopyManagedDisplaySpaces`
 returns Spaces in Mission Control order, and a window sent to full screen gets
 its Space appended at the end. Existing Spaces stay put. The runner used to
