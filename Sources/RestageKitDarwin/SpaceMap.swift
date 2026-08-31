@@ -2,17 +2,25 @@ struct SpaceMap {
     private let current: Set<Int>
     private let fullScreen: Set<Int>
     private let tiles: [Int: [Int]]
+    private let positions: [Int: Int]
 
     init(displays: [DisplaySpaces]) {
         current = Set(displays.map(\.current))
         var fullScreen: Set<Int> = []
         var tiles: [Int: [Int]] = [:]
-        for space in displays.flatMap(\.all) {
+        var positions: [Int: Int] = [:]
+        for (index, space) in displays.flatMap(\.all).enumerated() {
             if space.isFullScreen { fullScreen.insert(space.id) }
             tiles[space.id] = space.tileWindows
+            positions[space.id] = index
         }
         self.fullScreen = fullScreen
         self.tiles = tiles
+        self.positions = positions
+    }
+
+    func position(of spaces: [Int]) -> Int {
+        spaces.compactMap { positions[$0] }.min() ?? Int.max
     }
 
     var currentSpaces: Set<Int> { current }

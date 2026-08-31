@@ -84,6 +84,16 @@ struct BrowserDialect {
         """
     }
 
+    func setFirstTabURLScript(windowID: Int, url: String) -> String {
+        """
+        tell application "\(applicationName)"
+          tell window id \(windowID)
+            set URL of tab 1 to "\(escape(url))"
+          end tell
+        end tell
+        """
+    }
+
     func addTabScript(windowID: Int, url: String) -> String {
         """
         tell application "\(applicationName)"

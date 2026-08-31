@@ -28,12 +28,21 @@ enum TabController {
             windowID = try resolveFrontWindow(firstURL: first, dialect: dialect)
         }
 
-        let existing = Set(try windows(dialect: dialect)
+        let tabURLs = try windows(dialect: dialect)
             .first { $0.id == windowID }?
-            .tabURLs.map(URLNormalizer.normalize) ?? [])
+            .tabURLs ?? []
+        let existing = Set(tabURLs.map(URLNormalizer.normalize))
 
         var opened = 0
-        for url in plan.tabs where !existing.contains(url) {
+        var missing = plan.tabs.filter { !existing.contains($0) }
+        if let first = missing.first, BlankTabs.allBlank(tabURLs) {
+            _ = try AppleScriptRunner.run(
+                dialect.setFirstTabURLScript(windowID: windowID, url: first),
+                applicationName: dialect.applicationName)
+            missing.removeFirst()
+            opened += 1
+        }
+        for url in missing {
             _ = try AppleScriptRunner.run(
                 dialect.addTabScript(windowID: windowID, url: url),
                 applicationName: dialect.applicationName)
@@ -46,6 +55,16 @@ enum TabController {
         firstURL: String, dialect: BrowserDialect
     ) async throws -> Int {
         if let found = try findWindow(firstURL: firstURL, dialect: dialect) { return found }
+
+        if let blank = try windows(dialect: dialect).first(where: { BlankTabs.allBlank($0.tabURLs) }) {
+            _ = try AppleScriptRunner.run(
+                dialect.setFirstTabURLScript(windowID: blank.id, url: firstURL),
+                applicationName: dialect.applicationName)
+            let claimed = await Polling.poll(timeout: windowAppearTimeout) {
+                (try? findWindow(firstURL: firstURL, dialect: dialect)) ?? nil
+            }
+            if let claimed { return claimed }
+        }
 
         _ = try AppleScriptRunner.run(
             dialect.newWindowScript(url: firstURL),

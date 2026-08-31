@@ -71,9 +71,23 @@ public struct WorkspaceRunner {
         }
 
         var done = 0
+        for position in screen.items.indices.sorted() {
+            guard results[position] == nil,
+                  let handle = handles[screen.items[position].app],
+                  wantsFullScreen(screen.items[position], screen: screen) else { continue }
+            let outcome = await run(
+                screen.items[position], handle: handle, screen: screen, follow: false)
+            done += 1
+            onProgress?(RunProgress(
+                phase: .placing, app: screen.items[position].app,
+                completed: completed + done, total: total))
+            results[position] = outcome
+        }
+
         let tasks = appOrder.map { app -> Task<[(Int, ItemOutcome)], Never> in
             let positions = PlacementOrder.sorted(
                 positionsByApp[app, default: []], in: screen.items)
+                .filter { results[$0] == nil }
             let handle = handles[app]!
             return Task { @MainActor in
                 var placed: [(Int, ItemOutcome)] = []
@@ -343,6 +357,15 @@ public struct WorkspaceRunner {
 
     private func wantsFullScreen(_ plan: TabPlan, screen: ScreenPlan) -> Bool {
         plan.fullscreen || screen.mode == .fullscreen
+    }
+
+    private func wantsFullScreen(_ item: PlannedItem, screen: ScreenPlan) -> Bool {
+        switch item {
+        case .place(let placement):
+            return placement.fullscreen || screen.mode == .fullscreen
+        case .tabs(let plan):
+            return wantsFullScreen(plan, screen: screen)
+        }
     }
 
     private func isBrowserSatisfied(

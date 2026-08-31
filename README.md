@@ -191,6 +191,13 @@ click it. The report says how many were hidden and which.
 - {type: app, app: Cursor, slot: full, fullscreen: true}
 ```
 
+Full screen items are opened one at a time, in the order they are listed, so
+new Spaces line up in Mission Control in that order after the ones that
+already exist. Existing Spaces are never rearranged, and saving a workspace
+records full screen windows in their Mission Control order. macOS reshuffles
+Spaces by use when "Automatically rearrange Spaces based on most recent use"
+is on; turn it off to keep the order.
+
 Split View — two apps sharing one full screen Space — is saved as two full screen
 items, because the config has no way to say "these two share a Space". Opening
 the workspace puts each of them in a full screen of its own. Saving tells you
@@ -227,6 +234,9 @@ items:
 front window when the browser was already running, and opens a fresh window
 when restage had to launch it. `separate` always gives the item a window of its
 own, reusing one whose first tab matches; `shared` always uses the front window.
+A window whose tabs are all empty — the start page a browser opens on launch —
+is reused rather than left behind, so launching a browser doesn't leave a stray
+blank window.
 
 **Backups** — before a workspace file is overwritten, given a new hotkey, or
 deleted, the previous version is copied to `~/.config/restage/.backups/`, and

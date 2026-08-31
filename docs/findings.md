@@ -202,6 +202,20 @@ the folder is the last segment, and the file changes. Saving keeps the last
 segment after " — ", " – " or " - " as the `title`, so a saved workspace still
 matches after the user opens another file.
 
+**New full screen Spaces append in creation order.** `CGSCopyManagedDisplaySpaces`
+returns Spaces in Mission Control order, and a window sent to full screen gets
+its Space appended at the end. Existing Spaces stay put. The runner used to
+place each app's items on a parallel task, which made the creation order — and
+so the Space order — racy across apps; full screen items now run one at a time
+in config order. Measured: Dictionary, Cursor, Notes listed in that order
+appeared as the last three Spaces in that order, twice.
+
+**A browser launched by restage opens a start window first.** Safari opened a
+`favorites://` window before the dedicated tab window was made, and that blank
+window stayed behind. A window whose tabs are all blank pages is now reused by
+navigating its first tab instead of making a new window. Measured: fresh Safari
+launch ended with one window holding exactly the declared tabs.
+
 ## Browsers
 
 **Brave silently ignores the loop form.** Walking windows with `repeat` and

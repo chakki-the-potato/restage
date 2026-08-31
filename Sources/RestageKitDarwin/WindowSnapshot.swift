@@ -39,7 +39,7 @@ public enum WindowSnapshot {
         let all = CGWindowListCopyWindowInfo(
             [.optionAll, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] ?? []
 
-        return all.compactMap { window -> CapturedWindow? in
+        return all.compactMap { window -> (window: CapturedWindow, spacePosition: Int)? in
             guard let pid = window[kCGWindowOwnerPID as String] as? Int32,
                   let app = apps[pid],
                   window[kCGWindowLayer as String] as? Int == 0,
@@ -49,11 +49,12 @@ public enum WindowSnapshot {
             let id = window[kCGWindowNumber as String] as? Int ?? -1
             guard let map else {
                 let onCurrentSpace = visible.contains(id)
-                return CapturedWindow(
+                return (CapturedWindow(
                     appName: app.name, bundleID: app.bundleID,
                     title: (window[kCGWindowName as String] as? String) ?? "",
                     frame: frame, isOnCurrentSpace: onCurrentSpace,
-                    isFullScreen: !onCurrentSpace && coversWholeDisplay(frame, displays))
+                    isFullScreen: !onCurrentSpace && coversWholeDisplay(frame, displays)),
+                    Int.max)
             }
 
             let spaces = SpaceInventory.spaces(ofWindow: id) ?? []
@@ -61,21 +62,33 @@ public enum WindowSnapshot {
                   bounds.contains(where: { $0.intersects(frame) }),
                   map.holdsAllOf(spaces, window: id) else { return nil }
 
-            return CapturedWindow(
+            return (CapturedWindow(
                 appName: app.name,
                 bundleID: app.bundleID,
                 title: (window[kCGWindowName as String] as? String) ?? "",
                 frame: frame,
                 isOnCurrentSpace: map.isCurrent(spaces),
                 isFullScreen: map.isFullScreen(spaces),
-                isSharedFullScreen: map.isSharedFullScreen(spaces))
+                isSharedFullScreen: map.isSharedFullScreen(spaces)),
+                map.position(of: spaces))
         }
         .sorted { lhs, rhs in
-            if lhs.isOnCurrentSpace != rhs.isOnCurrentSpace { return lhs.isOnCurrentSpace }
-            if lhs.frame.minX != rhs.frame.minX { return lhs.frame.minX < rhs.frame.minX }
-            if lhs.frame.minY != rhs.frame.minY { return lhs.frame.minY < rhs.frame.minY }
-            return lhs.appName < rhs.appName
+            if lhs.window.isOnCurrentSpace != rhs.window.isOnCurrentSpace {
+                return lhs.window.isOnCurrentSpace
+            }
+            if lhs.window.isFullScreen, rhs.window.isFullScreen,
+               lhs.spacePosition != rhs.spacePosition {
+                return lhs.spacePosition < rhs.spacePosition
+            }
+            if lhs.window.frame.minX != rhs.window.frame.minX {
+                return lhs.window.frame.minX < rhs.window.frame.minX
+            }
+            if lhs.window.frame.minY != rhs.window.frame.minY {
+                return lhs.window.frame.minY < rhs.window.frame.minY
+            }
+            return lhs.window.appName < rhs.window.appName
         }
+        .map(\.window)
     }
 
     private struct AppInfo {
